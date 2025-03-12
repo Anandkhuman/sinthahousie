@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expenses & Winnings - Ningthoujam Malemnganbi</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            background-color: #121212;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 400px;
+            margin: 15px auto;
+            padding: 8px;
+            background: #1e1e1e;
+            border-radius: 10px;
+            box-shadow: 0px 0px 15px rgba(0, 255, 204, 0.8);
+        }
+        h2, h3 {
+            color: #00ffcc;
+        }
+        .logo {
+            width: 50px;
+            height: auto;
+            
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #fff;
+        }
+        .p {padding : 1px;}
+        th, td {
+            padding: 6px;
+            border-bottom: 1px solid rgba(0, 255, 204, 0.5);
+            
+        }
+        th {
+            background-color: #00ffcc;
+            color: #000;
+            text-transform: uppercase;
+        }
+        .total {
+            font-weight: bold;
+            background-color: rgba(0, 255, 204, 0.2);
+        }
+        .profit {
+            color: #00ffcc;
+            font-size: 13px;
+            font-weight: bold;
+            animation: pulse 1s infinite alternate;
+        }
+        @keyframes pulse {
+            from { text-shadow: 0px 0px 10px #00ffff; }
+            to { text-shadow: 0px 0px 20px #00ffff; }
+        }
+        .name {
+        color: #00ffcc;
+        font-size: 18px;
+        font-weight: bold;
+        animation: pulse 1s infinite alternate;
+        }
+        @keyframes pulse {
+        from { text-shadow: 0px 0px 10px #00ffff; }
+        to { text-shadow: 0px 0px 20px #00ffff; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="https://raw.githubusercontent.com/Anandkhuman/Photo/main/logo1.png" alt="Logo" class="logo">
+        <h2>💰 Expenses & Winnings 💰</h2>
+        <p><span class="name">Name: Ningthoujam Malemnganbi</span></p>
+        <table>
+            <tr><th>Date</th><th>Time</th><th>Amount (Rs)</th></tr>
+            <tr><td>7 May</td><td>03:00 PM</td><td>30</td></tr>
+            <tr><td>7 May</td><td>06:00 PM</td><td>42</td></tr>
+            <tr><td>8 May</td><td>08:30 PM</td><td>120</td></tr>
+            <tr><td>8 May</td><td>10:40 PM</td><td>120</td></tr>
+            <tr><td>9 May</td><td>8:30 PM</td><td>120</td></tr>
+            <tr><td>9 May</td><td>10:40 PM</td><td>120</td></tr>
+            <tr><td>11 May</td><td>8:30 PM</td><td>120</td></tr>
+            <tr><td>11 May</td><td>10:40 PM</td><td>120</td></tr>
+            <tr class="total"><td colspan="2">Total Spent</td><td>792</td></tr>
+        </table>
+        <br>
+        <table>
+            <tr><th>Date</th><th>Time</th><th>Winning</th><th>Amount (Rs)</th></tr>
+            <tr><td>9 May</td><td>08:30 PM</td><td>🎉 Quick 7</td><td>150</td></tr>
+            <tr><td>9 May</td><td>10:40 PM</td><td>🏆 First</td><td>500</td></tr>
+            <tr><td>11 May</td><td>10:40 PM</td><td>🥇 Second ½</td><td>150</td></tr>
+            <tr class="total"><td colspan="3">Total Winnings</td><td>800</td></tr>
+        </table>
+        
+        <h3>📢 Final Calculation:</h3>
+        <p>Total Spent: Rs 792 - 
+        Total Winnings: Rs 800
+        <p>Final Amount:<span class="profit">🎉 Rs 8 (Profit) 🎉</span></p>
+    </div>
+</body>
+</html>
