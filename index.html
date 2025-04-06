@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Agent Dashboard - Sintha Housie</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f6f8;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    header {
+      background-color: #1e293b;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 2em;
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .info {
+      padding: 20px 30px;
+      text-align: left;
+      background: #ffffff;
+      margin: 20px auto;
+      max-width: 800px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      font-size: 1.1em;
+      color: #444;
+    }
+
+    .highlight {
+      color: #0f172a;
+      font-weight: bold;
+    }
+
+    .dashboard {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 20px;
+      gap: 20px;
+      flex-grow: 1;
+    }
+
+    .card {
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.07);
+      width: 280px;
+      padding: 25px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      animation: fadeInUp 0.8s ease forwards;
+      text-align: center;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .agent-name {
+      font-size: 1.4em;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 10px;
+    }
+
+    .earning {
+      font-size: 1.1em;
+      color: #475569;
+    }
+
+    .thanks {
+      margin-top: 10px;
+      font-size: 0.95em;
+      color: #16a34a;
+      font-weight: 500;
+    }
+
+    footer {
+      background-color: #1e293b;
+      color: white;
+      text-align: center;
+      padding: 15px;
+      font-size: 0.95em;
+      margin-top: auto;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .dashboard {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>Sintha Housie</header>
+
+  <div class="info">
+    <p>Agents earn commissions by booking tickets for players:</p>
+    <p><span class="highlight">Rs 10</span> ticket earns <span class="highlight">Rs 1.5</span> commission.</p>
+    <p><span class="highlight">Rs 20</span> ticket earns <span class="highlight">Rs 2</span> commission.</p>
+    <p>Encourage players to join and maximize your daily income!</p>
+  </div>
+
+  <div class="dashboard">
+    <div class="card" style="animation-delay: 0.1s;">
+      <div class="agent-name">Athoi</div>
+      <div class="earning">Earning: ₹78</div>
+      <div class="thanks">Thank you for your amazing contribution!</div>
+    </div>
+    <div class="card" style="animation-delay: 0.2s;">
+      <div class="agent-name">Nicky</div>
+      <div class="earning">Earning: ₹36</div>
+      <div class="thanks">We appreciate your great work, Nicky!</div>
+    </div>
+    <div class="card" style="animation-delay: 0.3s;">
+      <div class="agent-name">Rishikesh</div>
+      <div class="earning">Earning: ₹6</div>
+      <div class="thanks">Thank you for being part of our journey!</div>
+    </div>
+  </div>
+
+  <footer>© 2025 sinthahousie.com</footer>
+
+</body>
+</html>
