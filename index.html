@@ -59,7 +59,9 @@
       width: 280px;
       padding: 15px;
       transition: transform 0.3s ease, box-shadow 0.3s ease;
-      animation: fadeInUp 0.8s ease forwards;
+      animation: fadeInUp 0.6s ease forwards;
+      opacity: 0;
+      transform: translateY(40px);
       text-align: center;
       margin-bottom: 10px;
     }
@@ -98,10 +100,6 @@
     }
 
     @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(40px);
-      }
       to {
         opacity: 1;
         transform: translateY(0);
@@ -127,25 +125,58 @@
     <p>Encourage players to join and maximize your daily income!</p>
   </div>
 
-  <div class="dashboard">
-    <div class="card" style="animation-delay: 0.1s;">
-      <div class="agent-name">Athoi</div>
-      <div class="earning">Earning: ₹78</div>
-      <div class="thanks">Thank you for your amazing contribution!</div>
-    </div>
-    <div class="card" style="animation-delay: 0.2s;">
-      <div class="agent-name">Nicky</div>
-      <div class="earning">Earning: ₹36</div>
-      <div class="thanks">We appreciate your great work, Nicky!</div>
-    </div>
-    <div class="card" style="animation-delay: 0.3s;">
-      <div class="agent-name">Rishikesh</div>
-      <div class="earning">Earning: ₹6</div>
-      <div class="thanks">Thank you for being part of our journey!</div>
-    </div>
-  </div>
+  <div class="dashboard" id="dashboard"></div>
 
   <footer>© 2025 sinthahousie.com</footer>
+
+  <script>
+    const agents = [
+      {
+        name: "Athoi",
+        earning: 129,
+        message: "Thank you for your amazing contribution!"
+      },
+      {
+        name: "Nicky",
+        earning: 63,
+        message: "We appreciate your great work, Nicky!"
+      },
+      {
+        name: "Rishikesh",
+        earning: 15,
+        message: "Thank you for being part of our journey!"
+      },
+      {
+        name: "Nongthreinganba",
+        earning: 9,
+        message: "Welcome aboard! We look forward to your journey with us."
+      },
+      {
+        name: "Sadananda Lai",
+        earning: 0,
+        message: "Your contribution starts now. Let’s achieve great things!"
+      }
+    ];
+
+    // Sort agents by earnings (descending)
+    agents.sort((a, b) => b.earning - a.earning);
+
+    const dashboard = document.getElementById("dashboard");
+
+    agents.forEach((agent, index) => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.style.animationDelay = `${index * 0.1}s`;
+
+      card.innerHTML = `
+        <div class="agent-name">${agent.name}</div>
+        <div class="earning">Earning: ₹${agent.earning}</div>
+        <div class="thanks">${agent.message}</div>
+      `;
+
+      dashboard.appendChild(card);
+    });
+  </script>
 
 </body>
 </html>
