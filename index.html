@@ -3,42 +3,80 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Agent Dashboard - Sintha Housie</title>
+  <title>Agent Dashboard</title>
   <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-color: #1e293b;
+      --text-color: #f8fafc;
+      --highlight-color: #38bdf8;
+      --progress-bg: #334155;
+      --progress-fill: #4ade80;
+    }
+
     body {
       margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f4f6f8;
-      color: #333;
+      background-color: var(--bg-color);
+      color: var(--text-color);
       display: flex;
       flex-direction: column;
-      height: 100vh;
+      min-height: 100vh;
     }
 
     header {
-      background-color: #1e293b;
-      color: white;
+      background-color: var(--card-color);
+      color: var(--text-color);
       padding: 20px;
       text-align: center;
       font-size: 2em;
       font-weight: bold;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .theme-icon {
+      width: 30px;
+      height: 30px;
+    }
+
+    .theme-selector {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      padding: 10px;
+      background: var(--card-color);
+    }
+
+    .theme-button {
+      cursor: pointer;
+      background: none;
+      border: none;
+      outline: none;
+      transition: transform 0.2s ease;
+    }
+
+    .theme-button:hover {
+      transform: scale(1.2);
     }
 
     .info {
       padding: 20px 30px;
       text-align: left;
-      background: #ffffff;
+      background: var(--card-color);
       margin: 20px auto;
       max-width: 800px;
       border-radius: 10px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.08);
       font-size: 1em;
-      color: #444;
+      color: var(--text-color);
     }
 
     .highlight {
-      color: #0f172a;
+      color: var(--highlight-color);
       font-weight: bold;
     }
 
@@ -53,12 +91,11 @@
     }
 
     .card {
-      background-color: white;
+      background-color: var(--card-color);
       border-radius: 12px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.07);
       width: 280px;
       padding: 15px;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
       animation: fadeInUp 0.6s ease forwards;
       opacity: 0;
       transform: translateY(40px);
@@ -74,25 +111,40 @@
     .agent-name {
       font-size: 1.4em;
       font-weight: 600;
-      color: #0f172a;
+      color: var(--highlight-color);
       margin-bottom: 10px;
     }
 
     .earning {
       font-size: 1.1em;
-      color: #475569;
+      color: var(--text-color);
     }
 
     .thanks {
       margin-top: 10px;
       font-size: 0.95em;
-      color: #16a34a;
+      color: #22c55e;
       font-weight: 500;
     }
 
+    .progress-container {
+      background: var(--progress-bg);
+      border-radius: 10px;
+      height: 12px;
+      margin-top: 12px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: var(--progress-fill);
+      width: 0%;
+      transition: width 1s ease;
+    }
+
     footer {
-      background-color: #1e293b;
-      color: white;
+      background-color: var(--card-color);
+      color: var(--text-color);
       text-align: center;
       padding: 15px;
       font-size: 0.95em;
@@ -116,13 +168,29 @@
 </head>
 <body>
 
-  <header>Sintha Housie</header>
+  <div class="theme-selector">
+    <button class="theme-button" onclick="changeTheme('dark')">
+      <img src="https://img.icons8.com/ios-filled/50/ffffff/moon-symbol.png" class="theme-icon" title="Dark Mode"/>
+    </button>
+    <button class="theme-button" onclick="changeTheme('neon')">
+      <img src="https://img.icons8.com/fluency/48/futurama-bender.png" class="theme-icon" title="Cyberpunk Neon"/>
+    </button>
+    <button class="theme-button" onclick="changeTheme('vintage')">
+      <img src="https://img.icons8.com/color/48/old-time-camera.png" class="theme-icon" title="Vintage"/>
+    </button>
+    <button class="theme-button" onclick="changeTheme('white')">
+      <img src="https://img.icons8.com/ios-filled/50/000000/sun--v1.png" class="theme-icon" title="Normal White"/>
+    </button>
+  </div>
+
+  <header id="siteTitle">Sintha Housie</header>
 
   <div class="info">
     <p>Agents earn commissions by booking tickets for players:</p>
     <p><span class="highlight">Rs 10</span> ticket earns <span class="highlight">Rs 1.5</span> commission.</p>
     <p><span class="highlight">Rs 20</span> ticket earns <span class="highlight">Rs 3</span> commission.</p>
     <p>Encourage players to join and maximize your daily income!</p>
+    <p>Today: <span class="highlight" id="currentDate"></span></p>
   </div>
 
   <div class="dashboard" id="dashboard"></div>
@@ -131,52 +199,112 @@
 
   <script>
     const agents = [
-      {
-        name: "Athoi",
-        earning: 129,
-        message: "Thank you for your amazing contribution!"
-      },
-      {
-        name: "Nicky",
-        earning: 63,
-        message: "We appreciate your great work, Nicky!"
-      },
-      {
-        name: "Rishikesh",
-        earning: 15,
-        message: "Thank you for being part of our journey!"
-      },
-      {
-        name: "Nongthreinganba",
-        earning: 9,
-        message: "Welcome aboard! We look forward to your journey with us."
-      },
-      {
-        name: "Sadananda Lai",
-        earning: 0,
-        message: "Your contribution starts now. Let’s achieve great things!"
-      }
+      { name: "Athoi", earning: 19.6, message: "Thank you for your amazing contribution!" },
+      { name: "Nicky", earning: 16.8, message: "We appreciate your great work, Nicky!" },
+      { name: "Rishikesh", earning: 0, message: "Fantastic performance, Rishikesh!" },
+      { name: "Nongthreinganba", earning: 0, message: "Keep growing! You're doing great." },
+      { name: "Sadananda Lai", earning: 0, message: "Your contribution starts now. Let’s achieve great things!" }
     ];
 
-    // Sort agents by earnings (descending)
-    agents.sort((a, b) => b.earning - a.earning);
+    const targets = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
 
-    const dashboard = document.getElementById("dashboard");
+    function getTarget(earning) {
+      for (let i = 0; i < targets.length; i++) {
+        if (earning <= targets[i]) {
+          return targets[i];
+        }
+      }
+      return 1000;
+    }
 
-    agents.forEach((agent, index) => {
-      const card = document.createElement("div");
-      card.className = "card";
-      card.style.animationDelay = `${index * 0.1}s`;
+    function renderDashboard() {
+      const dashboard = document.getElementById("dashboard");
+      dashboard.innerHTML = "";
+      agents.sort((a, b) => b.earning - a.earning);
 
-      card.innerHTML = `
-        <div class="agent-name">${agent.name}</div>
-        <div class="earning">Earning: ₹${agent.earning}</div>
-        <div class="thanks">${agent.message}</div>
-      `;
+      agents.forEach((agent, index) => {
+        const target = getTarget(agent.earning);
+        const percent = Math.min((agent.earning / target) * 100, 100);
 
-      dashboard.appendChild(card);
-    });
+        const card = document.createElement("div");
+        card.className = "card";
+        card.style.animationDelay = `${index * 0.1}s`;
+
+        card.innerHTML = `
+          <div class="agent-name">${agent.name}</div>
+          <div class="earning">Earning: ₹${agent.earning} / ₹${target}</div>
+          <div class="progress-container">
+            <div class="progress-bar" style="width: 0%;"></div>
+          </div>
+          <div class="thanks">${agent.message}</div>
+        `;
+
+        dashboard.appendChild(card);
+
+        // Animate progress after append
+        setTimeout(() => {
+          const progress = card.querySelector(".progress-bar");
+          progress.style.width = percent + "%";
+        }, 100);
+      });
+    }
+
+    function changeTheme(theme) {
+      const root = document.documentElement;
+      const siteTitle = document.getElementById("siteTitle");
+
+      if (theme === 'dark') {
+        root.style.setProperty('--bg-color', '#0f172a');
+        root.style.setProperty('--card-color', '#1e293b');
+        root.style.setProperty('--text-color', '#f8fafc');
+        root.style.setProperty('--highlight-color', '#38bdf8');
+        root.style.setProperty('--progress-bg', '#334155');
+        root.style.setProperty('--progress-fill', '#4ade80');
+        siteTitle.textContent = "Sintha Housie";
+        siteTitle.style.color = '#38bdf8';
+      } else if (theme === 'neon') {
+        root.style.setProperty('--bg-color', '#050014');
+        root.style.setProperty('--card-color', '#111133');
+        root.style.setProperty('--text-color', '#f0f');
+        root.style.setProperty('--highlight-color', '#0ff');
+        root.style.setProperty('--progress-bg', '#222244');
+        root.style.setProperty('--progress-fill', '#0ff');
+        siteTitle.textContent = "Sintha Cyber Arena";
+        siteTitle.style.color = '#f0f';
+      } else if (theme === 'vintage') {
+        root.style.setProperty('--bg-color', '#fdf6e3');
+        root.style.setProperty('--card-color', '#eee8d5');
+        root.style.setProperty('--text-color', '#073642');
+        root.style.setProperty('--highlight-color', '#b58900');
+        root.style.setProperty('--progress-bg', '#ddd6c0');
+        root.style.setProperty('--progress-fill', '#b58900');
+        siteTitle.textContent = "Sintha Classic Hall";
+        siteTitle.style.color = '#b58900';
+      } else if (theme === 'white') {
+        root.style.setProperty('--bg-color', '#ffffff');
+        root.style.setProperty('--card-color', '#f5f5f5');
+        root.style.setProperty('--text-color', '#111');
+        root.style.setProperty('--highlight-color', '#1e90ff');
+        root.style.setProperty('--progress-bg', '#e0e0e0');
+        root.style.setProperty('--progress-fill', '#1e90ff');
+        siteTitle.textContent = "Sintha Housie Lite";
+        siteTitle.style.color = '#1e90ff';
+      }
+
+      renderDashboard(); // Re-render to apply theme styles
+    }
+
+    function showDate() {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('en-IN', {
+        weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+      });
+      document.getElementById("currentDate").textContent = dateStr;
+    }
+
+    showDate();
+    renderDashboard();
+    changeTheme('dark'); // default theme
   </script>
-
 </body>
 </html>
