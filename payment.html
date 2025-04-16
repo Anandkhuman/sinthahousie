@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SinthaHousie UPI Payment</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: #f1f4f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 650px;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 60px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .tabs {
+      display: flex;
+      background: #ecf0f1;
+    }
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 14px;
+      cursor: pointer;
+      background: #dcdde1;
+      font-weight: 600;
+      color: #2d3436;
+      transition: all 0.3s ease;
+    }
+
+    .tab:hover {
+      background: #b2bec3;
+    }
+
+    .tab.active {
+      background: #0984e3;
+      color: #fff;
+    }
+
+    .content {
+      opacity: 0;
+      height: 0;
+      overflow: hidden;
+      padding: 0 30px;
+      transition: opacity 0.4s ease, height 0.4s ease, padding 0.4s ease;
+    }
+
+    .content.active {
+      opacity: 1;
+      height: auto;
+      padding: 30px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+
+    .qr-image {
+      display: block;
+      margin: 0 auto 15px;
+      width: 200px;
+      height: 200px;
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s ease;
+    }
+
+    .qr-image:hover {
+      transform: scale(1.05);
+    }
+
+    .upi-id {
+      background: #f6f6f6;
+      padding: 10px;
+      text-align: center;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-size: 15px;
+      color: #2d3436;
+    }
+
+    .alert {
+      background: #ff4757;
+      color: white;
+      text-align: center;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.6); }
+      70% { box-shadow: 0 0 0 15px rgba(255, 71, 87, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
+    }
+
+    .upi-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: #10ac84;
+      color: white;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      width: 100%;
+      font-weight: bold;
+      font-size: 15px;
+      text-decoration: none;
+      transition: background 0.3s ease;
+      margin-bottom: 20px;
+    }
+
+    .upi-button:hover {
+      background: #1dd1a1;
+    }
+
+    .info-box {
+      background: #f0f0f0;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      color: #555;
+      text-align: center;
+    }
+
+    .brand {
+      text-align: center;
+      padding: 20px;
+      font-size: 14px;
+      color: #aaa;
+    }
+
+    /* Anand Theme */
+    .anand-theme {
+      background: #f8faff;
+      border-left: 4px solid #0984e3;
+    }
+
+    .anand-theme .upi-button {
+      background: #0984e3;
+    }
+
+    .anand-theme .upi-button:hover {
+      background: #74b9ff;
+    }
+
+    /* Pari Theme */
+    .pari-theme {
+      background: #fdf8ec;
+      border-right: 4px solid #0984e3;
+    }
+
+    .pari-theme .upi-button {
+      background: #e1b12c;
+      color: #2f3542;
+    }
+
+    .pari-theme .upi-button:hover {
+      background: #feca57;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab(0)">Anand Khuman</div>
+      <div class="tab" onclick="switchTab(1)">Pari Thokchom</div>
+    </div>
+
+    <!-- Anand Content -->
+    <div class="content active anand-theme" id="content-0">
+      <h2><i class="fas fa-user-shield"></i> Pay to Anand Khuman</h2>
+      <div class="alert"><i class="fas fa-info-circle"></i> Only make payment if you have booked a ticket.</div>
+      <canvas id="qr-anand" class="qr-image"></canvas>
+      <div class="upi-id"><i class="fas fa-indian-rupee-sign"></i> anandkhuman143-1@oksbi</div>
+      <a class="upi-button" href="upi://pay?pa=anandkhuman143-1@oksbi&pn=Anand%20Khuman&cu=INR" target="_blank">
+        <i class="fas fa-money-check-alt"></i> Pay Now via UPI
+      </a>
+      <div class="info-box">
+        Admin: Anand Khuman<br>SinthaHousie.com ensures secure & timely payouts.
+      </div>
+    </div>
+
+    <!-- Pari Content -->
+    <div class="content pari-theme" id="content-1">
+      <h2><i class="fas fa-user-nurse"></i> Pay to Pari Thokchom</h2>
+      <div class="alert"><i class="fas fa-info-circle"></i> Only make payment if you have booked a ticket.</div>
+      <canvas id="qr-pari" class="qr-image"></canvas>
+      <div class="upi-id"><i class="fas fa-indian-rupee-sign"></i> parithokchom43-3@oksbi</div>
+      <a class="upi-button" href="upi://pay?pa=parithokchom43-3@oksbi&pn=Pari%20Thokchom&cu=INR" target="_blank">
+        <i class="fas fa-money-check-alt"></i> Pay Now via UPI
+      </a>
+      <div class="info-box">
+        Admin: Pari Thokchom<br>SinthaHousie.com – trusted by 1000+ daily players.
+      </div>
+    </div>
+
+    <div class="brand">🔐 Powered by <strong>sinthahousie.com</strong></div>
+  </div>
+
+  <script>
+    function switchTab(index) {
+      const tabs = document.querySelectorAll('.tab');
+      const contents = document.querySelectorAll('.content');
+      tabs.forEach((tab, i) => {
+        tab.classList.toggle('active', i === index);
+      });
+
+      contents.forEach((content, i) => {
+        if (i === index) {
+          content.classList.add('active');
+        } else {
+          content.classList.remove('active');
+        }
+      });
+    }
+
+    new QRious({
+      element: document.getElementById("qr-anand"),
+      value: "upi://pay?pa=anandkhuman143-1@oksbi&pn=Anand%20Khuman&cu=INR",
+      size: 200
+    });
+
+    new QRious({
+      element: document.getElementById("qr-pari"),
+      value: "upi://pay?pa=parithokchom43-3@oksbi&pn=Pari%20Thokchom&cu=INR",
+      size: 200
+    });
+  </script>
+
+</body>
+</html>
