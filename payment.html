@@ -6,12 +6,8 @@
   <title>SinthaHousie UPI Payment</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: 'Poppins', sans-serif;
@@ -24,8 +20,8 @@
     }
 
     .container {
-      width: 100%;
       max-width: 650px;
+      width: 100%;
       background: white;
       border-radius: 20px;
       box-shadow: 0 10px 60px rgba(0, 0, 0, 0.1);
@@ -48,10 +44,7 @@
       transition: all 0.3s ease;
     }
 
-    .tab:hover {
-      background: #b2bec3;
-    }
-
+    .tab:hover { background: #b2bec3; }
     .tab.active {
       background: #0984e3;
       color: #fff;
@@ -77,19 +70,19 @@
       color: #2c3e50;
     }
 
-    .qr-image {
+    .qr-img {
       display: block;
       margin: 0 auto 15px;
       width: 200px;
       height: 200px;
       border-radius: 16px;
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-      transition: all 0.3s ease;
+      transition: transform 0.3s ease;
+      cursor: pointer;
+      object-fit: cover;
     }
 
-    .qr-image:hover {
-      transform: scale(1.05);
-    }
+    .qr-img:hover { transform: scale(1.05); }
 
     .upi-id {
       background: #f6f6f6;
@@ -156,7 +149,6 @@
       color: #aaa;
     }
 
-    /* Anand Theme */
     .anand-theme {
       background: #f8faff;
       border-left: 4px solid #0984e3;
@@ -170,10 +162,9 @@
       background: #74b9ff;
     }
 
-    /* Pari Theme */
     .pari-theme {
       background: #fdf8ec;
-      border-right: 4px solid #0984e3;
+      border-left: 4px solid #e1b12c;
     }
 
     .pari-theme .upi-button {
@@ -184,76 +175,108 @@
     .pari-theme .upi-button:hover {
       background: #feca57;
     }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.7);
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal img {
+      max-width: 90%;
+      max-height: 90%;
+      border-radius: 16px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 30px;
+      right: 30px;
+      color: white;
+      font-size: 30px;
+      cursor: pointer;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <div class="tabs">
-      <div class="tab active" onclick="switchTab(0)">Anand Khuman</div>
-      <div class="tab" onclick="switchTab(1)">Pari Thokchom</div>
-    </div>
-
-    <!-- Anand Content -->
-    <div class="content active anand-theme" id="content-0">
-      <h2><i class="fas fa-user-shield"></i> Pay to Anand Khuman</h2>
-      <div class="alert"><i class="fas fa-info-circle"></i> Only make payment if you have booked a ticket.</div>
-      <canvas id="qr-anand" class="qr-image"></canvas>
-      <div class="upi-id"><i class="fas fa-indian-rupee-sign"></i> anandkhuman143-1@oksbi</div>
-      <a class="upi-button" href="upi://pay?pa=anandkhuman143-1@oksbi&pn=Anand%20Khuman&cu=INR" target="_blank">
-        <i class="fas fa-money-check-alt"></i> Pay Now via UPI
-      </a>
-      <div class="info-box">
-        Admin: Anand Khuman<br>SinthaHousie.com ensures secure & timely payouts.
-      </div>
-    </div>
-
-    <!-- Pari Content -->
-    <div class="content pari-theme" id="content-1">
-      <h2><i class="fas fa-user-nurse"></i> Pay to Pari Thokchom</h2>
-      <div class="alert"><i class="fas fa-info-circle"></i> Only make payment if you have booked a ticket.</div>
-      <canvas id="qr-pari" class="qr-image"></canvas>
-      <div class="upi-id"><i class="fas fa-indian-rupee-sign"></i> parithokchom43-3@okaxis</div>
-      <a class="upi-button" href="upi://pay?pa=parithokchom43-3@okaxis&pn=Pari%20Thokchom&cu=INR" target="_blank">
-        <i class="fas fa-money-check-alt"></i> Pay Now via UPI
-      </a>
-      <div class="info-box">
-        Admin: Pari Thokchom<br>SinthaHousie.com – trusted by 1000+ daily players.
-      </div>
-    </div>
-
-    <div class="brand">🔐 Powered by <strong>sinthahousie.com</strong></div>
+<div class="container">
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(0)">Anand Khuman</div>
+    <div class="tab" onclick="switchTab(1)">Pari Thokchom</div>
   </div>
 
-  <script>
-    function switchTab(index) {
-      const tabs = document.querySelectorAll('.tab');
-      const contents = document.querySelectorAll('.content');
-      tabs.forEach((tab, i) => {
-        tab.classList.toggle('active', i === index);
-      });
+  <div class="content active anand-theme" id="content-0">
+    <h2><i class="fas fa-user-shield"></i> Pay to Anand Khuman</h2>
+    <div class="alert"><i class="fas fa-info-circle"></i> Only make payment if you have booked a ticket.</div>
+    <img src="https://github.com/Anandkhuman/Photo/raw/main/anandqr.png" class="qr-img" onclick="showModal(this.src)" alt="Anand QR">
+    <div class="upi-id"><i class="fas fa-indian-rupee-sign"></i> anandkhuman143-1@oksbi</div>
+    <a class="upi-button" href="upi://pay?pa=anandkhuman143-1@oksbi&pn=Anand%20Khuman&cu=INR" target="_blank">
+      <i class="fas fa-money-check-alt"></i> Pay Now via UPI
+    </a>
+    <div class="info-box">
+      Admin: Anand Khuman<br>SinthaHousie.com ensures secure & timely payouts.
+    </div>
+  </div>
 
-      contents.forEach((content, i) => {
-        if (i === index) {
-          content.classList.add('active');
-        } else {
-          content.classList.remove('active');
-        }
-      });
-    }
+  <div class="content pari-theme" id="content-1">
+    <h2><i class="fas fa-user-nurse"></i> Pay to Pari Thokchom</h2>
+    <div class="alert"><i class="fas fa-info-circle"></i> Only make payment if you have booked a ticket.</div>
+    <img src="https://github.com/Anandkhuman/Photo/raw/main/pariqr.png" class="qr-img" onclick="showModal(this.src)" alt="Pari QR">
+    <div class="upi-id"><i class="fas fa-indian-rupee-sign"></i> parithokchom43-3@oksbi</div>
+    <a class="upi-button" href="upi://pay?pa=parithokchom43-3@oksbi&pn=Pari%20Thokchom&cu=INR" target="_blank">
+      <i class="fas fa-money-check-alt"></i> Pay Now via UPI
+    </a>
+    <div class="info-box">
+      Admin: Pari Thokchom<br>SinthaHousie.com – trusted by 1000+ daily players.
+    </div>
+  </div>
 
-    new QRious({
-      element: document.getElementById("qr-anand"),
-      value: "upi://pay?pa=anandkhuman143-1@oksbi&pn=Anand%20Khuman&cu=INR",
-      size: 200
+  <div class="brand">🔐 Powered by <strong>sinthahousie.com</strong></div>
+</div>
+
+<!-- Modal for QR Preview -->
+<div class="modal" id="qrModal" onclick="hideModal()">
+  <span class="modal-close" onclick="hideModal()">&times;</span>
+  <img id="modalImg" src="">
+</div>
+
+<script>
+  function switchTab(index) {
+    const tabs = document.querySelectorAll('.tab');
+    const contents = document.querySelectorAll('.content');
+    tabs.forEach((tab, i) => tab.classList.toggle('active', i === index));
+    contents.forEach((content, i) => {
+      if (i === index) {
+        content.classList.add('active');
+      } else {
+        content.classList.remove('active');
+      }
     });
+  }
 
-    new QRious({
-      element: document.getElementById("qr-pari"),
-      value: "upi://pay?pa=parithokchom43-3@okaxis&pn=Pari%20Thokchom&cu=INR",
-      size: 200
-    });
-  </script>
+  function showModal(src) {
+    document.getElementById("modalImg").src = src;
+    document.getElementById("qrModal").style.display = "flex";
+  }
+
+  function hideModal() {
+    document.getElementById("qrModal").style.display = "none";
+  }
+</script>
 
 </body>
 </html>
