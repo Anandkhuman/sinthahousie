@@ -9,10 +9,11 @@
 
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+
   <style>
     body {
       font-family: 'Poppins', sans-serif;
@@ -22,9 +23,15 @@
     }
 
     h1 {
-      text-align: left;
       color: #ffffff;
       margin-top: 20px;
+      text-align: center;
+    }
+
+    @media (min-width: 768px) {
+      h1 {
+        text-align: left;
+      }
     }
 
     .scroll-menu {
@@ -54,6 +61,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      white-space: nowrap;
     }
 
     .scroll-menu button:hover,
@@ -71,7 +79,8 @@
     }
 
     .search-bar input {
-      width: 80%;
+      width: 100%;
+      max-width: 600px;
       padding: 10px;
       font-size: 1rem;
       border: 2px solid #1d4ed8;
@@ -156,11 +165,31 @@
         transform: translateY(0);
       }
     }
+
+    @media (max-width: 640px) {
+      .feed-card {
+        padding: 16px;
+        font-size: 0.95rem;
+      }
+
+      .feed-title {
+        font-size: 1rem;
+      }
+
+      .feed-date {
+        font-size: 0.8rem;
+      }
+
+      .feed-link {
+        font-size: 0.8rem;
+        padding: 6px 10px;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <h1 class="text-3xl md:text-5xl font-bold">Welcome to Sintha <span class="text-blue-400 typed-text"></span></h1>
+  <h1 class="text-2xl sm:text-3xl md:text-5xl font-bold px-2">Welcome to Sintha <span class="text-blue-400 typed-text"></span></h1>
 
   <div class="scroll-menu" id="rss-menu"></div>
 
@@ -272,14 +301,16 @@
       }
     }
   </script>
+
   <script>
-  AOS.init();
-  new Typed('.typed-text', {
-  strings: ['News', 'info', 'Education', 'Earning','housie'],
-  typeSpeed: 80,
-  backSpeed: 50,
-  loop: true
-  });
+    AOS.init();
+    new Typed('.typed-text', {
+      strings: ['News', 'info', 'Education', 'Earning', 'housie'],
+      typeSpeed: 80,
+      backSpeed: 50,
+      loop: true
+    });
   </script>
+
 </body>
 </html>
