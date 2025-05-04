@@ -1,17 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SinTha News</title>
 
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
 
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+
+  <!-- AOS Animations -->
+  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+
+  <!-- Typed.js -->
   <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
 
   <style>
@@ -19,19 +26,7 @@
       font-family: 'Poppins', sans-serif;
       background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
       margin: 0;
-      padding: 0 10px;
-    }
-
-    h1 {
-      color: #ffffff;
-      margin-top: 20px;
-      text-align: center;
-    }
-
-    @media (min-width: 768px) {
-      h1 {
-        text-align: left;
-      }
+      padding: 0;
     }
 
     .scroll-menu {
@@ -42,7 +37,7 @@
       gap: 10px;
       border-radius: 8px;
       scrollbar-width: none;
-      margin-top: 15px;
+      margin: 20px 10px 10px 10px;
     }
 
     .scroll-menu::-webkit-scrollbar {
@@ -62,6 +57,7 @@
       align-items: center;
       gap: 8px;
       white-space: nowrap;
+      transition: all 0.3s ease;
     }
 
     .scroll-menu button:hover,
@@ -71,25 +67,14 @@
       transform: scale(1.08);
     }
 
-    .search-bar {
-      margin-top: 20px;
-      display: flex;
-      justify-content: center;
-      padding: 10px;
-    }
-
     .search-bar input {
       width: 100%;
       max-width: 600px;
-      padding: 10px;
+      padding: 10px 16px;
       font-size: 1rem;
       border: 2px solid #1d4ed8;
       border-radius: 20px;
       outline: none;
-    }
-
-    .feed-container {
-      margin-top: 20px;
     }
 
     .feed-card {
@@ -97,7 +82,7 @@
       border-left: 6px solid #3b82f6;
       padding: 20px;
       border-radius: 12px;
-      margin-bottom: 24px;
+      margin: 20px 10px;
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
       animation: slideFade 0.5s forwards ease-out;
       opacity: 0;
@@ -156,7 +141,9 @@
     }
 
     @keyframes spin {
-      100% { transform: rotate(360deg); }
+      100% {
+        transform: rotate(360deg);
+      }
     }
 
     @keyframes slideFade {
@@ -187,13 +174,16 @@
     }
   </style>
 </head>
-<body>
 
-  <h1 class="text-2xl sm:text-3xl md:text-5xl font-bold px-2">Welcome to Sintha <span class="text-blue-400 typed-text"></span></h1>
+<body class="px-2 sm:px-6 md:px-10">
+
+  <h1 class="text-xl sm:text-3xl md:text-5xl font-bold text-white mt-6 text-center sm:text-left">
+    Welcome to Sintha <span class="text-blue-400 typed-text"></span>
+  </h1>
 
   <div class="scroll-menu" id="rss-menu"></div>
 
-  <div class="search-bar">
+  <div class="search-bar flex justify-center my-4">
     <input type="text" id="searchInput" placeholder="Search posts..." onkeyup="searchPosts()" />
   </div>
 
@@ -277,7 +267,7 @@
         });
     }
 
-    // Default load
+    // Load default
     loadFeed(feedTypes["Headlines"], document.querySelector(".scroll-menu button"));
 
     function searchPosts() {
@@ -300,17 +290,14 @@
         prompt("Copy this link to share:", url);
       }
     }
-  </script>
 
-  <script>
     AOS.init();
     new Typed('.typed-text', {
-      strings: ['News', 'info', 'Education', 'Earning', 'housie'],
+      strings: ['News', 'Info', 'Education', 'Earning', 'Housie'],
       typeSpeed: 80,
       backSpeed: 50,
       loop: true
     });
   </script>
-
 </body>
 </html>
