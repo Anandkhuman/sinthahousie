@@ -8,13 +8,13 @@
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
 
-  <!-- Font Awesome Icons -->
+  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
   <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
 
-  <!-- AOS Animations -->
+  <!-- AOS Animation -->
   <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
 
@@ -246,13 +246,15 @@
             const dateStr = `${pubDate.toDateString()} ${pubDate.toLocaleTimeString()}`;
 
             const imageMatch = item.description.match(/<img[^>]+src="([^">]+)"/);
-            const image = imageMatch ? `<img src="${imageMatch[1]}" class="feed-img" alt="image">` : "";
+            const imageTag = imageMatch ? `<img src="${imageMatch[1]}" class="feed-img" alt="image">` : "";
+
+            const cleanDesc = item.description.replace(/<img[^>]*>/g, '').replace(/<\/?[^>]+(>|$)/g, '').slice(0, 400);
 
             const content = `
-              <div class="feed-title"><i class="fas fa-circle-info"></i> ${item.title}</div>
-              <div class="feed-date"><i class="fas fa-clock"></i> ${dateStr}</div>
-              ${image}
-              <div>${item.description.replace(/<img[^>]*>/g, '').slice(0, 400)}...</div>
+              <div class="feed-title">${item.title}</div>
+              <div class="feed-date">${dateStr}</div>
+              ${imageTag}
+              <div class="feed-description">${cleanDesc}...</div>
               <a class="feed-link" href="${item.link || item.guid}" target="_blank">Read More</a>
               <i class="fas fa-share-alt feed-share" title="Share this post" onclick="sharePost('${item.link || item.guid}')"></i>
             `;
@@ -267,28 +269,32 @@
         });
     }
 
-    // Load default
-    loadFeed(feedTypes["Headlines"], document.querySelector(".scroll-menu button"));
+    function sharePost(postUrl) {
+      const card = event.target.closest(".feed-card");
+      const title = card.querySelector(".feed-title")?.textContent.trim() || "SinTha News";
+      const date = card.querySelector(".feed-date")?.textContent.trim() || "";
+      const desc = card.querySelector(".feed-description")?.textContent.trim() || "";
+
+      const message = `${title}\n\n🕒 ${date}\n\n📄 ${desc}\n\n🔗 ${postUrl}`;
+
+      if (navigator.share) {
+        navigator.share({
+          title: title,
+          text: message,
+          url: postUrl
+        }).catch((err) => console.log("Sharing failed", err));
+      } else {
+        alert("Sharing not supported. Please use Chrome on Android/iOS.");
+      }
+    }
 
     function searchPosts() {
       const query = document.getElementById("searchInput").value.toLowerCase();
       const cards = document.querySelectorAll(".feed-card");
-
       cards.forEach(card => {
         const text = card.textContent.toLowerCase();
         card.style.display = text.includes(query) ? "block" : "none";
       });
-    }
-
-    function sharePost(url) {
-      if (navigator.share) {
-        navigator.share({
-          title: 'SinTha News',
-          url: url
-        }).catch(err => console.log('Share failed:', err));
-      } else {
-        prompt("Copy this link to share:", url);
-      }
     }
 
     AOS.init();
@@ -298,6 +304,8 @@
       backSpeed: 50,
       loop: true
     });
+
+    loadFeed(feedTypes["Headlines"], document.querySelector(".scroll-menu button"));
   </script>
 </body>
 </html>
