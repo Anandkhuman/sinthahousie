@@ -192,123 +192,157 @@
     <div class="spinner"><i class="fas fa-spinner fa-spin"></i></div>
   </div>
 
-  <script>
-    const feedTypes = {
-      Headlines: "headlines",
-      Sports: "sports",
-      Jobs: "jobpostings",
-      Editorials: "editorial",
-      Announcements: "announcements",
-      Education: "educationannouncement",
-      Snippets: "snippets",
-      Press: "pressreleases",
-      Hotspot: "hotspot"
-    };
+<script>
+  const feedTypes = {
+    Headlines: "headlines",
+    Sports: "sports",
+    Jobs: "jobpostings",
+    Editorials: "editorial",
+    Announcements: "announcements",
+    Education: "educationannouncement",
+    Snippets: "snippets",
+    Press: "pressreleases",
+    Hotspot: "hotspot"
+  };
 
-    const feedIcons = {
-      Headlines: "fa-newspaper",
-      Sports: "fa-football-ball",
-      Jobs: "fa-briefcase",
-      Editorials: "fa-pen-nib",
-      Announcements: "fa-bullhorn",
-      Education: "fa-graduation-cap",
-      Snippets: "fa-scissors",
-      Press: "fa-building",
-      Hotspot: "fa-regular fa-pen-clip"
-    };
+  const feedIcons = {
+    Headlines: "fa-newspaper",
+    Sports: "fa-football-ball",
+    Jobs: "fa-briefcase",
+    Editorials: "fa-pen-nib",
+    Announcements: "fa-bullhorn",
+    Education: "fa-graduation-cap",
+    Snippets: "fa-scissors",
+    Press: "fa-building",
+    Hotspot: "fa-regular fa-pen-clip"
+  };
 
-    const menu = document.getElementById("rss-menu");
-    const feed = document.getElementById("rss-feed");
+  const menu = document.getElementById("rss-menu");
+  const feed = document.getElementById("rss-feed");
+  let currentFeed = "headlines";
+  let allItems = [];
+  let shownCount = 0;
 
-    Object.keys(feedTypes).forEach((name, idx) => {
-      const btn = document.createElement("button");
-      btn.innerHTML = `<i class="fas ${feedIcons[name]}"></i> ${name}`;
-      btn.onclick = () => loadFeed(feedTypes[name], btn);
-      if (idx === 0) btn.classList.add("active");
-      menu.appendChild(btn);
-    });
+  Object.keys(feedTypes).forEach((name, idx) => {
+    const btn = document.createElement("button");
+    btn.innerHTML = `<i class="fas ${feedIcons[name]}"></i> ${name}`;
+    btn.onclick = () => loadFeed(feedTypes[name], btn);
+    if (idx === 0) btn.classList.add("active");
+    menu.appendChild(btn);
+  });
 
-    function loadFeed(type, btn) {
-      document.querySelectorAll('.scroll-menu button').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      feed.innerHTML = `<div class="spinner"><i class="fas fa-spinner fa-spin"></i></div>`;
+  function loadFeed(type, btn) {
+    currentFeed = type;
+    shownCount = 0;
+    allItems = [];
+    document.querySelectorAll('.scroll-menu button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    feed.innerHTML = `<div class="spinner"><i class="fas fa-spinner fa-spin"></i></div>`;
 
-      const url = `https://api.rss2json.com/v1/api.json?rss_url=https://e-pao.org/rss/eprss.php?type=${type}`;
+    const url = `https://api.rss2json.com/v1/api.json?rss_url=https://e-pao.org/rss/eprss.php?type=${type}`;
 
-      fetch(url)
-        .then(res => res.json())
-        .then(data => {
-          feed.innerHTML = "";
-          const sortedItems = data.items.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
-          sortedItems.slice(0, 10).forEach((item, i) => {
-            const card = document.createElement("div");
-            card.className = "feed-card";
-            card.style.setProperty('--i', i);
-
-            const pubDate = new Date(item.pubDate);
-            const dateStr = `${pubDate.toDateString()} ${pubDate.toLocaleTimeString()}`;
-
-            const imageMatch = item.description.match(/<img[^>]+src="([^">]+)"/);
-            const imageTag = imageMatch ? `<img src="${imageMatch[1]}" class="feed-img" alt="image">` : "";
-
-            const cleanDesc = item.description.replace(/<img[^>]*>/g, '').replace(/<\/?[^>]+(>|$)/g, '').slice(0, 400);
-
-            const content = `
-              <div class="feed-title">${item.title}</div>
-              <div class="feed-date">${dateStr}</div>
-              ${imageTag}
-              <div class="feed-description">${cleanDesc}...</div>
-              <a class="feed-link" href="${item.link || item.guid}" target="_blank">Read More</a>
-              <i class="fas fa-share-alt feed-share" title="Share this post" onclick="sharePost('${item.link || item.guid}')"></i>
-            `;
-
-            card.innerHTML = content;
-            feed.appendChild(card);
-          });
-        })
-        .catch(err => {
-          feed.innerHTML = "<p style='color:red;'>Failed to load feed.</p>";
-          console.error(err);
-        });
-    }
-
-    function sharePost(postUrl) {
-      const card = event.target.closest(".feed-card");
-      const title = card.querySelector(".feed-title")?.textContent.trim() || "SinTha News";
-      const date = card.querySelector(".feed-date")?.textContent.trim() || "";
-      const desc = card.querySelector(".feed-description")?.textContent.trim() || "";
-
-      const message = `${title}\n\n🕒 ${date}\n\n📄 ${desc}\n\n🔗 ${postUrl}`;
-
-      if (navigator.share) {
-        navigator.share({
-          title: title,
-          text: message,
-          url: postUrl
-        }).catch((err) => console.log("Sharing failed", err));
-      } else {
-        alert("Sharing not supported. Please use Chrome on Android/iOS.");
-      }
-    }
-
-    function searchPosts() {
-      const query = document.getElementById("searchInput").value.toLowerCase();
-      const cards = document.querySelectorAll(".feed-card");
-      cards.forEach(card => {
-        const text = card.textContent.toLowerCase();
-        card.style.display = text.includes(query) ? "block" : "none";
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        allItems = data.items.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+        localStorage.setItem(`sintha_feed_${type}`, JSON.stringify(allItems));
+        renderPosts();
+      })
+      .catch(err => {
+        console.warn("Fetching failed. Trying localStorage.");
+        const cached = localStorage.getItem(`sintha_feed_${type}`);
+        if (cached) {
+          allItems = JSON.parse(cached);
+          renderPosts();
+        } else {
+          feed.innerHTML = "<p style='color:red;'>Failed to load feed and no offline cache found.</p>";
+        }
       });
-    }
+  }
 
-    AOS.init();
-    new Typed('.typed-text', {
-      strings: ['News', 'Info', 'Education', 'Earning', 'Housie'],
-      typeSpeed: 80,
-      backSpeed: 50,
-      loop: true
+  function renderPosts() {
+    const toShow = allItems.slice(shownCount, shownCount + 10);
+    if (shownCount === 0) feed.innerHTML = "";
+    toShow.forEach((item, i) => {
+      const card = document.createElement("div");
+      card.className = "feed-card";
+
+      const pubDate = new Date(item.pubDate);
+      const dateStr = `${pubDate.toDateString()} ${pubDate.toLocaleTimeString()}`;
+      const imageMatch = item.description.match(/<img[^>]+src="([^">]+)"/);
+      const imageTag = imageMatch ? `<img src="${imageMatch[1]}" class="feed-img" alt="image">` : "";
+      const cleanDesc = item.description.replace(/<img[^>]*>/g, '').replace(/<\/?[^>]+(>|$)/g, '');
+
+      const content = `
+        <div class="feed-title">${item.title}</div>
+        <div class="feed-date">${dateStr}</div>
+        ${imageTag}
+        <div class="feed-description">${cleanDesc}</div>
+        <div class="mt-3">
+          <button class="feed-link" onclick="sharePost('${item.link || item.guid}')"><i class="fas fa-share-alt mr-1"></i> Share</button>
+          <a href="${item.link || item.guid}" target="_blank" class="feed-link ml-2">Source</a>
+        </div>
+      `;
+
+      card.innerHTML = content;
+      feed.appendChild(card);
     });
 
-    loadFeed(feedTypes["Headlines"], document.querySelector(".scroll-menu button"));
-  </script>
+    shownCount += toShow.length;
+
+    const loadMoreBtn = document.getElementById("loadMoreBtn");
+    if (shownCount < allItems.length) {
+      if (!loadMoreBtn) {
+        const btn = document.createElement("button");
+        btn.id = "loadMoreBtn";
+        btn.innerText = "Load More";
+        btn.className = "mt-4 mx-auto block bg-white text-blue-600 font-semibold px-4 py-2 rounded hover:bg-blue-100";
+        btn.onclick = renderPosts;
+        feed.appendChild(btn);
+      }
+    } else if (loadMoreBtn) {
+      loadMoreBtn.remove();
+    }
+  }
+
+  function sharePost(postUrl) {
+    const card = event.target.closest(".feed-card");
+    const title = card.querySelector(".feed-title")?.textContent.trim() || "SinTha News";
+    const date = card.querySelector(".feed-date")?.textContent.trim() || "";
+    const desc = card.querySelector(".feed-description")?.textContent.trim() || "";
+    const message = `${title}\n\n🕒 ${date}\n\n📄 ${desc}\n\n🔗 ${postUrl}`;
+
+    if (navigator.share) {
+      navigator.share({
+        title: title,
+        text: message,
+        url: postUrl
+      }).catch((err) => console.log("Sharing failed", err));
+    } else {
+      alert("Sharing not supported. Please use Chrome on Android/iOS.");
+    }
+  }
+
+  function searchPosts() {
+    const query = document.getElementById("searchInput").value.toLowerCase();
+    const cards = document.querySelectorAll(".feed-card");
+    cards.forEach(card => {
+      const text = card.textContent.toLowerCase();
+      card.style.display = text.includes(query) ? "block" : "none";
+    });
+  }
+
+  AOS.init();
+  new Typed('.typed-text', {
+    strings: ['News', 'Info', 'Education', 'Earning', 'Housie'],
+    typeSpeed: 80,
+    backSpeed: 50,
+    loop: true
+  });
+
+  // Initial load
+  loadFeed(feedTypes["Headlines"], document.querySelector(".scroll-menu button"));
+</script>
+
 </body>
 </html>
