@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Mobile Chess</title>
+    <style>
+        :root {
+            --board-size: 90vmin;
+            --square-size: calc(var(--board-size) / 8);
+            --light-square: #EADDC5;
+            --dark-square: #A98A66;
+            --highlight-color: rgba(106, 153, 78, 0.7);
+            --bg-color: #2c2c2c;
+            --text-color: #f2f2f2;
+            --ui-bg: #3a3a3a;
+            --border-color: #4a4a4a;
+            --accent-color: #8cb369;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #app-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            gap: 2vh;
+        }
+
+        #ui-panel {
+            background-color: var(--ui-bg);
+            padding: 10px 15px;
+            border-radius: 8px;
+            width: var(--board-size);
+            box-sizing: border-box;
+            text-align: center;
+        }
+        
+        #game-status { font-size: 1.1em; font-weight: bold; min-height: 1.2em; }
+        #player-info { margin: 5px 0 10px; font-size: 0.9em; color: #ccc; }
+        #new-game-btn { padding: 8px 12px; font-size: 0.9em; }
+
+        #game-area {
+            position: relative;
+            width: var(--board-size);
+            height: var(--board-size);
+            box-shadow: 0 5px 25px rgba(0,0,0,0.5);
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            width: 100%;
+            height: 100%;
+            border: 2px solid #5f482a;
+        }
+
+        .square {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        .light { background-color: var(--light-square); }
+        .dark { background-color: var(--dark-square); }
+
+        .highlight::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40%;
+            height: 40%;
+            background-color: var(--highlight-color);
+            border-radius: 50%;
+        }
+
+        #piece-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        /* --- MODALS & OVERLAYS --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: var(--ui-bg);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 80%;
+        }
+
+        .modal-content h2 { margin-top: 0; color: var(--accent-color); }
+        .modal-content button {
+            display: block; width: 100%;
+            padding: 15px; margin-bottom: 10px; font-size: 1.1em;
+            border: none; background-color: var(--accent-color);
+            color: #fff; border-radius: 8px; cursor: pointer;
+        }
+        
+        #connection-ui input {
+            width: calc(100% - 20px); padding: 10px; margin-top: 10px;
+            background: #2a2a2a; border: 1px solid #555; color: #fff;
+            border-radius: 4px; font-size: 1em; text-align: center;
+        }
+        #game-code-display { font-size: 1.5em; font-weight: bold; background: #2a2a2a; padding: 10px; border-radius: 4px; letter-spacing: 3px; margin: 10px 0; }
+
+        button { border: none; background-color: var(--accent-color); color: #fff; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background-color 0.2s; }
+        button:hover { background-color: #79995a; }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <div id="ui-panel" style="display: none;">
+            <div id="game-status">Welcome to Chess!</div>
+            <div id="player-info">Select a game mode to start.</div>
+            <button id="new-game-btn" style="display:none;">New Game</button>
+        </div>
+        <div id="game-area">
+            <div id="board"></div>
+            <canvas id="piece-canvas"></canvas>
+        </div>
+    </div>
+    
+    <!-- Game Mode Selection Modal -->
+    <div id="game-mode-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Choose Game Mode</h2>
+            <button id="online-btn">Online Multiplayer</button>
+            <button id="pass-and-play-btn">Pass and Play (Single Device)</button>
+        </div>
+    </div>
+
+    <!-- Connection UI Modal -->
+    <div id="connection-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" id="connection-ui">
+            <div id="create-game-section">
+                <button id="create-game-btn">Create Game</button>
+                <div id="game-code-display" style="display: none;"></div>
+                <p>Share this 6-digit code with your friend.</p>
+            </div>
+            <hr style="border-color: #555; margin: 20px 0;">
+            <div id="join-game-section">
+                <input type="text" id="game-code-input" maxlength="6" placeholder="Enter 6-Digit Code">
+                <button id="join-game-btn" style="margin-top: 10px;">Join Game</button>
+            </div>
+             <button id="back-to-mode-select" style="margin-top:20px; background-color: #6c757d;">Back</button>
+        </div>
+    </div>
+
+    <!-- CDN IMPORTS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+
+    <script type="module">
+        // --- GAME STATE ---
+        const chess = new Chess();
+        let gameMode = 'none'; // 'online' or 'passAndPlay'
+        let playerColor = 'w'; // For online mode
+        let isMyTurn = false;
+        let selectedSquare = null;
+        let pieceObjects = {};
+        let pieceGeometries = {};
+
+        // --- 3D SCENE ---
+        let scene, camera, renderer;
+        
+        // --- MULTIPLAYER ---
+        let peer, conn;
+
+        // --- UI ELEMENTS ---
+        const boardDiv = document.getElementById('board');
+        const pieceCanvas = document.getElementById('piece-canvas');
+        const uiPanel = document.getElementById('ui-panel');
+        const gameModeModal = document.getElementById('game-mode-modal');
+        const connectionModal = document.getElementById('connection-modal');
+        const allUI = {
+            gameStatus: document.getElementById('game-status'),
+            playerInfo: document.getElementById('player-info'),
+            newGameBtn: document.getElementById('new-game-btn'),
+            onlineBtn: document.getElementById('online-btn'),
+            passAndPlayBtn: document.getElementById('pass-and-play-btn'),
+            createGameBtn: document.getElementById('create-game-btn'),
+            joinGameBtn: document.getElementById('join-game-btn'),
+            gameCodeDisplay: document.getElementById('game-code-display'),
+            gameCodeInput: document.getElementById('game-code-input'),
+            backToModeSelectBtn: document.getElementById('back-to-mode-select'),
+        };
+
+        const pieceBaseURL = 'https://raw.githubusercontent.com/UsmanSA/gltf-chess-pieces/main/glTF/';
+
+        function init() {
+            createHtmlBoard();
+            init3DScene();
+            loadPieceAssets();
+            setupEventListeners();
+        }
+
+        function createHtmlBoard() {
+            for (let i = 0; i < 64; i++) {
+                const square = document.createElement('div');
+                const row = Math.floor(i / 8);
+                const col = i % 8;
+                square.classList.add('square', (row + col) % 2 === 0 ? 'light' : 'dark');
+                square.dataset.algebraic = `${String.fromCharCode(97 + col)}${8 - row}`;
+                boardDiv.appendChild(square);
+            }
+        }
+
+        function init3DScene() {
+            scene = new THREE.Scene();
+            const aspect = 1;
+            const frustumSize = 45;
+            camera = new THREE.OrthographicCamera(frustumSize * aspect / -2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / -2, 1, 1000);
+            camera.position.set(0, 0, 50);
+            
+            renderer = new THREE.WebGLRenderer({ canvas: pieceCanvas, alpha: true, antialias: true });
+            renderer.setClearColor(0x000000, 0);
+            renderer.setSize(boardDiv.clientWidth, boardDiv.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
+            directionalLight.position.set(10, 20, 30);
+            scene.add(directionalLight);
+        }
+
+        // *** ROBUST ASSET LOADING ***
+        function loadPieceAssets() {
+            const loader = new THREE.GLTFLoader();
+            const pieceTypes = ['pawn_w', 'rook_w', 'knight_w', 'bishop_w', 'queen_w', 'king_w', 'pawn_b', 'rook_b', 'knight_b', 'bishop_b', 'queen_b', 'king_b'];
+            
+            const promises = pieceTypes.map(name => {
+                return new Promise((resolve, reject) => {
+                    loader.load(`${pieceBaseURL}${name}.gltf`, gltf => {
+                        gltf.scene.traverse(node => {
+                            if (node.isMesh) pieceGeometries[name] = node.geometry;
+                        });
+                        resolve();
+                    }, undefined, reject);
+                });
+            });
+
+            Promise.all(promises)
+                .then(() => {
+                    console.log("All piece assets loaded successfully.");
+                    placeAllPieces();
+                })
+                .catch(error => {
+                    console.error("Error loading piece assets:", error);
+                    alert("Failed to load 3D models. Please check your connection and try again.");
+                });
+        }
+        
+        function placeAllPieces() {
+            // Clear existing pieces from the scene if any
+            Object.values(pieceObjects).forEach(obj => scene.remove(obj));
+            pieceObjects = {};
+
+            const whiteMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.2, roughness: 0.7 });
+            const blackMaterial = new THREE.MeshStandardMaterial({ color: 0x3a3a3a, metalness: 0.2, roughness: 0.7 });
+
+            chess.board().forEach((row, i) => {
+                row.forEach((piece, j) => {
+                    if (piece) {
+                        const algebraic = `${String.fromCharCode(97 + j)}${8 - i}`;
+                        addPieceToScene(piece, algebraic, whiteMaterial, blackMaterial);
+                    }
+                });
+            });
+            render3D();
+        }
+
+        function addPieceToScene(piece, algebraic, whiteMat, blackMat) {
+            const name = `${piece.type}_${piece.color}`;
+            if (!pieceGeometries[name]) {
+                console.error(`Geometry for ${name} not found!`);
+                return;
+            }
+            const material = piece.color === 'w' ? whiteMat : blackMat;
+            const mesh = new THREE.Mesh(pieceGeometries[name], material);
+            const scale = piece.type === 'pawn' ? 2.5 : 2.8;
+            mesh.scale.set(scale, scale, scale);
+            mesh.rotation.x = Math.PI / 7;
+            mesh.position.copy(get3DPositionForAlgebraic(algebraic));
+            pieceObjects[algebraic] = mesh;
+            scene.add(mesh);
+        }
+
+        function get3DPositionForAlgebraic(algebraic) {
+            const col = algebraic.charCodeAt(0) - 97;
+            const row = parseInt(algebraic.substring(1), 10) - 1;
+            const squareSize3D = 5;
+            return new THREE.Vector3((col - 3.5) * squareSize3D, (row - 3.5) * squareSize3D, 0);
+        }
+
+        function setupEventListeners() {
+            boardDiv.addEventListener('click', onSquareClick);
+            allUI.newGameBtn.addEventListener('click', () => {
+                if (confirm("Are you sure you want to start a new game?")) {
+                    location.reload();
+                }
+            });
+
+            allUI.onlineBtn.addEventListener('click', () => {
+                gameMode = 'online';
+                gameModeModal.style.display = 'none';
+                connectionModal.style.display = 'flex';
+            });
+            allUI.passAndPlayBtn.addEventListener('click', () => {
+                gameMode = 'passAndPlay';
+                gameModeModal.style.display = 'none';
+                startGame();
+            });
+            allUI.backToModeSelectBtn.addEventListener('click', () => {
+                connectionModal.style.display = 'none';
+                gameModeModal.style.display = 'flex';
+            });
+
+            allUI.createGameBtn.addEventListener('click', handleCreateGame);
+            allUI.joinGameBtn.addEventListener('click', handleJoinGame);
+        }
+        
+        function startGame() {
+            uiPanel.style.display = 'block';
+            allUI.newGameBtn.style.display = 'inline-block';
+            
+            if (gameMode === 'online') {
+                isMyTurn = (playerColor === 'w');
+                connectionModal.style.display = 'none';
+                allUI.playerInfo.textContent = `You are ${playerColor === 'w' ? 'White' : 'Black'}. Online Game.`;
+            } else if (gameMode === 'passAndPlay') {
+                isMyTurn = true; // Always the local player's turn to interact
+                allUI.playerInfo.textContent = 'Pass and Play Mode';
+            }
+            updateGameStatus();
+        }
+
+        function onSquareClick(event) {
+            const squareEl = event.target.closest('.square');
+            if (!squareEl) return;
+            const algebraic = squareEl.dataset.algebraic;
+            const piece = chess.get(algebraic);
+
+            if (gameMode === 'online' && !isMyTurn) return;
+            if (piece && piece.color !== chess.turn()) {
+                if (selectedSquare) tryMove(selectedSquare, algebraic);
+                return;
+            }
+
+            if (selectedSquare) {
+                tryMove(selectedSquare, algebraic);
+            } else if (piece) {
+                selectedSquare = algebraic;
+                highlightPossibleMoves(algebraic);
+            }
+        }
+
+        function tryMove(from, to) {
+            let promotion;
+            const piece = chess.get(from);
+            if (piece.type === 'p' && ((piece.color === 'w' && to[1] === '8') || (piece.color === 'b' && to[1] === '1'))) {
+                promotion = prompt("Promote to? (q, r, b, n)")?.toLowerCase();
+                if (!['q', 'r', 'b', 'n'].includes(promotion)) {
+                    clearHighlights(); selectedSquare = null; return;
+                }
+            }
+            
+            const move = { from, to, promotion };
+            const moveResult = chess.move(move);
+            
+            clearHighlights(); selectedSquare = null;
+
+            if (moveResult) {
+                updateBoardState(moveResult);
+                if (gameMode === 'online') {
+                    conn.send({ type: 'move', move });
+                    isMyTurn = false;
+                }
+                updateGameStatus();
+            }
+        }
+        
+        function updateBoardState(move) {
+            const { from, to, captured, promotion, flags } = move;
+            if (pieceObjects[from]) {
+                pieceObjects[from].position.copy(get3DPositionForAlgebraic(to));
+                pieceObjects[to] = pieceObjects[from];
+                delete pieceObjects[from];
+            }
+            if (captured) {
+                const capturedAlg = flags.includes('e') ? to[0] + from[1] : to;
+                if (pieceObjects[capturedAlg]) {
+                    scene.remove(pieceObjects[capturedAlg]);
+                    delete pieceObjects[capturedAlg];
+                }
+            }
+            if (promotion) {
+                scene.remove(pieceObjects[to]);
+                addPieceToScene(chess.get(to), to, new THREE.MeshStandardMaterial({color: 0xffffff}), new THREE.MeshStandardMaterial({color: 0x3a3a3a}));
+            }
+            if (flags.includes('k') || flags.includes('q')) {
+                const rookFrom = flags.includes('k') ? 'h' + from[1] : 'a' + from[1];
+                const rookTo = flags.includes('k') ? 'f' + from[1] : 'd' + from[1];
+                if (pieceObjects[rookFrom]) {
+                    pieceObjects[rookFrom].position.copy(get3DPositionForAlgebraic(rookTo));
+                    pieceObjects[rookTo] = pieceObjects[rookFrom];
+                    delete pieceObjects[rookFrom];
+                }
+            }
+            render3D();
+        }
+
+        function updateGameStatus() {
+            let status = '';
+            const turn = chess.turn() === 'w' ? 'White' : 'Black';
+
+            if (chess.in_checkmate()) {
+                status = `Checkmate! ${turn === 'White' ? 'Black' : 'White'} wins.`;
+            } else if (chess.in_draw()) {
+                status = 'Draw!';
+            } else {
+                status = `${turn}'s Turn.`;
+                if (chess.in_check()) status += ' (Check!)';
+            }
+            
+            if(gameMode === 'online') {
+                 allUI.gameStatus.textContent = isMyTurn ? `Your turn. ${status}` : `Opponent's turn.`;
+            } else {
+                 allUI.gameStatus.textContent = status;
+            }
+        }
+
+        function highlightPossibleMoves(algebraic) {
+            clearHighlights();
+            const moves = chess.moves({ square: algebraic, verbose: true });
+            document.querySelector(`[data-algebraic="${algebraic}"]`).classList.add('highlight');
+            moves.forEach(move => {
+                document.querySelector(`[data-algebraic="${move.to}"]`).classList.add('highlight');
+            });
+        }
+        function clearHighlights() {
+            document.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
+        }
+        function render3D() { renderer.render(scene, camera); }
+        
+        function handleCreateGame() {
+            const gameCode = Math.floor(100000 + Math.random() * 900000).toString();
+            allUI.gameCodeDisplay.textContent = gameCode;
+            allUI.gameCodeDisplay.style.display = 'block';
+            allUI.createGameBtn.disabled = true;
+
+            peer = new Peer(gameCode);
+            peer.on('open', id => console.log('PeerJS host ready with ID:', id));
+            peer.on('connection', newConn => {
+                setupConnection(newConn);
+                playerColor = 'w'; // Creator is White
+                startGame();
+            });
+            peer.on('error', err => alert('Error: ' + err.message));
+        }
+
+        function handleJoinGame() {
+            const gameCode = allUI.gameCodeInput.value.trim();
+            if (gameCode.length !== 6) return alert('Invalid code.');
+            
+            peer = new Peer();
+            peer.on('open', () => {
+               const newConn = peer.connect(gameCode);
+               setupConnection(newConn);
+               playerColor = 'b'; // Joiner is Black
+            });
+            peer.on('error', err => alert('Connection failed: ' + err.message));
+        }
+
+        function setupConnection(newConn) {
+            conn = newConn;
+            conn.on('open', () => {
+                if (playerColor === 'b') startGame();
+            });
+            conn.on('data', data => {
+                if (data.type === 'move') {
+                    const moveResult = chess.move(data.move);
+                    if (moveResult) {
+                        updateBoardState(moveResult);
+                        isMyTurn = true;
+                        updateGameStatus();
+                    }
+                }
+            });
+            conn.on('close', () => {
+                alert("Opponent has disconnected.");
+                isMyTurn = false;
+            });
+        }
+        init();
+    </script>
+</body>
+</html>
