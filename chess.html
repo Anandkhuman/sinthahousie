@@ -3,73 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sovereign Chess - Professional Edition</title>
+    <title>Sintha Chess</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <style>
-        /* --- THEME & GLOBAL STYLES --- */
         :root {
             --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            
-            /* Light Theme */
-            --light-bg: #e8e8e8;
-            --light-panel-bg: #fdfdfd;
-            --light-panel-secondary-bg: #f4f4f4;
-            --light-text: #1a1a1a;
-            --light-text-secondary: #555;
-            --light-border: #dcdcdc;
-            --light-square-light: #f0d9b5;
-            --light-square-dark: #b58863;
-            --light-highlight: rgba(255, 255, 0, 0.5);
-            --light-button-bg: #e0e0e0;
-            --light-button-hover-bg: #d0d0d0;
-            --light-glow: rgba(255, 215, 0, 0.7);
-
-            /* Dark Theme */
-            --dark-bg: #161616;
-            --dark-panel-bg: #212121;
-            --dark-panel-secondary-bg: #2c2c2c;
-            --dark-text: #f0f0f0;
-            --dark-text-secondary: #aaa;
-            --dark-border: #444444;
-            --dark-square-light: #a9a9a9;
-            --dark-square-dark: #656565;
-            --dark-highlight: rgba(255, 215, 0, 0.4);
-            --dark-button-bg: #3a3a3a;
-            --dark-button-hover-bg: #4a4a4a;
-            --dark-glow: rgba(255, 215, 0, 0.6);
-        }
-
-        [data-theme="light"] {
-            --bg-color: var(--light-bg);
-            --panel-bg-color: var(--light-panel-bg);
-            --panel-secondary-bg-color: var(--light-panel-secondary-bg);
-            --text-color: var(--light-text);
-            --text-secondary-color: var(--light-text-secondary);
-            --border-color: var(--light-border);
-            --square-light: var(--light-square-light);
-            --square-dark: var(--light-square-dark);
-            --highlight-color: var(--light-highlight);
-            --button-bg: var(--light-button-bg);
-            --button-hover-bg: var(--light-button-hover-bg);
-            --glow-color: var(--light-glow);
-        }
-
-        [data-theme="dark"] {
-            --bg-color: var(--dark-bg);
-            --panel-bg-color: var(--dark-panel-bg);
-            --panel-secondary-bg-color: var(--dark-panel-secondary-bg);
-            --text-color: var(--dark-text);
-            --text-secondary-color: var(--dark-text-secondary);
-            --border-color: var(--dark-border);
-            --square-light: var(--dark-square-light);
-            --square-dark: var(--dark-square-dark);
-            --highlight-color: var(--dark-highlight);
-            --button-bg: var(--dark-button-bg);
-            --button-hover-bg: var(--dark-button-hover-bg);
-            --glow-color: var(--dark-glow);
+            --font-title: 'Playfair Display', serif;
+            --bg-color: #121212;
+            --panel-bg-color: #1e1e1e;
+            --panel-secondary-bg-color: #2a2a2a;
+            --text-color: #e0e0e0;
+            --text-secondary-color: #b0b0b0;
+            --border-color: #383838;
+            --square-light: #FFCE9E; /* Light wood color */
+            --square-dark: #D18B47;  /* Dark wood color */
+            --highlight-color: rgba(255, 235, 59, 0.5); /* Yellow for selected square */
+            --dot-color: rgba(29, 99, 53, 0.6); /* Darker green dot color */
+            --button-bg: #3a3a3a;
+            --button-hover-bg: #4a4a4a;
+            --glow-color: var(--dot-color);
         }
 
         *, *::before, *::after {
@@ -77,245 +32,250 @@
             margin: 0;
             padding: 0;
         }
-
-        body {
-            font-family: var(--font-family);
+        
+        html, body {
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
             background-color: var(--bg-color);
             color: var(--text-color);
-            transition: background-color 0.3s, color 0.3s;
+            font-family: var(--font-family);
+        }
+
+        body {
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            padding: 1rem;
-            overflow-x: hidden;
         }
 
-        #app-container {
+        /* --- Welcome Screen --- */
+        #welcome-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            max-width: 1400px;
-            margin: auto;
+            height: 100%;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--bg-color);
+            color: white;
+        }
+
+        #bg-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #welcome-screen .title {
+            font-family: var(--font-title);
+            font-size: clamp(3rem, 10vw, 6rem);
+            letter-spacing: 0.1em;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+            position: relative;
+            z-index: 1;
         }
         
-        /* --- HEADER --- */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem 1.5rem;
-            margin-bottom: 1rem;
-            background-color: var(--panel-bg-color);
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        #welcome-screen .title .letter {
+            display: inline-block;
+            opacity: 0;
         }
-        .header h1 { font-size: 1.5rem; font-weight: 700; }
-        .theme-switch-wrapper { display: flex; align-items: center; gap: 0.5rem; }
-        .theme-switch { display: inline-block; height: 24px; position: relative; width: 48px; }
-        .theme-switch input { display: none; }
-        .slider { background-color: #ccc; bottom: 0; cursor: pointer; left: 0; position: absolute; right: 0; top: 0; transition: .4s; border-radius: 24px; }
-        .slider:before { background-color: #fff; bottom: 3px; content: ""; height: 18px; left: 3px; position: absolute; transition: .4s; width: 18px; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--dark-button-bg); }
-        input:checked + .slider:before { transform: translateX(24px); }
 
-        /* --- PROFESSIONAL GAME LAYOUT --- */
+        #enter-game-btn {
+            margin-top: 3rem;
+            padding: 1rem 3rem;
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: var(--text-color);
+            background-color: rgba(42, 42, 42, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(5px);
+            opacity: 0;
+        }
+        #enter-game-btn:hover {
+            background-color: var(--button-hover-bg);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        /* --- Main App Layout --- */
+        #app-container {
+            width: 100%;
+            height: 100%;
+            max-width: 1800px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .header {
+            text-align: center;
+            padding-bottom: 1.5rem;
+        }
+        .header h1 { 
+            font-family: var(--font-title);
+            font-size: 2.5rem; 
+            font-weight: 700; 
+        }
+
         .game-layout {
             display: flex;
-            gap: 1.5rem;
+            gap: 2rem;
             align-items: flex-start;
+            justify-content: center;
         }
 
         .board-area {
             flex-grow: 1;
+            flex-shrink: 1;
+            max-width: 80vh;
+            min-width: 300px;
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 1rem;
         }
 
+        #board-container { position: relative; }
         #board {
             width: 100%;
-            box-shadow: 0 5px 25px rgba(0,0,0,0.2);
-            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border-radius: 6px;
         }
-        .highlight-square { box-shadow: inset 0 0 3px 3px var(--highlight-color); }
+
+        .highlight-source { box-shadow: inset 0 0 0 4px var(--highlight-color); }
+        .move-dot {
+            position: absolute; width: 33%; height: 33%; background-color: var(--dot-color);
+            border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            pointer-events: none; opacity: 0.8;
+        }
         
         .player-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem 1rem;
-            background: var(--panel-secondary-bg-color);
-            border-radius: 8px;
-            transition: box-shadow 0.4s ease-in-out;
+            display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1.25rem;
+            background: var(--panel-secondary-bg-color); border-radius: 8px; transition: box-shadow 0.4s ease-in-out;
         }
-        .player-bar.active-player {
-            box-shadow: 0 0 15px 3px var(--glow-color);
-        }
-        .player-info { display: flex; align-items: center; gap: 1rem; font-weight: 500; }
-        .timer { font-size: 1.2rem; font-weight: 700; }
-        
+        .player-bar.active-player { box-shadow: 0 0 15px 3px var(--glow-color); }
+        .player-info { display: flex; align-items: center; gap: 1rem; font-weight: 500; font-size: 1.1rem; }
+        .timer { font-size: 1.4rem; font-weight: 700; }
         .controls { display: flex; gap: 0.5rem; }
         .btn-icon {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0.5rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.2s;
+            background: none; border: none; cursor: pointer; padding: 0.5rem; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; transition: background-color 0.2s;
         }
         .btn-icon:hover { background-color: var(--button-hover-bg); }
         .btn-icon svg { width: 24px; height: 24px; fill: var(--text-color); }
 
         .side-dashboard {
-            width: 320px;
-            flex-shrink: 0;
-            background-color: var(--panel-bg-color);
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            overflow: hidden;
+            width: 380px; flex-shrink: 0; background-color: var(--panel-bg-color); border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden;
         }
 
         .tab-controls { display: flex; border-bottom: 1px solid var(--border-color); }
         .tab-btn {
-            flex: 1;
-            padding: 1rem;
-            background-color: transparent;
-            border: none;
-            color: var(--text-secondary-color);
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            border-bottom: 3px solid transparent;
+            flex: 1; padding: 1rem; background-color: transparent; border: none;
+            color: var(--text-secondary-color); font-size: 1rem; font-weight: 500;
+            cursor: pointer; transition: all 0.2s; border-bottom: 3px solid transparent;
         }
-        .tab-btn.active {
-            color: var(--text-color);
-            border-bottom-color: var(--glow-color);
-        }
+        .tab-btn.active { color: var(--text-color); border-bottom-color: var(--glow-color); }
 
         .tab-content { padding: 1rem; }
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
         
         #status { font-weight: 500; text-align: center; margin-bottom: 1rem; padding: 0.5rem; border-radius: 6px; }
-
-        #move-history { height: 300px; overflow-y: auto; font-size: 0.9rem; }
-        #chat-log { height: 250px; overflow-y: auto; margin-bottom: 0.5rem; border: 1px solid var(--border-color); padding: 0.5rem; border-radius: 6px; }
+        #move-history { height: 45vh; max-height: 600px; overflow-y: auto; font-size: 1rem; line-height: 1.6; }
+        #chat-log { height: calc(45vh - 50px); max-height: 550px; overflow-y: auto; margin-bottom: 0.5rem; border: 1px solid var(--border-color); padding: 0.5rem; border-radius: 6px; }
         #chat-input { width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--bg-color); color: var(--text-color); font-family: var(--font-family); }
 
-        /* --- MODAL STYLES --- */
         .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0; top: 0;
-            width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            backdrop-filter: blur(5px);
-            align-items: center;
-            justify-content: center;
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5); backdrop-filter: blur(5px);
+            align-items: center; justify-content: center;
         }
         .modal-content {
-            background-color: var(--panel-bg-color);
-            color: var(--text-color);
-            padding: 2rem;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 500px;
-            text-align: center;
-            box-shadow: 0 5px 25px rgba(0,0,0,0.3);
-            opacity: 0;
-            transform: scale(0.8);
+            background-color: var(--panel-bg-color); color: var(--text-color); padding: 2rem;
+            border-radius: 12px; width: 90%; max-width: 500px; text-align: center;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.3); opacity: 0; transform: scale(0.8);
         }
         .modal-content h2 { margin-top: 0; font-size: 1.8rem; font-weight: 700; }
         .modal-content p { margin: 1rem 0; color: var(--text-secondary-color); }
         .modal-content .btn-group { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
         .btn {
-            padding: 0.8rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            background-color: var(--button-bg);
-            color: var(--text-color);
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
+            padding: 0.8rem 1.5rem; border: none; border-radius: 8px; background-color: var(--button-bg);
+            color: var(--text-color); font-size: 1rem; font-weight: 500; cursor: pointer; transition: all 0.2s;
         }
         .btn:hover { background-color: var(--button-hover-bg); transform: translateY(-2px); }
-        .btn-primary { background-color: var(--dark-square-dark); color: white; }
+        .btn-primary { background-color: var(--square-dark); color: white; }
         .btn-primary:hover { filter: brightness(1.2); }
         
-        #room-code-display { font-size: 2rem; font-weight: bold; background: var(--bg-color); padding: 1rem; border-radius: 6px; margin: 1.5rem 0; word-break: break-all; letter-spacing: 2px; }
-        #room-code-input { width: 100%; padding: 0.75rem; font-size: 1.2rem; text-align: center; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 1rem; letter-spacing: 2px; }
+        #room-code-display { font-size: 2.5rem; font-weight: bold; background: var(--bg-color); padding: 1rem; border-radius: 6px; margin: 1.5rem 0; word-break: break-all; letter-spacing: 5px; }
+        #room-code-input { width: 100%; padding: 0.75rem; font-size: 1.5rem; text-align: center; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 1rem; letter-spacing: 5px; }
         
         .hidden { display: none !important; }
 
-        /* --- RESPONSIVENESS --- */
-        @media (max-width: 900px) {
-            .game-layout { flex-direction: column; }
-            .side-dashboard { width: 100%; }
+        @media (max-width: 1100px) {
+            #app-container { padding: 1rem; }
+            .game-layout { flex-direction: column; align-items: center; }
+            .side-dashboard { width: 100%; max-width: 600px; }
+            .board-area { max-width: 90vw; }
+            #move-history, #chat-log { height: 25vh; }
         }
         @media (max-width: 640px) {
-            body { padding: 0.5rem; }
-            .header { padding: 0.5rem 1rem; }
-            .header h1 { font-size: 1.2rem; }
+            .header h1 { font-size: 2rem; }
             .btn { padding: 0.75rem 1.2rem; font-size: 0.9rem; }
             .modal-content { padding: 1.5rem; }
         }
     </style>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js",
+            "three/examples/jsm/loaders/GLTFLoader.js": "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/loaders/GLTFLoader.js",
+            "animejs": "https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.es.js"
+        }
+    }
+    </script>
+
 </head>
-<body data-theme="dark">
+<body>
 
-    <div id="app-container">
-        <!-- Header -->
-        <div class="header">
-            <h1>Sovereign Chess</h1>
-            <div class="theme-switch-wrapper">
-                <span>☀️</span>
-                <label class="theme-switch">
-                    <input type="checkbox" id="theme-toggle">
-                    <span class="slider"></span>
-                </label>
-                <span>🌙</span>
-            </div>
-        </div>
+    <div id="welcome-screen">
+        <canvas id="bg-canvas"></canvas>
+        <h1 class="title"></h1>
+        <button id="enter-game-btn">Enter</button>
+    </div>
 
-        <!-- Main Game Area -->
+    <div id="app-container" class="hidden">
+        <div class="header"><h1>Sintha Chess</h1></div>
         <div id="game-area" class="game-layout hidden">
             <div class="board-area">
                 <div id="opponent-bar" class="player-bar">
-                    <div class="player-info">
-                        <span>Opponent</span>
-                    </div>
+                    <div class="player-info"><span>Opponent</span></div>
                     <div id="black-timer" class="timer">10:00</div>
                 </div>
-                <div id="board-container" style="position: relative;">
-                     <div id="board"></div>
-                </div>
+                <div id="board-container"><div id="board"></div></div>
                 <div id="player-bar" class="player-bar">
-                    <div class="player-info">
-                        <span>You</span>
-                    </div>
+                    <div class="player-info"><span>You</span></div>
                     <div class="controls">
-                        <button id="flip-board-btn" class="btn-icon" title="Flip Board">
-                            <svg viewBox="0 0 24 24"><path d="M12,7.77L18.39,18H5.61L12,7.77M12,4L2,20H22L12,4Z" /></svg>
-                        </button>
-                        <button id="new-game-btn" class="btn-icon" title="New Game">
-                            <svg viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4C16.42,4 20,7.58 20,12C20,16.42 16.42,20 12,20C7.58,20 4,16.42 4,12C4,7.58 7.58,4 12,4M11,7V12H6V14H13V7H11Z" /></svg>
-                        </button>
-                         <button id="draw-btn" class="btn-icon" title="Offer Draw">
-                            <svg viewBox="0 0 24 24"><path d="M12,2C6.5,2 2,6.5 2,12S6.5,22 12,22 22,17.5 22,12 17.5,2 12,2M12,20C7.59,20 4,16.41 4,12S7.59,4 12,4 20,7.59 20,12 16.41,20 12,20M17,13H7V11H17V13Z" /></svg>
-                        </button>
-                        <button id="resign-btn" class="btn-icon" title="Resign">
-                            <svg viewBox="0 0 24 24"><path d="M22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2A10,10 0 0,1 22,12M14.5,17L19,12.5L14.5,8L13.09,9.41L15.67,12H5V13H15.67L13.09,15.59L14.5,17Z" /></svg>
-                        </button>
+                        <button id="flip-board-btn" class="btn-icon" title="Flip Board"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12,7.77L18.39,18H5.61L12,7.77M12,4L2,20H22L12,4Z" /></svg></button>
+                        <button id="new-game-btn" class="btn-icon" title="New Game"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4C16.42,4 20,7.58 20,12C20,16.42 16.42,20 12,20C7.58,20 4,16.42 4,12C4,7.58 7.58,4 12,4M11,7V12H6V14H13V7H11Z" /></svg></button>
+                        <button id="draw-btn" class="btn-icon" title="Offer Draw"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12,2C6.5,2 2,6.5 2,12S6.5,22 12,22 22,17.5 22,12 17.5,2 12,2M12,20C7.59,20 4,16.41 4,12S7.59,4 12,4 20,7.59 20,12 16.41,20 12,20M17,13H7V11H17V13Z" /></svg></button>
+                        <button id="resign-btn" class="btn-icon" title="Resign"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2A10,10 0 0,1 22,12M14.5,17L19,12.5L14.5,8L13.09,9.41L15.67,12H5V13H15.67L13.09,15.59L14.5,17Z" /></svg></button>
                     </div>
                     <div id="white-timer" class="timer">10:00</div>
                 </div>
             </div>
-
             <div class="side-dashboard">
                 <div class="tab-controls">
                     <button class="tab-btn active" data-tab="moves">Moves</button>
@@ -336,41 +296,107 @@
     </div>
 
     <!-- Modals -->
-    <div id="game-mode-modal" class="modal" style="display: flex;"><div class="modal-content" style="opacity:1; transform: scale(1);"><h2>Welcome to Sovereign Chess</h2><p>Choose how you want to play.</p><div class="btn-group"><button id="single-player-btn" class="btn btn-primary">Single Player vs AI</button><button id="pass-and-play-btn" class="btn">Pass & Play (Local)</button><button id="online-multiplayer-btn" class="btn">Online Multiplayer</button></div></div></div>
+    <div id="game-mode-modal" class="modal"><div class="modal-content"><h2>Welcome to Sintha Chess</h2><p>Choose how you want to play.</p><div class="btn-group"><button id="single-player-btn" class="btn btn-primary">Single Player vs AI</button><button id="pass-and-play-btn" class="btn">Pass & Play (Local)</button><button id="online-multiplayer-btn" class="btn">Online Multiplayer</button></div></div></div>
     <div id="ai-difficulty-modal" class="modal"><div class="modal-content"><h2>Choose AI Difficulty</h2><div class="btn-group"><button class="btn difficulty-btn" data-depth="1">Easy</button><button class="btn difficulty-btn" data-depth="3">Medium</button><button class="btn difficulty-btn" data-depth="5">Hard</button></div></div></div>
     <div id="online-modal" class="modal"><div class="modal-content"><h2>Online Multiplayer</h2><p>Create a private room to play with a friend, or join one with their code.</p><div class="btn-group"><button id="create-game-btn" class="btn btn-primary">Create Game</button><button id="join-game-btn" class="btn">Join Game</button></div><button id="online-back-btn" class="btn" style="margin-top: 1.5rem;">Back</button></div></div>
-    <div id="create-room-modal" class="modal"><div class="modal-content"><h2>Your Room Code</h2><p>Share this code with your friend. Waiting for them to connect...</p><div id="room-code-display"></div><button id="copy-code-btn" class="btn">Copy Code</button></div></div>
-    <div id="join-room-modal" class="modal"><div class="modal-content"><h2>Join Game</h2><input type="text" id="room-code-input" placeholder="Enter Room Code"><button id="join-room-submit-btn" class="btn btn-primary">Join</button></div></div>
+    <div id="create-room-modal" class="modal"><div class="modal-content"><h2>Your Room Code</h2><p>Share this 6-digit code with your friend. Waiting for them to connect...</p><div id="room-code-display"></div><button id="copy-code-btn" class="btn">Copy Code</button></div></div>
+    <div id="join-room-modal" class="modal"><div class="modal-content"><h2>Join Game</h2><input type="text" id="room-code-input" placeholder="Enter 6-Digit Code" maxlength="6"><button id="join-room-submit-btn" class="btn btn-primary">Join</button></div></div>
     <div id="game-over-modal" class="modal"><div class="modal-content"><h2 id="game-over-message"></h2><button id="play-again-btn" class="btn btn-primary" style="margin-top: 1.5rem;">Play Again</button></div></div>
 
-    <!-- Audio Effects (embedded as Base64) -->
-    <audio id="sound-move" src="data:audio/mpeg;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"></audio>
-    <audio id="sound-capture" src="data:audio/mpeg;base64,UklGRiYAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"></audio>
-    <audio id="sound-check" src="data:audio/mpeg;base64,UklGRlIAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhbIAAABs="></audio>
-    <audio id="sound-game-start" src="data:audio/mpeg;base64,UklGRkgAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhQAAAAA=="></audio>
-    <audio id="sound-game-end" src="data:audio/mpeg;base64,UklGRkIAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhQAAAAA=="></audio>
+    <!-- Audio -->
+    <audio id="sound-move" src="https://lichess1.org/sound/standard/move.mp3" preload="auto"></audio>
+    <audio id="sound-capture" src="https://lichess1.org/sound/standard/capture.mp3" preload="auto"></audio>
+    <audio id="sound-check" src="https://lichess1.org/sound/standard/check.mp3" preload="auto"></audio>
+    <audio id="sound-game-start" src="https://lichess1.org/sound/standard/game-start.mp3" preload="auto"></audio>
+    <audio id="sound-game-end" src="https://lichess1.org/sound/standard/game-end.mp3" preload="auto"></audio>
 
-
-    <!-- External Libraries -->
+    <!-- Non-Module Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.2/chess.min.js"></script>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    
+    <!-- FIX: Main application logic is now in a single module script, with the $(document).ready() wrapper removed. -->
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+        import anime from 'animejs';
 
-    <script>
-    $(document).ready(function() {
-        // --- CONSTANTS & CONFIG ---
-        const pieceSVGs = {'wP':'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iNDUiIGhlaWdodD0iNDUiPgo8ZyBzdHlsZT0ib3BhY2l0eToxO2ZpbGw6I2ZmZmZmZjtzdHJva2U6IzAwMDAwMDtzdHJva2Utd2lkdGg6MS41O3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDsiPgo8cGF0aCBkPSJNMjIuNSw5QzE5LjQ5Myw5IDE3LDEwLjM0IDE3LDEyYzAsMC44ODUgMS44MTIsMS43ODUgMi41LDIuNSwxLjI2MywxLjI5MyAyLjUsMi42ODggMi41LDQuNWwwLDcuNWgtNWwwLDJoMTV2LTJsLTUsMCwwLC03LjVjMCwtMS44MTIgMS4yMzcsLTMuMjA3IDIuNSwtNC41LDAuNjg4LC0wLjcxNSAyLjUsLTEuNjE1IDIuNSwtMi41QzI4LDEwLjM0IDI1LjUwNyw5IDIyLjUsOXoiIHN0eWxlPSJzdHJva2UtbGluZWNhcDpyb3VuZDsiLz4KPC9nPgo8L3N2Zz4=','wR':'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iNDUiIGhlaWdodD0iNDUiPgo8ZyBzdHlsZT0ib3BhY2l0eToxO2ZpbGw6I2ZmZmZmZjtzdHJva2U6IzAwMDAwMDtzdHJva2Utd2lkdGg6MS41O3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDsiPgo8cGF0aCBkPSJNOSwzNmwzLDAgMCwtMyAzLDAgMCwzIDUsMCAwLC0zIDMsMCAwLDMgMywwdi01bC0yLC0yLjV2LTIuNWwtMSwtMS42di0yLjRsMSwtMVYxMWwtMSwtMmMtMS41LC0xLjUgLTMsLTIuNSAtOCwtMi41cy02LjUsMSAtOCwyLjVsLTEsM3YyLjZsMSwxLjR2Mi40bC0xLDEuNnYyLjVsLTIsMi41djVsMywwIDAsLTMgMywwIDAsMyA1LDAgMCwtMyAzLDAiIHN0eWxlPSJmaWxsOiNmZmZmZmY7c3Ryb2tlOiMwMDAwMDA7c3Ryb2tlLXdpZHRoOjEuNTtzdHJva2UtbGluZWpvaW46bWl0ZXI7Ii8+CjwvZz4KPC9zdmc+','wN':'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iNDUiIGhlaWdodD0iNDUiPgo8ZyBzdHlsZT0ib3BhY2l0eToxO2ZpbGw6bm9uZTtzdHJva2U6IzAwMDAwMDtzdHJva2Utd2lkdGg6MS41O3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDsiPgo8cGF0aCBkPSJNMjIsMTBjLTEuMjcsMCAtMi40NDMsMC4zNyAtMy41LDAuOTc5VjExYzAsMCAwLjYsLTMuNSAtMy41LC0zLjVBNi45ODcsNi45ODcsMCAwIDAgOSwxMC41QzksMTQuNTMyIDExLDMyIDE4LDMybDEsMHMxLjU3NSwyLjIzMyAyLjUsMi4yMzNTMjIsMzIgMjIsMzJjOCwwIDEwLC0xOCAxMCwtMjJBNi4xNDcsNi4xNDcgMCAwIDAgMjgsMTBjLTIuNSwwIC0yLjcsMiAtMy41LDJsLTAuNSwxLjVjMCwwIDEuNSwtMSAyLjUsLTEgMywwIDMsMyAzLDdzLTExLDExIC0xMSwxMWMwLDAsMC41LC0zIDQuNSwtNC41czIuNSwtNC41IDIuNSwtNC41IiBmaWxsPSIjZmZmZmZmIi8+CjwvZz4KPC9zdmc+','wB':'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iNDUiIGhlaWdodD0iNDUiPgo8ZyBzdHlsZT0ib3BhY2l0eToxO2ZpbGw6I2ZmZmZmZjtzdHJva2U6IzAwMDAwMDtzdHJva2Utd2lkdGg6MS41O3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDsiPgo8cGF0aCBkPSJNIDksMzZMMzYsMzZMMjcuNSwzMSBMMjcuNSwzMSBDIDI5LjUsMjUuNSAzMSwxNy41IDIyLjUsMTQuNSBDIDE0LDUuNSAxOSwxOSAxOCwyMy41IEwgMTgsMjMuNSBMMTcuNSwzMUwgMTcuNSwzMSBaIi8+CjxwYXRoIGQ9Ik0gMTUuNSwyNS41QzE3LDUuNSAyOCw1LjUgMjkuNSwyNS41IiBzdHlsZT0iZmlsbDpub25lO3N0cm9rZS1saW5lam9pbjptaXRlcjtzdHJva2UtbGluZWNhcDpidXR0OyIvPgo8cGF0aCBkPSJNMjIuNSw4QzI0LjUsNC41IDIwLjUsNC41IDIyLjUsOCBaIE0gMjAuMywxMy40QzIwLjMsMTMuNCAyNC43LDEzLjQgMjQuNywxMy40IiBzdHlsZT0ic3Ryb2tlLWxpbmVjYXA6YnV0dDsiLz4KPC9nPgo8L3N2Zz4=','wQ':'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iNDUiIGhlaWdodD0iNDUiPgo8ZyBzdHlsZT0ib3BhY2l0eToxO2ZpbGw6I2ZmZmZmZjtzdHJva2U6IzAwMDAwMDtzdHJva2Utd2lkdGg6MS41O3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDsiPgo8cGF0aCBkPSJNNiwxNEwzOSwxNEwxMSwzNmgwLjVsNSwtMi4xdi01LjJsLTIuNSwtMy4ybDMuMSwtMi43IDMuMSwyLjcgMy4xLC0yLjYgMy4xLDIuNiAzLjEsLTIuNiAzLjEsMi42IDMuMSwtMi43IDMuMSwyLjcgLTIuNSwzLjJ2NS4ybDUsMi4xaDAuNWwwLC0yMloiLz4KPHBhdGggZD0iTTkuNSwzNkgzNS41IiBzdHlsZT0iZmlsbDpub25lO3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDsiLz4KPHBhdGggZD0iTTExLjUsMzBoMjIiIHN0eWxlPSJmaWxsOm5vbmU7c3Ryb2tlLWxpbmVjYXA6YnV0dDsiLz4KPHBhdGggZD0iTTgsOGEyLjEsMi4xIDAgMSwgMCA0LjIsMCAwLjUsMC41IDAgMCAxIC00LjIsMCBNIDIyLjUsOGEyLjEsMi4xIDAgMSwgMCA0LjIsMCAwLjUsMC41IDAgMCAxIC00LjIsMCBNIDM3LDhhMi4xLDIuMSAwIDEgLSAwLDQuMiAwIDAuNSwwLjUgMCAwIDEgNC4yLDAgTSAxNSw4YTIuMSwyLjEgMCAxIC0gMCw0LjIgMCAwLjUsMC41IDAgMCAxIDQuMiwwIE0gMzAsOGEyLjEsMi4xIDAgMSwgLSAwLDQuMiAwIDAuNSwwLjUgMCAwIDEgNC4yLDAiIHN0eWxlPSJmaWxsOiNmZmZmZmY7Ii8+CjwvZz4KPC9zdmc+','wK':'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iNDUiIGhlaWdodD0iNDUiPgo8ZyBzdHlsZT0ib3BhY2l0eToxO2ZpbGw6I2ZmZmZmZjtzdHJva2U6IzAwMDAwMDtzdHJva2Utd2lkdGg6MS41O3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDsiPgo8cGF0aCBkPSJNMjIuNSwxMS42MjVWOGgxLjI1VjYuNzVoLTIuNVY4aDEuMjV2My42MjVDMTcuNSwxMS4xMjUgMTcuNSwzIDIyLjUsM2M1LDAgNSw4LjEyNSA1LDguNjI1IiBzdHlsZT0ic3Ryb2tlLWxpbmVjYXA6YnV0dDsiLz4KPHBhdGggZD0iTTIyLjUsMjZjLTVuNSwwIC04LjUsMi41IC04LjUsMi41TDksMzZsNSwtMS45VjMyLjVsMi41LDIuNSAyLjUsLTIuNVYzNC4xTDMyLDM2bDQuNSwtNy41cy0zLC0yLjUgLTguNSwtMi41WiIvPgo8cGF0aCBkPSJNMTEuNSwzMGgyMiIvPgo8L2c+Cjwvc3ZnPg==','bP':'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iNDUiIGhlaWdodD0iNDUiPgo8ZyBzdHlsZT0ib3BhY2l0eToxO2ZpbGw6IzAwMDAwMDtzdHJva2U6IzAwMDAwMDtzdHJva2Utd2lkdGg6MS41O3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDsiPgo8cGF0aCBkPSJNMjIuNSw5QzE5LjQ5Myw5IDE3LDEwLjM0IDE3LDEyYzAsMC44ODUgMS44MTIsMS43ODUgMi41LDIuNSwxLjI2MywxLjI5MyAyLjUsMi42ODggMi41LDQuNWwwLDcuNWgtNWwwLDJoMTV2LTJsLTUsMCwwLC03LjVjMCwtMS44MTIgMS4yMzcsLTMuMjA3IDIuNSwtNC41LDAuNjg4LC0wLjcxNSAyLjUsLTEuNjE1IDIuNSwtMi41QzI4LDEwLjM0IDI1LjUwNyw5IDIyLjUsOXoiIHN0eWxlPSJmaWxsOiMwMDAwMDA7c3Ryb2tlLWxpbmVjYXA6cm91bmQ7Ii8+CjwvZz4KPC9zdmc+','bR':'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iNDUiIGhlaWdodD0iNDUiPgo8ZyBzdHlsZT0ib3BhY2l0eToxO2ZpbGw6IzAwMDAwMDtzdHJva2U6IzAwMDAwMDtzdHJva2Utd2lkdGg6MS41O3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDsiPgo8cGF0aCBkPSJNOSwzNmwzLDAgMCwtMyAzLDAgMCwzIDUsMCAwLC0zIDMsMCAwLDMgMywwdi01bC0yLC0yLjV2LTIuNWwtMSwtMS42di0yLjRsMSwtMVYxMWwtMSwtMmMtMS41LC0xLjUgLTMsLTIuNSAtOCwtMi41cy02LjUsMSAtOCwyLjVsLTEsM3YyLjZsMSwxLjR2Mi40bC0xLDEuNnYyLjVsLTIsMi41djVsMywwIDAsLTMgMywwIDAsMyA1LDAgMCwtMyAzLDAiIHN0eWxlPSJmaWxsOiMwMDAwMDA7c3Ryb2tlOiMwMDAwMDA7c3Ryb2tlLXdpZHRoOjEuNTtzdHJva2UtbGluZWpvaW46bWl0ZXI7Ii8+CjwvZz4KPC9zdmc+','bN':'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iNDUiIGhlaWdodD0iNDUiPgo8ZyBzdHlsZT0ib3BhY2l0eToxO2ZpbGw6bm9uZTtzdHJva2U6IzAwMDAwMDtzdHJva2Utd2lkdGg6MS41O3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDsiPgo8cGF0aCBkPSJNMjIsMTBjLTEuMjcsMCAtMi40NDMsMC4zNyAtMy41LDAuOTc5VjExYzAsMCAwLjYsLTMuNSAtMy41LC0zLjVBNi45ODcsNi45ODcsMCAwIDAgOSwxMC41QzksMTQuNTMyIDExLDMyIDE4LDMybDEsMHMxLjU3NSwyLjIzMyAyLjUsMi4yMzNTMjIsMzIgMjIsMzJjOCwwIDEwLC0xOCAxMCwtMjJBNi4xNDcsNi4xNDcgMCAwIDAgMjgsMTBjLTIuNSwwIC0yLjcsMiAtMy41LDJsLTAuNSwxLjVjMCwwIDEuNSwtMSAyLjUsLTEgMywwIDMsMyAzLDdzLTExLDExIC0xMSwxMWMwLDAsMC41LC0zIDQuNSwtNC41czIuNSwtNC41IDIuNSwtNC41IiBmaWxsPSIjMDAwMDAwIi8+CjwvZz4KPC9zdmc+','bB':'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iNDUiIGhlaWdodD0iNDUiPgo8ZyBzdHlsZT0ib3BhY2l0eToxO2ZpbGw6IzAwMDAwMDtzdHJva2U6IzAwMDAwMDtzdHJva2Utd2lkdGg6MS41O3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDsiPgo8cGF0aCBkPSJNIDksMzZMMzYsMzZMMjcuNSwzMSBMMjcuNSwzMSBDIDI5LjUsMjUuNSAzMSwxNy41IDIyLjUsMTQuNSBDIDE0LDUuNSAxOSwxOSAxOCwyMy41IEwgMTgsMjMuNSBMMTcuNSwzMUwgMTcuNSwzMSBaIi8+CjxwYXRoIGQ9Ik0gMTUuNSwyNS41QzE3LDUuNSAyOCw1LjUgMjkuNSwyNS41IiBzdHlsZT0iZmlsbDpub25lO3N0cm9rZS1saW5lam9pbjptaXRlcjtzdHJva2UtbGluZWNhcDpidXR0OyIvPgo8cGF0aCBkPSJNMjIuNSw4QzI0LjUsNC41IDIwLjUsNC41IDIyLjUsOCBaIE0gMjAuMywxMy40QzIwLjMsMTMuNCAyNC47LDEzLjQgMjQuNywxMy40IiBzdHlsZT0ic3Ryb2tlLWxpbmVjYXA6YnV0dDsiLz4KPC9nPgo8L3N2Zz4=','bQ':'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iNDUiIGhlaWdodD0iNDUiPgo8ZyBzdHlsZT0ib3BhY2l0eToxO2ZpbGw6IzAwMDAwMDtzdHJva2U6IzAwMDAwMDtzdHJva2Utd2lkdGg6MS41O3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDsiPgo8cGF0aCBkPSJNNiwxNEwzOSwxNEwxMSwzNmgwLjVsNSwtMi4xdi01LjJsLTIuNSwtMy4ybDMuMSwtMi43IDMuMSwyLjcgMy4xLC0yLjYgMy4xLDIuNiAzLjEsLTIuNiAzLjEsMi42IDMuMSwtMi43IDMuMSwyLjcgLTIuNSwzLjJ2NS4ybDUsMi4xaDAuNWwwLC0yMloiLz4KPHBhdGggZD0iTTkuNSwzNkgzNS41IiBzdHlsZT0iZmlsbDpub25lO3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDsiLz4KPHBhdGggZD0iTTExLjUsMzBoMjIiIHN0eWxlPSJmaWxsOm5vbmU7c3Ryb2tlLWxpbmVjYXA6YnV0dDsiLz4KPHBhdGggZD0iTTgsOGEyLjEsMi4xIDAgMSwgMCA0LjIsMCAwLjUsMC41IDAgMCAxIC00LjIsMCBNIDIyLjUsOGEyLjEsMi4xIDAgMSwgMCA0LjIsMCAwLjUsMC41IDAgMCAxIC00LjIsMCBNIDM3LDhhMi4xLDIuMSAwIDEgLSAwLDQuMiAwIDAuNSwwLjUgMCAwIDEgNC4yLDAgTSAxNSw4YTIuMSwyLjEgMCAxIC0gMCw0LjIgMCAwLjUsMC41IDAgMCAxIDQuMiwwIE0gMzAsOGEyLjEsMi4xIDAgMSwgLSAwLDQuMiAwIDAuNSwwLjUgMCAwIDEgNC4yLDAiIHN0eWxlPSJmaWxsOiMwMDAwMDA7Ii8+CjwvZz4KPC9zdmc+','bK':'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iNDUiIGhlaWdodD0iNDUiPgo8ZyBzdHlsZT0ib3BhY2l0eToxO2ZpbGw6IzAwMDAwMDtzdHJva2U6IzAwMDAwMDtzdHJva2Utd2lkdGg6MS41O3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDsiPgo8cGF0aCBkPSJNMjIuNSwxMS42MjVWOGgxLjI1VjYuNzVoLTIuNVY4aDEuMjV2My42MjVDMTcuNSwxMS4xMjUgMTcuNSwzIDIyLjUsM2M1LDAgNSw4LjEyNSA1LDguNjI1IiBzdHlsZT0ic3Ryb2tlLWxpbmVjYXA6YnV0dDsiLz4KPHBhdGggZD0iTTIyLjUsMjZjLTVuNSwwIC04LjUsMi41IC04LjUsMi41TDksMzZsNSwtMS45VjMyLjVsMi41LDIuNSAyLjUsLTIuNVYzNC4xTDMyLDM2bDQuNSwtNy41cy0zLC0yLjUgLTguNSwtMi41WiIvPgo8cGF0aCBkPSJNMTEuNSwzMGgyMiIvPgo8L2c+Cjwvc3ZnPg=='};
-        function pieceTheme(piece) { return pieceSVGs[piece]; }
+        // --- WELCOME SCREEN SCRIPT ---
+        function setupWelcomeScreen() {
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const canvas = document.getElementById('bg-canvas');
+            const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
 
-        // --- GLOBAL STATE ---
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 7.5);
+            scene.add(directionalLight);
+
+            camera.position.z = 5;
+
+            let chessPiece;
+            const loader = new GLTFLoader();
+            loader.load('https://raw.githubusercontent.com/sadface-dev/3d-assets/main/chess/white_king.gltf', (gltf) => {
+                chessPiece = gltf.scene;
+                chessPiece.scale.set(1.5, 1.5, 1.5);
+                chessPiece.position.y = -1;
+                scene.add(chessPiece);
+            }, undefined, (error) => {
+                console.error('An error happened while loading the model', error);
+            });
+
+            const particlesGeometry = new THREE.BufferGeometry;
+            const particlesCnt = 5000;
+            const posArray = new Float32Array(particlesCnt * 3);
+            for(let i=0; i<particlesCnt*3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 15;
+            }
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            const particlesMaterial = new THREE.PointsMaterial({ size: 0.005, color: 0xffffff });
+            const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+            scene.add(particlesMesh);
+
+            const clock = new THREE.Clock();
+            function animate() {
+                const elapsedTime = clock.getElapsedTime();
+                if (chessPiece) chessPiece.rotation.y = elapsedTime * 0.2;
+                particlesMesh.rotation.y = elapsedTime * 0.05;
+                requestAnimationFrame(animate);
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+            
+            const welcomeTitle = 'Sintha Chess';
+            $('.title').html(welcomeTitle.replace(/./g, "<span class='letter'>$&</span>"));
+
+            anime.timeline({loop: false})
+            .add({
+                targets: '#welcome-screen .letter', translateY: [-100, 0], opacity: [0, 1],
+                easing: "easeOutExpo", duration: 1400, delay: (el, i) => 300 + 30 * i
+            }).add({
+                targets: '#enter-game-btn', translateY: [50, 0], opacity: [0, 1],
+                easing: "easeOutExpo", duration: 1200
+            }, '-=800');
+        }
+
+        // --- GLOBAL STATE & CONFIG ---
         let board = null, game = new Chess(), gameMode = null, playerColor = 'w';
         let aiDifficulty = 3, peer = null, conn = null;
         let whiteTimer, blackTimer, whiteTime = 600, blackTime = 600;
         let isAudioUnlocked = false;
+        let fromSquare = null;
 
-        // --- DOM ELEMENTS & SOUNDS ---
         const $status = $('#status'), $moveHistory = $('#move-history'), $boardEl = $('#board');
         const sounds = {
             move: $('#sound-move')[0],
@@ -379,96 +405,81 @@
             gameStart: $('#sound-game-start')[0],
             gameEnd: $('#sound-game-end')[0]
         };
-
-        // --- SOUND SYSTEM ---
-        function playSound(soundName) {
-            if (!isAudioUnlocked) return;
-            const sound = sounds[soundName];
-            if (sound) {
-                sound.currentTime = 0;
-                sound.play().catch(e => console.error("Sound play failed:", e));
-            }
-        }
-        function unlockAudio() {
-            if (isAudioUnlocked) return;
-            const context = new (window.AudioContext || window.webkitAudioContext)();
-            if (context.state === 'suspended') {
-                context.resume();
-            }
-            isAudioUnlocked = true;
-        }
-
-        // --- ANIMATION & MODAL FUNCTIONS with GSAP ---
-        function showModal(id) {
-            const modal = $(id);
-            modal.css('display', 'flex');
-            gsap.to(modal.find('.modal-content'), { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(1.7)' });
-        }
-        function hideModal(id, onComplete) {
-            const modal = $(id);
-            gsap.to(modal.find('.modal-content'), { opacity: 0, scale: 0.8, duration: 0.2, ease: 'power2.in', onComplete: () => { modal.hide(); if (onComplete) onComplete(); }});
-        }
-        function playIntroAnimation() {
-            const tl = gsap.timeline();
-            tl.from('.header', { y: -50, opacity: 0, duration: 0.5, ease: 'power2.out' })
-              .from('.player-bar', { y: (i) => i === 0 ? -30 : 30, opacity: 0, duration: 0.6, stagger: 0.1, ease: 'power2.out' }, "-=0.3")
-              .from('#board', { scale: 0.9, opacity: 0, duration: 0.5, ease: 'back.out(1.4)'}, "-=0.6")
-              .from('.side-dashboard', { x: 100, opacity: 0, duration: 0.6, ease: 'power2.out' }, "-=0.5");
-        }
         
-        // --- CUSTOM ANIMATED MOVE FUNCTION ---
-        function makeAnimatedMove(move) {
-            const gameMove = game.move(move);
-            if (gameMove === null) return 'snapback';
-
-            playSound(gameMove.flags.includes('c') ? 'capture' : 'move');
-
-            if (gameMove.flags.includes('c')) {
-                const capturedPieceEl = $boardEl.find(`.square-${gameMove.to}`).find('img');
-                gsap.to(capturedPieceEl, { scale: 0, opacity: 0, duration: 0.3, ease: 'power2.in' });
-            }
-
-            setTimeout(() => {
-                 if (gameMode === 'online') {
-                    conn.send({ type: 'move', move: move });
-                }
-                updateGame();
-                if (gameMode === 'single' && !game.game_over() && game.turn() !== playerColor) {
-                    window.setTimeout(makeComputerMove, 500);
-                }
-            }, 300);
-        }
-
-        // --- TIMERS ---
+        // --- CORE LOGIC & FUNCTIONS ---
+        function playSound(soundName) { if (!isAudioUnlocked) return; const sound = sounds[soundName]; if (sound) { sound.currentTime = 0; sound.play().catch(e => {}); }}
+        function unlockAudio() { if (isAudioUnlocked) return; isAudioUnlocked = true; Object.values(sounds).forEach(sound => { sound.play().catch(() => {}); sound.pause(); sound.currentTime = 0; });}
+        function showModal(id) { const modal = $(id); modal.css('display', 'flex'); gsap.to(modal.find('.modal-content'), { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(1.7)' });}
+        function hideModal(id, onComplete) { const modal = $(id); gsap.to(modal.find('.modal-content'), { opacity: 0, scale: 0.8, duration: 0.2, ease: 'power2.in', onComplete: () => { modal.hide(); if (onComplete) onComplete(); }});}
+        function playIntroAnimation() { const tl = gsap.timeline(); tl.from('.header', { y: -50, opacity: 0, duration: 0.5, ease: 'power2.out' }).from('.player-bar', { y: (i) => i === 0 ? -30 : 30, opacity: 0, duration: 0.6, stagger: 0.1, ease: 'power2.out' }, "-=0.3").from('#board', { scale: 0.9, opacity: 0, duration: 0.5, ease: 'back.out(1.4)'}, "-=0.6").from('.side-dashboard', { x: 100, opacity: 0, duration: 0.6, ease: 'power2.out' }, "-=0.5");}
+        function removeHighlights() { $boardEl.find('.square-55d63').removeClass('highlight-source'); $boardEl.find('.move-dot').remove(); }
+        function highlightMoves(square) { removeHighlights(); const moves = game.moves({ square: square, verbose: true }); if (moves.length === 0) return; $boardEl.find('.square-' + square).addClass('highlight-source'); moves.forEach(move => { $boardEl.find('.square-' + move.to).append('<div class="move-dot"></div>'); }); }
         function stopTimers() { clearInterval(whiteTimer); clearInterval(blackTimer); }
         function startTimers() { stopTimers(); if (game.turn() === 'w') { whiteTimer = setInterval(updateWhiteTimer, 1000); } else { blackTimer = setInterval(updateBlackTimer, 1000); }}
         function updateWhiteTimer() { whiteTime--; $('#white-timer').text(formatTime(whiteTime)); if (whiteTime <= 0) handleGameOver('Black wins on time'); }
         function updateBlackTimer() { blackTime--; $('#black-timer').text(formatTime(blackTime)); if (blackTime <= 0) handleGameOver('White wins on time'); }
         function formatTime(seconds) { if (seconds < 0) seconds = 0; const mins = Math.floor(seconds / 60); const secs = seconds % 60; return `${mins}:${secs < 10 ? '0' : ''}${secs}`; }
+        function handleGameOver(message) { stopTimers(); removeHighlights(); $('#game-over-message').text(message); showModal('#game-over-modal'); }
+        function updateMoveHistory() { const history = game.history({ verbose: true }); let html = ''; for (let i = 0; i < history.length; i += 2) { html += `<span>${(i/2)+1}. ${history[i].san} ${history[i+1] ? history[i+1].san : ' '}</span><br>`; } $moveHistory.html(html); $moveHistory.scrollTop($moveHistory[0].scrollHeight); }
+        function resetCoreState() { game.reset(); fromSquare = null; whiteTime = 600; blackTime = 600; $('#white-timer').text(formatTime(whiteTime)); $('#black-timer').text(formatTime(blackTime)); $moveHistory.html(''); $('#chat-log').html(''); removeHighlights(); stopTimers();}
+        function makeComputerMove() { const bestMove = getBestMove(game, aiDifficulty); if (bestMove) { game.move(bestMove); board.position(game.fen()); playSound(game.history({verbose: true}).pop().flags.includes('c') ? 'capture' : 'move'); updateGameStatus(); }}
+        function receiveOnlineMove(move) { const moveResult = game.move(move); if (moveResult) { board.position(game.fen()); playSound(moveResult.flags.includes('c') ? 'capture' : 'move'); updateGameStatus(); }}
+        function getBestMove(game, depth) { const possibleMoves = game.moves({ verbose: true }); if (possibleMoves.length === 0) return null; let bestMove = null; let bestValue = -Infinity; possibleMoves.sort(() => Math.random() - 0.5); for (const move of possibleMoves) { game.move(move); const boardValue = -negamax(game, depth - 1, -Infinity, Infinity); game.undo(); if (boardValue > bestValue) { bestValue = boardValue; bestMove = move; }} return bestMove;}
+        function negamax(game, depth, alpha, beta) { if (depth === 0 || game.game_over()) { return evaluateBoard(game.board()); } let max = -Infinity; const moves = game.moves(); for (const move of moves) { game.move(move); const score = -negamax(game, depth - 1, -beta, -alpha); game.undo(); max = Math.max(max, score); alpha = Math.max(alpha, score); if (alpha >= beta) { break; }} return max;}
+        function evaluateBoard(board) { let totalEvaluation = 0; const pieceValues = { p: 10, n: 30, b: 30, r: 50, q: 90, k: 900 }; board.forEach(row => { row.forEach(piece => { if (piece) { const value = pieceValues[piece.type]; totalEvaluation += (piece.color === 'w' ? value : -value); } }); }); return totalEvaluation * (game.turn() === 'w' ? 1 : -1);}
         
-        // --- CHESS LOGIC & BOARD UI ---
-        function onDragStart(source, piece, position, orientation) {
-            if (game.game_over()) return false;
-            if (gameMode === 'single' && piece.search('^' + playerColor) === -1) return false;
-            if (gameMode === 'pass' && ((game.turn()==='w' && piece.search(/^b/) !== -1) || (game.turn()==='b' && piece.search(/^w/) !== -1))) return false;
-            if (gameMode === 'online' && ((game.turn() !== playerColor) || (piece.search('^' + (playerColor === 'w' ? 'b' : 'w')) !== -1 ))) return false;
+        function onSquareClick() {
+            const square = $(this).data('square');
+            if (game.game_over() || (gameMode === 'single' && game.turn() !== playerColor) || (gameMode === 'online' && game.turn() !== playerColor)) return;
+            const pieceOnSquare = game.get(square);
+            if (fromSquare) {
+                if (square === fromSquare) { fromSquare = null; removeHighlights(); return; }
+                const move = { from: fromSquare, to: square, promotion: 'q' };
+                const moveResult = game.move(move);
+                if (moveResult) {
+                    board.position(game.fen());
+                    playSound(moveResult.flags.includes('c') ? 'capture' : 'move');
+                    updateGameStatus();
+                    if (gameMode === 'online' && conn && conn.open) conn.send({ type: 'move', move: move });
+                    if (gameMode === 'single' && !game.game_over()) window.setTimeout(makeComputerMove, 250);
+                    fromSquare = null;
+                    removeHighlights();
+                } else {
+                    if (pieceOnSquare && pieceOnSquare.color === game.turn()) { fromSquare = square; highlightMoves(square); } 
+                    else { fromSquare = null; removeHighlights(); }
+                }
+            } else if (pieceOnSquare && pieceOnSquare.color === game.turn()) {
+                fromSquare = square;
+                highlightMoves(square);
+            }
         }
-        function onDrop(source, target) { removeHighlights(); const move = { from: source, to: target, promotion: 'q' }; makeAnimatedMove(move); }
-        function onSnapEnd() { board.position(game.fen()); }
-        function onMouseoverSquare(square, piece) { if(game.game_over()) return; const moves = game.moves({square: square, verbose: true}); if (moves.length === 0) return; highlightMoves(square, moves); }
-        function onMouseoutSquare(square, piece) { removeHighlights(); }
-        function removeHighlights() { $boardEl.find('.square-55d63').removeClass('highlight-square'); }
-        function highlightMoves(square, moves) { removeHighlights(); $boardEl.find('.square-' + square).addClass('highlight-square'); moves.forEach(move => { $boardEl.find('.square-' + move.to).addClass('highlight-square'); }); }
+
+        function updateStatusText() {
+            let statusText = '';
+            const moveColor = game.turn() === 'w' ? 'White' : 'Black';
+            statusText = moveColor + ' to move.';
+            $('.player-bar').removeClass('active-player');
+            if(gameMode === 'pass' || (gameMode === 'single' && playerColor === game.turn()) || (gameMode === 'online' && playerColor === game.turn())) {
+                $('#player-bar').addClass('active-player');
+            } else {
+                $('#opponent-bar').addClass('active-player');
+            }
+            if (game.in_check()) {
+                statusText += ' - CHECK!';
+                $status.css('background-color', 'rgba(255,0,0,0.2)');
+                playSound('check');
+            } else {
+                $status.css('background-color', 'transparent');
+            }
+            $status.text(statusText);
+        }
         
-        function updateGame() {
-            board.position(game.fen());
-            updateStatus();
+        function updateGameStatus() {
+            updateStatusText();
             updateMoveHistory();
             startTimers();
-            
             if (game.game_over()) {
-                stopTimers();
-                playSound('gameEnd');
+                stopTimers(); playSound('gameEnd');
                 let message = '';
                 if (game.in_checkmate()) message = 'Checkmate! ' + (game.turn() === 'w' ? 'Black' : 'White') + ' wins.';
                 else if (game.in_draw()) {
@@ -481,131 +492,119 @@
             }
         }
         
-        function handleGameOver(message) {
-            stopTimers();
-            $('#game-over-message').text(message);
-            showModal('#game-over-modal');
-        }
-
-        function updateStatus() {
-            let statusText = '';
-            const moveColor = game.turn() === 'w' ? 'White' : 'Black';
-            statusText = moveColor + ' to move.';
-            
-            $('.player-bar').removeClass('active-player');
-            if ((playerColor === 'w' && game.turn() === 'w') || (playerColor === 'b' && game.turn() === 'b')) {
-                $('#player-bar').addClass('active-player');
-            } else {
-                $('#opponent-bar').addClass('active-player');
-            }
-            
-            if (game.in_check()) {
-                statusText += ' CHECK!';
-                $status.css('background-color', 'rgba(255,0,0,0.2)');
-                gsap.fromTo($status, {scale: 1.2, y: -5}, {scale: 1, y: 0, duration: 0.8, ease: 'elastic.out(1, 0.5)'});
-                playSound('check');
-            } else {
-                $status.css('background-color', 'transparent');
-            }
-            $status.text(statusText);
-        }
-
-        function updateMoveHistory() {
-            const history = game.history({ verbose: true });
-            let html = '';
-            for (let i = 0; i < history.length; i += 2) {
-                html += `<span>${(i/2)+1}. ${history[i].san} ${history[i+1] ? history[i+1].san : ' '}</span><br>`;
-            }
-            $moveHistory.html(html);
-            $moveHistory.scrollTop($moveHistory[0].scrollHeight);
-        }
-        
-        function resetGame() {
-            game.reset();
-            whiteTime = 600; blackTime = 600;
-            $('#white-timer').text(formatTime(whiteTime));
-            $('#black-timer').text(formatTime(blackTime));
-            $moveHistory.html(''); $('#chat-log').html('');
-            stopTimers();
-            if (board) board.start();
-            updateGame();
-        }
-
-        // --- AI LOGIC ---
-        function makeComputerMove() { const bestMove = getBestMove(game, aiDifficulty); makeAnimatedMove(bestMove); }
-        function getBestMove(game, depth) { const possibleMoves = game.moves({verbose: true}); if (possibleMoves.length === 0) return; let bestMove = null; let bestValue = -Infinity; possibleMoves.forEach(move => { game.move(move); const boardValue = -minimax(game, depth - 1, -Infinity, Infinity, false); game.undo(); if (boardValue > bestValue) { bestValue = boardValue; bestMove = move; } }); return bestMove; }
-        function minimax(game, depth, alpha, beta, isMaximizingPlayer) { if (depth === 0 || game.game_over()) { return evaluateBoard(game.board()); } const possibleMoves = game.moves(); if (isMaximizingPlayer) { let bestValue = -Infinity; for (const move of possibleMoves) { game.move(move); bestValue = Math.max(bestValue, minimax(game, depth - 1, alpha, beta, false)); game.undo(); alpha = Math.max(alpha, bestValue); if (beta <= alpha) break; } return bestValue; } else { let bestValue = Infinity; for (const move of possibleMoves) { game.move(move); bestValue = Math.min(bestValue, minimax(game, depth - 1, alpha, beta, true)); game.undo(); beta = Math.min(beta, bestValue); if (beta <= alpha) break; } return bestValue; } }
-        function evaluateBoard(board) { let totalEvaluation = 0; const pieceValues = { p: 10, n: 30, b: 30, r: 50, q: 90, k: 900 }; board.forEach(row => { row.forEach(piece => { if (piece) { const value = pieceValues[piece.type]; totalEvaluation += (piece.color === 'w' ? value : -value); } }); }); return totalEvaluation * (game.turn() === 'w' ? 1 : -1); }
-        
-        // --- GAME SETUP ---
         function setupGame(mode, options = {}) {
-            resetGame();
+            resetCoreState();
             gameMode = mode;
             playerColor = options.color || 'w';
             aiDifficulty = options.difficulty || 3;
-            
-            const boardConfig = { draggable: true, position: 'start', onDragStart: onDragStart, onDrop: onDrop, onSnapEnd: onSnapEnd, onMouseoutSquare: onMouseoutSquare, onMouseoverSquare: onMouseoverSquare, pieceTheme: pieceTheme, moveSpeed: 'slow', snapbackSpeed: 500, snapSpeed: 100 };
-            
-            if (playerColor === 'b') boardConfig.orientation = 'black'; else boardConfig.orientation = 'white';
-            
+            const boardConfig = {
+                position: 'start',
+                pieceTheme: 'https://lichess1.org/assets/piece/staunty/{piece}.svg',
+                draggable: false,
+                orientation: playerColor === 'b' ? 'black' : 'white'
+            };
+            if(board) board.destroy();
             board = Chessboard('board', boardConfig);
-            
-            hideModal('#game-mode-modal', () => { $('#game-area').removeClass('hidden'); playIntroAnimation(); playSound('gameStart'); });
-            
-            if (mode === 'online') { $('.tab-btn[data-tab="chat"]').show(); } else { $('.tab-btn[data-tab="chat"]').hide(); $('.tab-btn[data-tab="moves"]').addClass('active').click(); }
-            
-            if (mode === 'single' && playerColor === 'b') makeComputerMove();
-
-            updateGame();
+            $boardEl.on('click', '.square-55d63', onSquareClick);
+            updateGameStatus();
+            $('#game-area').removeClass('hidden');
+            playIntroAnimation();
+            playSound('gameStart');
+            if (mode === 'online') { $('.tab-btn[data-tab="chat"]').show(); } 
+            else { $('.tab-btn[data-tab="chat"]').hide(); $('.tab-btn[data-tab="moves"]').addClass('active').click(); }
+            if (mode === 'single' && playerColor === 'b') window.setTimeout(makeComputerMove, 500);
             $(window).trigger('resize');
         }
-        
-        // --- PEER-TO-PEER LOGIC ---
-        function initializePeer(){peer=new Peer({host:'peerjs.92k.de',key:'peerjs'});peer.on('open',id=>{console.log('My peer ID is: '+id);$('#room-code-display').text(id);});peer.on('connection',newConn=>{conn=newConn;setupConnection(conn,false);});peer.on('error',err=>{alert('PeerJS Error: '+err);console.error(err);});}
-        function setupConnection(connection,isHost){hideModal('#create-room-modal');playerColor=isHost?'w':'b';setupGame('online',{color:playerColor});connection.on('data',data=>{switch(data.type){case'move':makeAnimatedMove(data.move);break;case'chat':$('#chat-log').append(`<div><b>Opponent:</b> ${data.message}</div>`);$('#chat-log').scrollTop($('#chat-log')[0].scrollHeight);break;case'resign':handleGameOver(`${playerColor==='w'?'Black':'White'} resigned.`);break;case'draw-offer':if(confirm('Opponent offers a draw. Accept?')){conn.send({type:'draw-accept'});handleGameOver('Draw by agreement.');}else{conn.send({type:'draw-reject'});}break;case'draw-accept':handleGameOver('Draw by agreement.');break;case'draw-reject':alert('Opponent declined the draw offer.');break;}});connection.on('close',()=>{handleGameOver('Opponent disconnected.');});}
 
-        // --- UI & EVENT HANDLERS ---
-        $('.btn, .btn-icon').on('click', function() {
-            unlockAudio();
-            gsap.fromTo(this, {scale: 0.95}, {scale: 1, duration: 0.3, ease: 'elastic.out(1, 0.5)'});
-        });
+        function generateRoomCode() {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
+
+        function initializePeer(isCreating, roomCode = null) {
+            if (peer) peer.destroy();
+            const peerId = isCreating ? generateRoomCode() : null;
+            peer = isCreating ? new Peer(peerId) : new Peer();
+            peer.on('open', id => {
+                if (isCreating) {
+                    $('#room-code-display').text(id);
+                } else {
+                    conn = peer.connect(roomCode);
+                    conn.on('open', () => setupConnection(conn, false));
+                    conn.on('error', (err) => { alert('Connection failed. Invalid Room Code or host is unavailable.'); console.error(err); });
+                }
+            });
+            peer.on('connection', newConn => {
+                conn = newConn;
+                setupConnection(conn, true);
+            });
+            peer.on('error', err => {
+                alert('An error occurred with the connection service. Please try again.');
+                console.error('PeerJS Error: ', err);
+                hideModal('#create-room-modal'); hideModal('#join-room-modal');
+            });
+        }
+
+        function setupConnection(connection, isHosting) {
+            hideModal('#create-room-modal');
+            hideModal('#join-room-modal', () => {
+                playerColor = isHosting ? 'w' : 'b';
+                setupGame('online', { color: playerColor });
+            });
+            connection.on('data', data => {
+                switch(data.type){
+                    case 'move': receiveOnlineMove(data.move); break;
+                    case 'chat': $('#chat-log').append(`<div><b>Opponent:</b> ${data.message}</div>`); $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight); break;
+                    case 'resign': handleGameOver(`${playerColor==='w'?'Black':'White'} resigned.`); break;
+                    case 'draw-offer': if(confirm('Opponent offers a draw. Accept?')){conn.send({type:'draw-accept'}); handleGameOver('Draw by agreement.');} else {conn.send({type:'draw-reject'});} break;
+                    case 'draw-accept': handleGameOver('Draw by agreement.'); break;
+                    case 'draw-reject': alert('Opponent declined the draw offer.'); break;
+                }
+            });
+            connection.on('close', () => { handleGameOver('Opponent disconnected.'); });
+        }
+
+        // --- INITIALIZATION & EVENT BINDINGS (NO LONGER WRAPPED IN DOCUMENT.READY) ---
         
-        $('.tab-btn').on('click', function() {
-            const tabId = $(this).data('tab');
-            $('.tab-btn').removeClass('active');
-            $(this).addClass('active');
-            $('.tab-panel').removeClass('active');
-            $('#' + tabId + '-panel').addClass('active');
+        // Start the welcome screen animation immediately.
+        setupWelcomeScreen();
+
+        // Attach all event listeners.
+        $(document).one('click', unlockAudio);
+        $('.btn, .btn-icon').on('click', function() { gsap.fromTo(this, {scale: 0.95}, {scale: 1, duration: 0.3, ease: 'elastic.out(1, 0.5)'}); });
+        $('.tab-btn').on('click', function() { const tabId = $(this).data('tab'); $('.tab-btn').removeClass('active'); $(this).addClass('active'); $('.tab-panel').removeClass('active'); $('#' + tabId + '-panel').addClass('active'); });
+        
+        $('#enter-game-btn').on('click', () => {
+            gsap.to('#welcome-screen', {
+                opacity: 0, 
+                duration: 0.5, 
+                onComplete: () => {
+                    $('#welcome-screen').addClass('hidden');
+                    $('#app-container').removeClass('hidden');
+                    gsap.from('#app-container', {opacity: 0, duration: 0.5});
+                    showModal('#game-mode-modal');
+                }
+            });
         });
 
-        $('#theme-toggle').on('change', function() { if (this.checked) { $('body').attr('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); } else { $('body').attr('data-theme', 'light'); localStorage.setItem('theme', 'light'); } });
         $('#single-player-btn').on('click', () => { hideModal('#game-mode-modal', () => showModal('#ai-difficulty-modal')); });
-        $('.difficulty-btn').on('click', function() { aiDifficulty = $(this).data('depth'); hideModal('#ai-difficulty-modal', () => setupGame('single', { difficulty: aiDifficulty })); });
+        $('.difficulty-btn').on('click', function() { hideModal('#ai-difficulty-modal', () => setupGame('single', { difficulty: $(this).data('depth') })); });
         $('#pass-and-play-btn').on('click', () => { hideModal('#game-mode-modal', () => setupGame('pass')); });
         $('#online-multiplayer-btn').on('click', () => { hideModal('#game-mode-modal', () => showModal('#online-modal')); });
-        $('#online-back-btn').on('click', () => { hideModal('#online-modal', () => showModal('#game-mode-modal')); });
-        $('#create-game-btn').on('click', () => { hideModal('#online-modal', () => { showModal('#create-room-modal'); initializePeer(); }); });
-        $('#join-game-btn').on('click', () => { hideModal('#online-modal', () => showModal('#join-room-modal')); });
-        $('#join-room-submit-btn').on('click', () => { const roomCode = $('#room-code-input').val().trim(); if(roomCode){ initializePeer(); peer.on('open', () => { conn = peer.connect(roomCode); conn.on('open', () => { hideModal('#join-room-modal', () => setupConnection(conn, false)); }); conn.on('error', (err) => { alert('Connection failed.'); console.error(err); }); }); }});
-        $('#copy-code-btn').on('click', () => { navigator.clipboard.writeText($('#room-code-display').text()).then(() => alert('Copied!')); });
-        $('#play-again-btn').on('click', () => { hideModal('#game-over-modal', () => { $('#game-area').addClass('hidden'); showModal('#game-mode-modal'); resetGame(); if (peer) peer.destroy(); }); });
         
+        $('#online-back-btn').on('click', () => { hideModal('#online-modal', () => showModal('#game-mode-modal')); });
+        $('#create-game-btn').on('click', () => { hideModal('#online-modal', () => { showModal('#create-room-modal'); initializePeer(true); }); });
+        $('#join-game-btn').on('click', () => { hideModal('#online-modal', () => showModal('#join-room-modal')); });
+        $('#join-room-submit-btn').on('click', () => { const roomCode = $('#room-code-input').val().trim(); if(roomCode && roomCode.length === 6){ initializePeer(false, roomCode); } else { alert('Please enter a valid 6-digit room code.'); }});
+        $('#copy-code-btn').on('click', () => { navigator.clipboard.writeText($('#room-code-display').text()).then(() => alert('Copied!')); });
+        
+        $('#play-again-btn').on('click', () => { hideModal('#game-over-modal', () => { $('#game-area').addClass('hidden'); showModal('#game-mode-modal'); if (peer) peer.destroy(); }); });
         $('#flip-board-btn').on('click', () => board.flip());
-        $('#new-game-btn').on('click', () => { if(confirm('Start new game?')){ $('#game-area').addClass('hidden'); showModal('#game-mode-modal'); resetGame(); if (peer) peer.destroy(); }});
-        $('#resign-btn').on('click', () => { if(confirm('Resign?')){ if(gameMode === 'online' && conn) conn.send({type:'resign'}); handleGameOver(`${playerColor==='w'?'White':'Black'} resigned.`);}});
-        $('#draw-btn').on('click', () => { if(gameMode === 'online' && conn){ conn.send({type:'draw-offer'}); alert('Draw offer sent.'); } else { alert('Only available in online games.'); }});
+        $('#new-game-btn').on('click', () => { if(confirm('Start a new game? This will end the current match.')){ $('#game-area').addClass('hidden'); showModal('#game-mode-modal'); if (peer) peer.destroy(); }});
+        $('#resign-btn').on('click', () => { if(confirm('Resign the game?')){ if(gameMode === 'online' && conn) conn.send({type:'resign'}); handleGameOver(`${playerColor==='w'?'White':'Black'} resigned.`);}});
+        $('#draw-btn').on('click', () => { if(gameMode === 'online' && conn){ conn.send({type:'draw-offer'}); alert('Draw offer sent.'); } else { alert('You can only offer a draw in an online game.'); }});
         $('#chat-input').on('keypress', function(e) { if(e.which === 13){ const message = $(this).val(); if (message.trim() !== ''){ if(gameMode === 'online' && conn) { conn.send({type:'chat',message:message}); $('#chat-log').append(`<div><b>You:</b> ${message}</div>`); $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight); $(this).val(''); } } }});
         $(window).on('resize', function() { if(board) board.resize(); }).trigger('resize');
 
-        // --- INITIALIZATION ---
-        function init() {
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'light') { $('#theme-toggle').prop('checked', false); $('body').attr('data-theme', 'light'); } 
-            else { $('#theme-toggle').prop('checked', true); $('body').attr('data-theme', 'dark'); }
-            // Small change: default to dark theme if no preference is saved
-        }
-        init();
-    });
     </script>
 </body>
 </html>
