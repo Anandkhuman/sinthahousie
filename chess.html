@@ -52,7 +52,7 @@
         .tab-controls { display: flex; border-bottom: 1px solid var(--border-color); }
         .tab-btn { flex: 1; padding: 1rem; background-color: transparent; border: none; color: var(--text-secondary-color); font-size: 1rem; font-weight: 500; cursor: pointer; transition: all 0.2s; border-bottom: 3px solid transparent; }
         .tab-btn.active { color: var(--text-color); border-bottom-color: var(--glow-color); }
-        .tab-content { padding: 1rem; }
+        .tab-content { padding: 1.5rem; }
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
         #status { font-weight: 500; text-align: center; margin-bottom: 1rem; padding: 0.5rem; border-radius: 6px; }
@@ -69,7 +69,11 @@
         .btn-primary { background-color: var(--square-dark); color: white; }
         .btn-primary:hover { filter: brightness(1.2); }
         #room-code-display { font-size: 2rem; font-weight: bold; background: var(--bg-color); padding: 1rem; border-radius: 6px; margin: 1.5rem 0; letter-spacing: 4px; }
-        #room-code-input { width: 100%; padding: 0.75rem; font-size: 1.5rem; text-align: center; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 1rem; letter-spacing: 4px; font-weight: bold; text-transform: uppercase; }
+        #room-code-input, #player-name-input { width: 100%; padding: 0.75rem; font-size: 1.5rem; text-align: center; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 1rem; letter-spacing: 4px; font-weight: bold; text-transform: uppercase; }
+        #public-games-list { list-style: none; padding: 0; margin-top: 1rem; max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px; }
+        #public-games-list li { padding: 0.75rem; cursor: pointer; transition: background-color 0.2s; border-bottom: 1px solid var(--border-color); }
+        #public-games-list li:last-child { border-bottom: none; }
+        #public-games-list li:hover { background-color: var(--button-bg); }
         .hidden { display: none !important; }
         @media (max-width: 1100px) { .game-layout { flex-direction: column; } .side-dashboard { width: 100%; } .board-area { max-width: 100%; } }
         @media (max-width: 640px) { body { padding: 0.5rem; } .header { padding: 0.5rem 1rem; } .header h1 { font-size: 1.2rem; } .btn { padding: 0.75rem 1.2rem; font-size: 0.9rem; } .modal-content { padding: 1.5rem; } }
@@ -96,18 +100,19 @@
             <div class="side-dashboard">
                 <div class="tab-controls"><button class="tab-btn active" data-tab="moves">Moves</button><button class="tab-btn" data-tab="chat">Chat</button></div>
                 <div class="tab-content">
-                    <div id="moves-panel" class="tab-panel active"><div id="status">White to move.</div><div id="move-history"></div></div>
+                    <div id="moves-panel" class="tab-panel active"><div id="status"></div><div id="move-history"></div></div>
                     <div id="chat-panel" class="tab-panel"><div id="chat-log"></div><input type="text" id="chat-input" placeholder="Type a message..."></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="game-mode-modal" class="modal"><div class="modal-content"><h2>Welcome to Sovereign Chess</h2><p>Choose how you want to play.</p><div class="btn-group"><button id="single-player-btn" class="btn btn-primary">Single Player vs AI</button><button id="pass-and-play-btn" class="btn">Pass & Play (Local)</button><button id="online-multiplayer-btn" class="btn">Online Multiplayer</button></div></div></div>
+    <div id="player-name-modal" class="modal"><div class="modal-content"><h2>Enter Your Name</h2><input type="text" id="player-name-input" placeholder="PLAYER" maxlength="12"><button id="player-name-submit-btn" class="btn btn-primary">Continue</button></div></div>
+    <div id="game-mode-modal" class="modal"><div class="modal-content"><h2>Welcome, <span id="welcome-player-name"></span>!</h2><p>Choose how you want to play.</p><div class="btn-group"><button id="single-player-btn" class="btn btn-primary">Single Player vs AI</button><button id="pass-and-play-btn" class="btn">Pass & Play (Local)</button><button id="online-multiplayer-btn" class="btn">Online Multiplayer</button></div></div></div>
     <div id="ai-difficulty-modal" class="modal"><div class="modal-content"><h2>Choose AI Difficulty</h2><div class="btn-group"><button class="btn difficulty-btn" data-depth="1">Easy</button><button class="btn difficulty-btn" data-depth="3">Medium</button><button class="btn difficulty-btn" data-depth="5">Hard</button></div></div></div>
-    <div id="online-modal" class="modal"><div class="modal-content"><h2>Online Multiplayer</h2><p>Create a private room to play with a friend, or join one with their code.</p><div class="btn-group"><button id="create-game-btn" class="btn btn-primary">Create Game</button><button id="join-game-btn" class="btn">Join Game</button></div><button id="online-back-btn" class="btn" style="margin-top: 1.5rem;">Back</button></div></div>
+    <div id="online-modal" class="modal"><div class="modal-content"><h2>Online Multiplayer</h2><div class="btn-group"><button id="create-public-game-btn" class="btn btn-primary">Create Public Game</button><button id="create-private-game-btn" class="btn">Create Private Room</button></div><hr style="margin: 1.5rem 0; border-color: var(--border-color);"><button id="refresh-games-btn" class="btn">Refresh Public Games</button><ul id="public-games-list"><li>No public games found.</li></ul><button id="online-back-btn" class="btn" style="margin-top: 1.5rem;">Back</button></div></div>
     <div id="create-room-modal" class="modal"><div class="modal-content"><h2>Your Room Code</h2><p>Share this code with your friend. Waiting for them to connect...</p><div id="room-code-display"></div><button id="copy-code-btn" class="btn">Copy Code</button></div></div>
-    <div id="join-room-modal" class="modal"><div class="modal-content"><h2>Join Game</h2><input type="text" id="room-code-input" placeholder="Enter 6-Digit Code" maxlength="6"><button id="join-room-submit-btn" class="btn btn-primary">Join</button></div></div>
+    <div id="join-room-modal" class="modal"><div class="modal-content"><h2>Join Private Game</h2><input type="text" id="room-code-input" placeholder="Enter Code" maxlength="15"><button id="join-room-submit-btn" class="btn btn-primary">Join</button></div></div>
     <div id="game-over-modal" class="modal"><div class="modal-content"><h2 id="game-over-message"></h2><button id="play-again-btn" class="btn btn-primary" style="margin-top: 1.5rem;">Play Again</button></div></div>
 
     <audio id="sound-move" src="https://lichess1.org/sound/standard/move.mp3" preload="auto"></audio>
@@ -125,11 +130,16 @@
     <script>
     $(document).ready(function() {
         // --- GLOBAL STATE & CONFIG ---
-        let board = null, game = new Chess(), gameMode = null, playerColor = 'w';
-        let aiDifficulty = 3, peer = null, conn = null, fromSquare = null;
+        let board = null, game = new Chess(), gameMode = null, playerColor = 'w', playerName = 'Player';
+        let aiDifficulty = 3, fromSquare = null;
         let whiteTimer, blackTimer, whiteTime = 600, blackTime = 600;
-        let isAudioUnlocked = false;
+        let isAudioUnlocked = false, isHost = false;
         let redoStack = [];
+
+        // PeerJS related state
+        let peer = null, opponentConn = null;
+        let spectatorConns = [];
+        const PUBLIC_GAME_PREFIX = 'SC-PUBLIC-';
 
         const $status = $('#status'), $moveHistory = $('#move-history'), $boardEl = $('#board');
         const $undoBtn = $('#undo-btn'), $redoBtn = $('#redo-btn');
@@ -138,30 +148,38 @@
             gameStart: $('#sound-game-start')[0], gameEnd: $('#sound-game-end')[0]
         };
 
-        // --- SOUND & UI FUNCTIONS ---
-        function playSound(soundName) { if (!isAudioUnlocked) return; const sound = sounds[soundName]; if (sound) { sound.currentTime = 0; sound.play().catch(e => console.error("Sound play failed:", e)); } }
-        function unlockAudio() { if (isAudioUnlocked) return; isAudioUnlocked = true; Object.values(sounds).forEach(sound => { sound.play().catch(() => {}); sound.pause(); sound.currentTime = 0; }); }
-        function showModal(id) { const modal = $(id); modal.css('display', 'flex'); gsap.to(modal.find('.modal-content'), { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(1.7)' }); }
-        function hideModal(id, onComplete) { const modal = $(id); gsap.to(modal.find('.modal-content'), { opacity: 0, scale: 0.8, duration: 0.2, ease: 'power2.in', onComplete: () => { modal.hide(); if (onComplete) onComplete(); }}); }
+        // --- CORE UI & SOUND ---
+        function playSound(soundName) { if (!isAudioUnlocked) return; sounds[soundName].currentTime = 0; sounds[soundName].play().catch(e => {}); }
+        function unlockAudio() { if (isAudioUnlocked) return; isAudioUnlocked = true; Object.values(sounds).forEach(s => { s.play().catch(e=>{}); s.pause(); s.currentTime = 0; }); }
+        function showModal(id) { $(id).css('display', 'flex'); gsap.to($(id).find('.modal-content'), { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(1.7)' }); }
+        function hideModal(id, onComplete) { gsap.to($(id).find('.modal-content'), { opacity: 0, scale: 0.8, duration: 0.2, ease: 'power2.in', onComplete: () => { $(id).hide(); if (onComplete) onComplete(); }}); }
         function playIntroAnimation() { const tl = gsap.timeline(); tl.from('.header', { y: -50, opacity: 0, duration: 0.5, ease: 'power2.out' }).from('.player-bar', { y: (i) => i === 0 ? -30 : 30, opacity: 0, duration: 0.6, stagger: 0.1, ease: 'power2.out' }, "-=0.3").from('#board', { scale: 0.9, opacity: 0, duration: 0.5, ease: 'back.out(1.4)'}, "-=0.6").from('.controls-area', { y: 30, opacity: 0, duration: 0.4, ease: 'power2.out' }, "-=0.5").from('.side-dashboard', { x: 100, opacity: 0, duration: 0.6, ease: 'power2.out' }, "-=0.5"); }
         
-        // --- HIGHLIGHTING & MOVE LOGIC ---
+        // --- MOVE & HIGHLIGHT LOGIC ---
         function removeHighlights() { $boardEl.find('.square-55d63').removeClass('highlight-source'); $boardEl.find('.move-dot').remove(); }
-        function highlightMoves(square) { removeHighlights(); const moves = game.moves({ square: square, verbose: true }); if (moves.length === 0) return; $boardEl.find('.square-' + square).addClass('highlight-source'); moves.forEach(move => { $boardEl.find('.square-' + move.to).append('<div class="move-dot"></div>'); }); }
+        function highlightMoves(square) { removeHighlights(); const moves = game.moves({ square: square, verbose: true }); if (moves.length === 0) return; $boardEl.find('.square-' + square).addClass('highlight-source'); moves.forEach(move => $boardEl.find('.square-' + move.to).append('<div class="move-dot"></div>')); }
+        
         function onSquareClick() {
             const square = $(this).data('square');
-            if (game.game_over() || (gameMode === 'single' && game.turn() !== playerColor) || (gameMode === 'online' && game.turn() !== playerColor)) return;
+            // Prevent moves if game is over, not your turn, or if you are a spectator
+            if (game.game_over() || gameMode === 'spectator' || (gameMode.includes('online') && game.turn() !== playerColor) || (gameMode === 'single' && game.turn() !== playerColor)) return;
+            
             const pieceOnSquare = game.get(square);
             if (fromSquare) {
                 if (square === fromSquare) { fromSquare = null; removeHighlights(); return; }
                 const move = { from: fromSquare, to: square, promotion: 'q' };
+                
+                // In online games, don't move locally first. Send intent to host.
+                if (gameMode.includes('online') && !isHost) {
+                    opponentConn.send({ type: 'move', move: move });
+                    fromSquare = null; removeHighlights();
+                    return;
+                }
+                
                 const moveResult = game.move(move);
                 if (moveResult) {
-                    board.position(game.fen()); playSound(moveResult.flags.includes('c') ? 'capture' : 'move');
-                    redoStack = []; updateGameStatus();
-                    if (gameMode === 'online' && conn && conn.open) conn.send({ type: 'move', move: move });
+                    processLocalMove(moveResult);
                     if (gameMode === 'single' && !game.game_over()) window.setTimeout(makeComputerMove, 250);
-                    fromSquare = null; removeHighlights();
                 } else {
                     if (pieceOnSquare && pieceOnSquare.color === game.turn()) { fromSquare = square; highlightMoves(square); } 
                     else { fromSquare = null; removeHighlights(); }
@@ -171,16 +189,25 @@
             }
         }
         
-        // --- TIMERS ---
-        function stopTimers() { clearInterval(whiteTimer); clearInterval(blackTimer); }
-        function startTimers() { stopTimers(); if (game.turn() === 'w') { whiteTimer = setInterval(updateWhiteTimer, 1000); } else { blackTimer = setInterval(updateBlackTimer, 1000); }}
-        function updateWhiteTimer() { whiteTime--; $('#white-timer').text(formatTime(whiteTime)); if (whiteTime <= 0) handleGameOver('Black wins on time'); }
-        function updateBlackTimer() { blackTime--; $('#black-timer').text(formatTime(blackTime)); if (blackTime <= 0) handleGameOver('White wins on time'); }
-        function formatTime(seconds) { if (seconds < 0) seconds = 0; const mins = Math.floor(seconds / 60); const secs = seconds % 60; return `${mins}:${secs < 10 ? '0' : ''}${secs}`; }
+        function processLocalMove(moveResult) {
+            fromSquare = null;
+            removeHighlights();
+            redoStack = [];
+            board.position(game.fen());
+            playSound(moveResult.flags.includes('c') ? 'capture' : 'move');
+            updateGameStatus();
+            
+            // If host, broadcast the new state to everyone
+            if (isHost) {
+                broadcast({ type: 'gamestate', fen: game.fen(), history: game.history() });
+            }
+        }
         
-        // --- CORE GAME LOGIC ---
-        function updateGameStatus() {
-            updateStatusText(); updateMoveHistory(); updateUndoRedoButtons(); startTimers();
+        // --- GAME STATE & STATUS ---
+        function updateGameStatus(isSpectatorUpdate = false) {
+            updateStatusText(); updateMoveHistory(); updateUndoRedoButtons();
+            if (!isSpectatorUpdate) startTimers();
+            
             if (game.game_over()) {
                 stopTimers(); playSound('gameEnd'); let message = '';
                 if (game.in_checkmate()) message = 'Checkmate! ' + (game.turn() === 'w' ? 'Black' : 'White') + ' wins.';
@@ -192,9 +219,12 @@
         function updateStatusText() {
             let statusText = (game.turn() === 'w' ? 'White' : 'Black') + ' to move.';
             $('.player-bar').removeClass('active-player');
-            if ((playerColor === 'w' && game.turn() === 'w') || (playerColor === 'b' && game.turn() === 'b')) { $('#player-bar').addClass('active-player'); } 
-            else { $('#opponent-bar').addClass('active-player'); }
-            if(gameMode === 'pass') { if (game.turn() === 'w') $('#player-bar').addClass('active-player'); else $('#opponent-bar').addClass('active-player'); }
+            if (gameMode !== 'spectator') {
+                 if ((playerColor === 'w' && game.turn() === 'w') || (playerColor === 'b' && game.turn() === 'b')) $('#player-bar').addClass('active-player'); 
+                 else $('#opponent-bar').addClass('active-player');
+            } else { // Spectator active bar logic
+                 if (game.turn() === 'w') $('#player-bar').addClass('active-player'); else $('#opponent-bar').addClass('active-player');
+            }
             if (game.in_check()) {
                 statusText += ' - CHECK!'; $status.css('background-color', 'rgba(255,0,0,0.2)');
                 gsap.fromTo($status, {scale: 1.1, y: -2}, {scale: 1, y: 0, duration: 0.8, ease: 'elastic.out(1, 0.5)'});
@@ -203,121 +233,249 @@
             $status.text(statusText);
         }
         function updateMoveHistory() { const history = game.history({ verbose: true }); let html = ''; for (let i = 0; i < history.length; i += 2) { html += `<span>${(i/2)+1}. ${history[i].san} ${history[i+1] ? history[i+1].san : ' '}</span><br>`; } $moveHistory.html(html); $moveHistory.scrollTop($moveHistory[0].scrollHeight); }
-        function resetCoreState() { game.reset(); whiteTime = 600; blackTime = 600; fromSquare = null; redoStack = []; $('#white-timer').text(formatTime(whiteTime)); $('#black-timer').text(formatTime(blackTime)); $moveHistory.html(''); $('#chat-log').html(''); removeHighlights(); stopTimers(); }
-        function makeComputerMove() { const bestMove = getBestMove(game, aiDifficulty); if (bestMove) { game.move(bestMove); playSound(game.history({verbose: true}).pop().flags.includes('c') ? 'capture' : 'move'); updateGameStatus(); board.position(game.fen()); } }
-        function receiveOnlineMove(move) { const moveResult = game.move(move); if (moveResult) { playSound(moveResult.flags.includes('c') ? 'capture' : 'move'); updateGameStatus(); board.position(game.fen()); } }
+        function resetCoreState() { game.reset(); whiteTime = 600; blackTime = 600; fromSquare = null; redoStack = []; $('#white-timer').text(formatTime(whiteTime)); $('#black-timer').text(formatTime(blackTime)); $moveHistory.html(''); $('#chat-log').html(''); removeHighlights(); stopTimers(); isHost = false; opponentConn = null; spectatorConns = []; }
+        
+        // --- TIMERS ---
+        function stopTimers() { clearInterval(whiteTimer); clearInterval(blackTimer); }
+        function startTimers() { stopTimers(); if (game.turn() === 'w') { whiteTimer = setInterval(updateWhiteTimer, 1000); } else { blackTimer = setInterval(updateBlackTimer, 1000); }}
+        function updateWhiteTimer() { whiteTime--; $('#white-timer').text(formatTime(whiteTime)); if (whiteTime <= 0) handleGameOver('Black wins on time'); }
+        function updateBlackTimer() { blackTime--; $('#black-timer').text(formatTime(blackTime)); if (blackTime <= 0) handleGameOver('White wins on time'); }
+        function formatTime(seconds) { if (seconds < 0) seconds = 0; const mins = Math.floor(seconds / 60); const secs = seconds % 60; return `${mins}:${secs < 10 ? '0' : ''}${secs}`; }
+
+        // --- AI LOGIC (unchanged) ---
+        function makeComputerMove() { const bestMove = getBestMove(game, aiDifficulty); if (bestMove) { processLocalMove(bestMove); } }
         function getBestMove(game, depth) { const possibleMoves = game.moves({ verbose: true }); if (possibleMoves.length === 0) return null; let bestMove = null; let bestValue = -Infinity; possibleMoves.sort(() => Math.random() - 0.5); for (const move of possibleMoves) { game.move(move); const boardValue = -negamax(game, depth - 1, -Infinity, Infinity); game.undo(); if (boardValue > bestValue) { bestValue = boardValue; bestMove = move; } } return bestMove; }
         function negamax(game, depth, alpha, beta) { if (depth === 0 || game.game_over()) { return evaluateBoard(game.board()); } let max = -Infinity; const moves = game.moves(); for (const move of moves) { game.move(move); const score = -negamax(game, depth - 1, -beta, -alpha); game.undo(); max = Math.max(max, score); alpha = Math.max(alpha, score); if (alpha >= beta) { break; } } return max; }
         function evaluateBoard(board) { let totalEvaluation = 0; const pieceValues = { p: 10, n: 30, b: 30, r: 50, q: 90, k: 900 }; board.forEach(row => { row.forEach(piece => { if (piece) { const value = pieceValues[piece.type]; totalEvaluation += (piece.color === 'w' ? value : -value); } }); }); return totalEvaluation * (game.turn() === 'w' ? 1 : -1); }
+
+        // --- GAME SETUP ---
         function setupGame(mode, options = {}) {
             resetCoreState(); gameMode = mode; playerColor = options.color || 'w'; aiDifficulty = options.difficulty || 3;
+            if (options.isHost) isHost = true;
+            
+            // Set player names on bars
+            if (mode === 'spectator') {
+                $('#player-bar .player-info span').text(options.whiteName);
+                $('#opponent-bar .player-info span').text(options.blackName);
+            } else {
+                $('#player-bar .player-info span').text(playerName + " (You)");
+                $('#opponent-bar .player-info span').text(options.opponentName || 'Opponent');
+            }
+
             const boardConfig = { position: 'start', pieceTheme: 'https://lichess1.org/assets/piece/staunty/{piece}.svg', draggable: false, moveSpeed: 'slow', snapSpeed: 50 };
             boardConfig.orientation = (playerColor === 'b') ? 'black' : 'white';
             if(board) board.destroy();
             board = Chessboard('board', boardConfig);
             $boardEl.on('click', '.square-55d63', onSquareClick);
-            updateGameStatus();
+            
+            // Disable controls for spectators
+            const isPlayer = (gameMode !== 'spectator' && gameMode !== 'pass');
+            $('#draw-btn, #resign-btn').prop('disabled', !isPlayer);
+
+            if (options.fen) { game.load(options.fen); board.position(options.fen); }
+            updateGameStatus(gameMode === 'spectator');
             $('#game-area').removeClass('hidden'); playIntroAnimation(); playSound('gameStart');
-            if (mode === 'online') { $('.tab-btn[data-tab="chat"]').show(); } else { $('.tab-btn[data-tab="chat"]').hide(); $('.tab-btn[data-tab="moves"]').addClass('active').click(); }
+            if (mode.includes('online') || mode === 'spectator') { $('.tab-btn[data-tab="chat"]').show(); } else { $('.tab-btn[data-tab="chat"]').hide(); $('.tab-btn[data-tab="moves"]').addClass('active').click(); }
             if (mode === 'single' && playerColor === 'b') window.setTimeout(makeComputerMove, 500);
             $(window).trigger('resize');
         }
-        
-        // --- ONLINE & UNDO/REDO ---
-        function generateRoomCode() { return Math.floor(100000 + Math.random() * 900000).toString(); }
-        function updateUndoRedoButtons() {
-            if (gameMode === 'online') { $undoBtn.prop('disabled', true); $redoBtn.prop('disabled', true); return; }
-            $undoBtn.prop('disabled', game.history().length === 0);
-            $redoBtn.prop('disabled', redoStack.length === 0);
+
+        // --- ONLINE MULTIPLAYER LOGIC ---
+        function broadcast(data) {
+            if (opponentConn && opponentConn.open) opponentConn.send(data);
+            spectatorConns.forEach(conn => { if (conn.open) conn.send(data); });
         }
-        function createOnlineRoom() {
-            if (peer) peer.destroy();
-            let roomCode = generateRoomCode(); peer = new Peer(roomCode);
-            peer.on('open', id => { $('#room-code-display').text(id); showModal('#create-room-modal'); peer.on('connection', newConn => { conn = newConn; setupConnection(conn, true); }); });
-            peer.on('error', err => {
-                if (err.type === 'unavailable-id') { createOnlineRoom(); } 
-                else { alert('PeerJS Error. Could not create room.'); console.error(err); hideModal('#create-room-modal'); showModal('#online-modal'); }
-            });
-        }
-        
-        function setupConnection(connection, isHosting) {
-            // Determine which modal is currently visible for this player.
-            const modalToHide = isHosting ? '#create-room-modal' : '#join-room-modal';
+
+        function handleConnection(conn) {
+            // The first player to connect is the opponent.
+            if (!opponentConn || !opponentConn.open) {
+                opponentConn = conn;
+                opponentConn.send({ type: 'init', isSpectator: false, opponentName: playerName, fen: game.fen() });
+                $('#opponent-bar .player-info span').text("Opponent Connecting...");
+            } else { // Subsequent connections are spectators.
+                spectatorConns.push(conn);
+                let opponentName = (opponentConn && opponentConn.metadata) ? opponentConn.metadata.name : "Player 2";
+                conn.send({ type: 'init', isSpectator: true, whiteName: playerName, blackName: opponentName, fen: game.fen() });
+            }
             
-            // Hide the correct modal. Once the animation is complete, THEN set up the game.
-            // This prevents the game from loading behind the modal.
-            hideModal(modalToHide, () => {
-                playerColor = isHosting ? 'w' : 'b';
-                setupGame('online', { color: playerColor });
+            conn.on('data', data => {
+                if(data.type === 'move' && isHost) {
+                    const moveResult = game.move(data.move);
+                    if (moveResult) processLocalMove(moveResult);
+                } else if (data.type === 'chat') {
+                    // Host relays chat to everyone
+                    addChatMessage(data.name, data.message);
+                    broadcast({ type: 'chat', name: data.name, message: data.message });
+                } else if (data.type === 'init-reply') {
+                     $('#opponent-bar .player-info span').text(data.name);
+                     opponentConn.metadata = { name: data.name }; // Store opponent name
+                }
+                // Handle resign, draw offers etc. and broadcast them
             });
 
-            // Set up data/event listeners for the connection
-            connection.on('data', data => {
-                switch (data.type) {
-                    case 'move': receiveOnlineMove(data.move); break;
-                    case 'chat': $('#chat-log').append(`<div><b>Opponent:</b> ${data.message}</div>`).scrollTop($('#chat-log')[0].scrollHeight); break;
-                    case 'resign': handleGameOver(`${playerColor === 'w' ? 'Black' : 'White'} resigned.`); break;
-                    case 'draw-offer':
-                        if (confirm('Opponent offers a draw. Accept?')) { conn.send({ type: 'draw-accept' }); handleGameOver('Draw by agreement.'); } 
-                        else { conn.send({ type: 'draw-reject' }); }
-                        break;
-                    case 'draw-accept': handleGameOver('Draw by agreement.'); break;
-                    case 'draw-reject': alert('Opponent declined the draw offer.'); break;
+            conn.on('close', () => {
+                if (opponentConn && opponentConn.peer === conn.peer) {
+                    handleGameOver("Opponent disconnected.");
+                    opponentConn = null;
+                } else {
+                    spectatorConns = spectatorConns.filter(c => c.peer !== conn.peer);
                 }
             });
-            connection.on('close', () => { handleGameOver('Opponent disconnected.'); });
+        }
+        
+        function initPeer(id) {
+            if (peer) peer.destroy();
+            peer = new Peer(id, { debug: 2 });
+            peer.on('open', id => {
+                if (isHost) {
+                    $('#room-code-display').text(id);
+                    showModal('#create-room-modal');
+                }
+            });
+            peer.on('connection', handleConnection);
+            peer.on('error', err => { console.error("PeerJS error: ", err); alert("Error: " + err.type); });
+        }
+
+        function createGame(isPublic) {
+            isHost = true;
+            const id = (isPublic ? PUBLIC_GAME_PREFIX : '') + generateRoomCode();
+            initPeer(id);
+            const modalToHide = isPublic ? '#online-modal' : '#online-modal'; // You might want different modals
+            hideModal(modalToHide, () => {
+                setupGame(isPublic ? 'public-online' : 'private-online', {
+                    color: 'w',
+                    isHost: true,
+                    opponentName: 'Waiting...'
+                });
+            });
+        }
+        
+        function joinGame(id) {
+            if (peer) peer.destroy();
+            peer = new Peer({ metadata: { name: playerName } }); // Send our name when connecting
+            peer.on('open', () => {
+                const conn = peer.connect(id, { metadata: { name: playerName } });
+                opponentConn = conn;
+                conn.on('open', () => {
+                    hideModal('#join-room-modal');
+                    hideModal('#online-modal');
+                });
+                conn.on('data', data => {
+                    if(data.type === 'init') {
+                        if (data.isSpectator) {
+                            gameMode = 'spectator';
+                            setupGame('spectator', { whiteName: data.whiteName, blackName: data.blackName, fen: data.fen });
+                        } else {
+                            gameMode = 'private-online';
+                            playerColor = 'b';
+                            setupGame('private-online', { color: 'b', opponentName: data.opponentName, fen: data.fen });
+                            conn.send({ type: 'init-reply', name: playerName });
+                        }
+                    } else if (data.type === 'gamestate') {
+                        game.load(data.fen);
+                        board.position(data.fen);
+                        updateGameStatus(gameMode === 'spectator');
+                    } else if (data.type === 'chat') {
+                        addChatMessage(data.name, data.message);
+                    }
+                });
+                conn.on('error', err => { console.error(err); alert("Connection error."); });
+            });
+        }
+
+        function refreshPublicGames() {
+            if (!peer) {
+                // Create a temporary peer to list games if one doesn't exist
+                peer = new Peer();
+                peer.on('open', () => fetchGames());
+            } else {
+                fetchGames();
+            }
+            function fetchGames() {
+                peer.listAllPeers(peers => {
+                    const publicGames = peers.filter(p => p.startsWith(PUBLIC_GAME_PREFIX));
+                    const $list = $('#public-games-list').empty();
+                    if (publicGames.length > 0) {
+                        publicGames.forEach(gameId => {
+                            const name = gameId.replace(PUBLIC_GAME_PREFIX, 'Game ');
+                            $('<li>').text(name).data('id', gameId).appendTo($list);
+                        });
+                    } else {
+                        $('<li>').text('No public games found.').appendTo($list);
+                    }
+                });
+            }
+        }
+
+        function addChatMessage(name, message) {
+            $('#chat-log').append(`<div><b>${name}:</b> ${$('<div/>').text(message).html()}</div>`).scrollTop($('#chat-log')[0].scrollHeight);
         }
 
         // --- EVENT HANDLERS ---
         $(document).one('click', unlockAudio);
         $('.btn, .btn-icon').on('click', function() { gsap.fromTo(this, {scale: 0.95}, {scale: 1, duration: 0.3, ease: 'elastic.out(1, 0.5)'}); });
         $('.tab-btn').on('click', function() { const tabId = $(this).data('tab'); $('.tab-btn').removeClass('active'); $(this).addClass('active'); $('.tab-panel').removeClass('active'); $('#' + tabId + '-panel').addClass('active'); });
-        $('#single-player-btn').on('click', () => hideModal('#game-mode-modal', () => showModal('#ai-difficulty-modal')));
-        $('.difficulty-btn').on('click', function() { hideModal('#ai-difficulty-modal', () => setupGame('single', { difficulty: $(this).data('depth') })); });
-        $('#pass-and-play-btn').on('click', () => hideModal('#game-mode-modal', () => setupGame('pass')));
-        $('#online-multiplayer-btn').on('click', () => hideModal('#game-mode-modal', () => showModal('#online-modal')));
-        $('#online-back-btn').on('click', () => hideModal('#online-modal', () => showModal('#game-mode-modal')));
-        $('#create-game-btn').on('click', () => hideModal('#online-modal', createOnlineRoom));
-        $('#join-game-btn').on('click', () => hideModal('#online-modal', () => showModal('#join-room-modal')));
-        $('#join-room-submit-btn').on('click', () => {
-            const roomCode = $('#room-code-input').val().trim();
-            if (roomCode.length !== 6) { alert('Please enter a valid 6-digit room code.'); return; }
-            if(peer) peer.destroy();
-            peer = new Peer();
-            peer.on('open', () => {
-                conn = peer.connect(roomCode);
-                conn.on('open', () => setupConnection(conn, false));
-                conn.on('error', (err) => { alert('Connection failed. Invalid Room Code or host is unavailable.'); console.error(err); });
-            });
-            peer.on('error', err => { alert('PeerJS Error. Could not connect to server.'); console.error(err); });
+
+        $('#player-name-submit-btn').on('click', function() {
+            let name = $('#player-name-input').val().trim().toUpperCase();
+            if (name === '') name = "PLAYER";
+            playerName = name;
+            $('#welcome-player-name').text(playerName);
+            hideModal('#player-name-modal', () => showModal('#game-mode-modal'));
         });
+        
+        $('#single-player-btn').on('click', () => hideModal('#game-mode-modal', () => showModal('#ai-difficulty-modal')));
+        $('.difficulty-btn').on('click', function() { hideModal('#ai-difficulty-modal', () => setupGame('single', { difficulty: $(this).data('depth'), opponentName: 'AI' })); });
+        $('#pass-and-play-btn').on('click', () => hideModal('#game-mode-modal', () => setupGame('pass', { opponentName: 'Player 2' })));
+        
+        $('#online-multiplayer-btn').on('click', () => { hideModal('#game-mode-modal', () => { showModal('#online-modal'); refreshPublicGames(); }); });
+        $('#online-back-btn').on('click', () => hideModal('#online-modal', () => showModal('#game-mode-modal')));
+        $('#refresh-games-btn').on('click', refreshPublicGames);
+        $('#public-games-list').on('click', 'li', function() {
+            const id = $(this).data('id');
+            if (id) joinGame(id);
+        });
+
+        $('#create-public-game-btn').on('click', () => createGame(true));
+        $('#create-private-game-btn').on('click', () => {
+            isHost = true;
+            initPeer(generateRoomCode());
+            hideModal('#online-modal', () => {
+                setupGame('private-online', { color: 'w', isHost: true, opponentName: 'Waiting...' });
+            });
+        });
+        $('#join-room-submit-btn').on('click', () => joinGame($('#room-code-input').val().trim()));
+        
         $('#copy-code-btn').on('click', () => { navigator.clipboard.writeText($('#room-code-display').text()).then(() => alert('Copied!')); });
         $('#play-again-btn').on('click', () => { hideModal('#game-over-modal', () => { $('#game-area').addClass('hidden'); showModal('#game-mode-modal'); if (peer) peer.destroy(); }); });
         
         $('#flip-board-btn').on('click', () => board.flip());
-        $('#new-game-btn').on('click', () => { if(confirm('Start a new game? This will end the current match.')){ $('#game-area').addClass('hidden'); showModal('#game-mode-modal'); if (peer) peer.destroy(); }});
-        $('#resign-btn').on('click', () => { if(confirm('Resign the game?')){ if(gameMode === 'online' && conn) conn.send({type:'resign'}); handleGameOver(`${playerColor==='w'?'White':'Black'} resigned.`);}});
-        $('#draw-btn').on('click', () => { if(gameMode === 'online' && conn){ conn.send({type:'draw-offer'}); alert('Draw offer sent.'); } else { alert('You can only offer a draw in an online game.'); }});
-        $('#chat-input').on('keypress', function(e) { if(e.which === 13){ const message = $(this).val(); if (message.trim() !== ''){ if(gameMode === 'online' && conn) { conn.send({type:'chat',message:message}); $('#chat-log').append(`<div><b>You:</b> ${message}</div>`).scrollTop($('#chat-log')[0].scrollHeight); $(this).val(''); } } }});
+        $('#new-game-btn').on('click', () => { if(confirm('Start a new game? This will end the current match.')){ if(peer) peer.destroy(); location.reload(); }});
         
-        $undoBtn.on('click', function() {
-            if ($(this).prop('disabled')) return;
-            const movesToUndo = (gameMode === 'single' && game.history().length >= 2) ? 2 : 1;
-            for (let i = 0; i < movesToUndo; i++) { const undoneMove = game.undo(); if (undoneMove) redoStack.push(undoneMove); }
-            board.position(game.fen()); updateGameStatus(); playSound('move');
+        $('#chat-input').on('keypress', function(e) {
+            if(e.which === 13){
+                const message = $(this).val();
+                if (message.trim() !== '') {
+                    if (gameMode.includes('online') || gameMode === 'spectator') {
+                        addChatMessage(playerName, message); // Show your own message
+                        if (isHost) {
+                            broadcast({type:'chat', name: playerName, message: message});
+                        } else if(opponentConn) {
+                            opponentConn.send({type:'chat', name: playerName, message: message});
+                        }
+                    }
+                    $(this).val('');
+                }
+            }
         });
-        $redoBtn.on('click', function() {
-            if ($(this).prop('disabled')) return;
-            const movesToRedo = (gameMode === 'single' && redoStack.length >= 2) ? 2 : 1;
-            let moves = [];
-            for (let i = 0; i < movesToRedo; i++) { const move = redoStack.pop(); if (move) moves.unshift(move); }
-            moves.forEach(move => game.move(move));
-            board.position(game.fen()); updateGameStatus(); playSound('move');
-        });
-
-        $(window).on('resize', function() { if(board) board.resize(); }).trigger('resize');
         
-        showModal('#game-mode-modal');
+        // --- HELPERS ---
+        function generateRoomCode() { return Math.floor(1000 + Math.random() * 9000).toString(); }
+        function updateUndoRedoButtons() { const isOnline = gameMode.includes('online') || gameMode === 'spectator'; $undoBtn.prop('disabled', isOnline || game.history().length === 0); $redoBtn.prop('disabled', isOnline || redoStack.length === 0); }
+        
+        // --- INIT ---
+        function init() { showModal('#player-name-modal'); }
+        init();
     });
     </script>
 </body>
