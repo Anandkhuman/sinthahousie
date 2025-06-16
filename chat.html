@@ -147,7 +147,7 @@
             loadingOverlay.style.display = show ? 'flex' : 'none';
         };
         
-        // --- 3D Background (self-invoking) ---
+        // --- 3D Background ---
         (() => {
             const scene = new THREE.Scene();
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -207,7 +207,7 @@
                 rejoinContainer.innerHTML = `<button id="rejoin-btn" class="secondary-action"><i class="fas fa-history"></i> Rejoin "${lastRoomName}"</button>`;
                 document.getElementById('rejoin-btn').onclick = () => joinRoom(lastRoom);
             }
-            roomCodeDisplay.style.display = 'none'; // Ensure this is hidden on lobby entry
+            roomCodeDisplay.style.display = 'none';
             showScreen(screens.lobby);
             initPeer();
         };
@@ -237,16 +237,8 @@
                     'iceServers': [
                         { urls: 'stun:stun.l.google.com:19302' },
                         { urls: 'stun:stun1.l.google.com:19302' },
-                        {
-                            urls: "turn:openrelay.metered.ca:80",
-                            username: "openrelayproject",
-                            credential: "openrelayproject",
-                        },
-                        {
-                            urls: "turn:openrelay.metered.ca:443",
-                            username: "openrelayproject",
-                            credential: "openrelayproject",
-                        },
+                        { urls: "turn:openrelay.metered.ca:80", username: "openrelayproject", credential: "openrelayproject" },
+                        { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" }
                     ]
                 }
             };
@@ -256,7 +248,16 @@
                 if (roomToJoinFromUrl) { joinRoom(roomToJoinFromUrl); roomToJoinFromUrl = null; }
             });
             peer.on('connection', handleNewConnection);
-            peer.on('error', err => { console.error('PeerJS error:', err); showLoading(false); alert(`A connection error occurred: ${err.message}.`); });
+            peer.on('error', err => {
+                console.error('PeerJS error:', err);
+                if (err.type === 'peer-unavailable') {
+                    // This is a common, non-fatal error when trying multiple peers.
+                    console.warn(`Peer ${err.message.split(' ').pop()} was unavailable.`);
+                } else {
+                    showLoading(false);
+                    alert(`A connection error occurred: ${err.message}.`);
+                }
+            });
         };
         
         const handleNewConnection = (conn) => {
@@ -321,7 +322,7 @@
             Object.values(connections).forEach(conn => conn.open && conn.send(data));
         };
         
-        // --- Room Management (Create, Join, Share) ---
+        // --- Room Management ---
         createRoomBtn.addEventListener('click', () => {
             if (!peer || !peer.id) { alert('Connection not established yet. Please wait a moment.'); return; }
             const roomName = prompt("Enter a name for your new chat room:", "General Chat");
@@ -422,17 +423,14 @@
         
         // --- State & History Management ---
         const getRoomStateKey = (id) => `chat-state-${id}`;
-        
         const saveState = () => {
             if (!currentRoomId) return;
             const state = { roomName: currentRoomName, peers: knownPeers, messages: getMessageHistory() };
             localStorage.setItem(getRoomStateKey(currentRoomId), JSON.stringify(state));
             localStorage.setItem('resilient-chat-lastroom', currentRoomId);
         };
-
         const getRoomState = (roomId) => JSON.parse(localStorage.getItem(getRoomStateKey(roomId)) || 'null');
         const getMessageHistory = () => (getRoomState(currentRoomId) || {}).messages || [];
-        
         const saveMessageToHistory = (message) => {
             if (!currentRoomId) return;
             const history = getMessageHistory();
@@ -441,12 +439,10 @@
             currentState.messages = history.slice(-100);
             localStorage.setItem(getRoomStateKey(currentRoomId), JSON.stringify(currentState));
         };
-
         const loadMessageHistory = (history) => {
             messageContainer.innerHTML = '';
             history.forEach(msg => displayMessage(msg));
         };
-        
         const loadLocalRoomState = (roomId) => {
             const state = getRoomState(roomId);
             if (state) {
@@ -456,15 +452,12 @@
                 loadMessageHistory(state.messages);
             }
         };
-
         const addPeer = (peerId) => { if (!knownPeers.includes(peerId)) { knownPeers.push(peerId); saveState(); } };
         const removePeer = (peerId) => { knownPeers = knownPeers.filter(p => p !== peerId); saveState(); };
 
         // --- Message Display ---
         chatForm.addEventListener('submit', (e) => { e.preventDefault(); const content = chatInput.value.trim(); if (content) { const msg = { type: 'message', content, senderName: username }; broadcast(msg); displayMessage(msg); saveMessageToHistory(msg); chatInput.value = ''; } });
-        
         const displaySystemMessage = (content) => displayMessage({ type: 'system', content });
-        
         const displayMessage = (msg) => {
             const div = document.createElement('div');
             div.classList.add('message');
