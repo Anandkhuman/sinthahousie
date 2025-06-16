@@ -232,7 +232,25 @@
         // --- PeerJS & Core Connection Logic ---
         const initPeer = () => {
             if (peer) peer.destroy();
-            peer = new Peer();
+            const peerConfig = {
+                config: {
+                    'iceServers': [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' },
+                        {
+                            urls: "turn:openrelay.metered.ca:80",
+                            username: "openrelayproject",
+                            credential: "openrelayproject",
+                        },
+                        {
+                            urls: "turn:openrelay.metered.ca:443",
+                            username: "openrelayproject",
+                            credential: "openrelayproject",
+                        },
+                    ]
+                }
+            };
+            peer = new Peer(peerConfig);
             peer.on('open', id => {
                 console.log('My PeerJS ID is:', id);
                 if (roomToJoinFromUrl) { joinRoom(roomToJoinFromUrl); roomToJoinFromUrl = null; }
