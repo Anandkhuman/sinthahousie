@@ -54,7 +54,9 @@
         .name-container .edit-name-btn:hover { color: var(--secondary-color); }
         .room-code-container { margin-top: 20px; padding: 15px; background-color: var(--input-bg); border-radius: 8px; text-align: left; }
         .code-box { background: var(--bg-color); padding: 10px; border-radius: 5px; word-wrap: break-word; margin: 10px 0; font-weight: bold; text-align: center; border: 1px dashed var(--secondary-color); user-select: all; }
-        .room-actions { display: flex; gap: 10px; margin-top: 10px; }
+        .room-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        #enter-room-btn { grid-column: 1 / -1; background-color: var(--success-color); }
+        #enter-room-btn:hover { background-color: #36fddc; }
         .chat-container { width: 100%; max-width: 700px; height: 90vh; background: var(--card-bg); border-radius: 15px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); border: 1px solid #333; }
         .chat-header { padding: 15px 20px; background: #2a2a2a; border-radius: 15px 15px 0 0; display: flex; justify-content: space-between; align-items: center; }
         #leave-btn { width: auto; padding: 8px 20px; font-size: 0.9rem; background: #c62828; color: white; }
@@ -75,64 +77,46 @@
 </head>
 <body>
     <canvas id="bg"></canvas>
-    <div class="loading-overlay" id="loading-overlay">
-        <p id="loading-text">Connecting...</p>
-    </div>
+    <div class="loading-overlay" id="loading-overlay"><p id="loading-text">Connecting...</p></div>
     <div class="app-container">
         <div id="welcome-screen" class="screen">
             <div class="card">
                 <h1><i class="fas fa-comments" style="color: var(--secondary-color);"></i> Resilient Chat</h1>
                 <p>A truly decentralized chat application. Rooms stay alive as long as one person remains.</p>
-                <form id="name-form">
-                    <input type="text" id="name-input" placeholder="Enter Your Name" required autocomplete="off">
-                    <button type="submit">Continue <i class="fas fa-arrow-right"></i></button>
-                </form>
+                <form id="name-form"><input type="text" id="name-input" placeholder="Enter Your Name" required autocomplete="off"><button type="submit">Continue <i class="fas fa-arrow-right"></i></button></form>
             </div>
         </div>
         <div id="lobby-screen" class="screen">
             <div class="card">
-                <div class="name-container">
-                    <h2 id="welcome-message"></h2>
-                    <button class="edit-name-btn" id="edit-name-btn" title="Edit Name"><i class="fas fa-pencil-alt"></i></button>
-                </div>
+                <div class="name-container"><h2 id="welcome-message"></h2><button class="edit-name-btn" id="edit-name-btn" title="Edit Name"><i class="fas fa-pencil-alt"></i></button></div>
                 <div id="rejoin-container"></div>
                 <button id="create-room-btn">Create a New Room <i class="fas fa-plus-circle"></i></button>
                 <div class="divider">OR</div>
-                <form id="join-form">
-                    <input type="text" id="join-code-input" placeholder="Enter Room Code" required autocomplete="off">
-                    <button type="submit">Join Room <i class="fas fa-sign-in-alt"></i></button>
-                </form>
-                 <div id="room-code-display" class="room-code-container" style="display: none;">
-                    <p>Room created! Share this code:</p>
+                <form id="join-form"><input type="text" id="join-code-input" placeholder="Enter Room Code" required autocomplete="off"><button type="submit">Join Room <i class="fas fa-sign-in-alt"></i></button></form>
+                <div id="room-code-display" class="room-code-container" style="display: none;">
+                    <p>Your room is ready! Share this code:</p>
                     <div id="room-code" class="code-box"></div>
                     <div class="room-actions">
-                        <button id="share-btn"><i class="fas fa-share-alt"></i> Share Link</button>
-                        <button id="copy-code-btn"><i class="fas fa-copy"></i> Copy Code</button>
+                        <button id="enter-room-btn"><i class="fas fa-door-open"></i> Enter Room</button>
+                        <button id="share-btn"><i class="fas fa-share-alt"></i> Share</button>
+                        <button id="copy-code-btn"><i class="fas fa-copy"></i> Copy</button>
                     </div>
                 </div>
             </div>
         </div>
         <div id="chat-screen" class="screen">
             <div class="chat-container">
-                <div class="chat-header">
-                    <h3 id="chat-room-title">Chat Room</h3>
-                    <button id="leave-btn"><i class="fas fa-sign-out-alt"></i> Leave</button>
-                </div>
+                <div class="chat-header"><h3 id="chat-room-title">Chat Room</h3><button id="leave-btn"><i class="fas fa-sign-out-alt"></i> Leave</button></div>
                 <div class="messages" id="message-container"></div>
-                <form class="chat-input-form" id="chat-form">
-                    <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off">
-                    <button type="submit">Send <i class="fas fa-paper-plane"></i></button>
-                </form>
+                <form class="chat-input-form" id="chat-form"><input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off"><button type="submit">Send <i class="fas fa-paper-plane"></i></button></form>
             </div>
         </div>
     </div>
 
-    <!-- EXTERNAL LIBRARIES -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.4.7/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
 
-    <!-- JAVASCRIPT LOGIC -->
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         // --- DOM Elements ---
@@ -142,7 +126,7 @@
         const welcomeMessage = document.getElementById('welcome-message'), editNameBtn = document.getElementById('edit-name-btn');
         const createRoomBtn = document.getElementById('create-room-btn'), joinForm = document.getElementById('join-form'), joinCodeInput = document.getElementById('join-code-input');
         const roomCodeDisplay = document.getElementById('room-code-display'), roomCodeEl = document.getElementById('room-code');
-        const copyCodeBtn = document.getElementById('copy-code-btn'), shareBtn = document.getElementById('share-btn');
+        const copyCodeBtn = document.getElementById('copy-code-btn'), shareBtn = document.getElementById('share-btn'), enterRoomBtn = document.getElementById('enter-room-btn');
         const chatRoomTitle = document.getElementById('chat-room-title');
         const messageContainer = document.getElementById('message-container'), chatForm = document.getElementById('chat-form'), chatInput = document.getElementById('chat-input');
         const leaveBtn = document.getElementById('leave-btn'), rejoinContainer = document.getElementById('rejoin-container');
@@ -215,6 +199,7 @@
 
         const initLobby = () => {
             welcomeMessage.textContent = `Welcome, ${username}!`;
+            rejoinContainer.innerHTML = '';
             const lastRoom = localStorage.getItem('resilient-chat-lastroom');
             if (lastRoom) {
                 const lastRoomState = getRoomState(lastRoom);
@@ -222,14 +207,16 @@
                 rejoinContainer.innerHTML = `<button id="rejoin-btn" class="secondary-action"><i class="fas fa-history"></i> Rejoin "${lastRoomName}"</button>`;
                 document.getElementById('rejoin-btn').onclick = () => joinRoom(lastRoom);
             }
+            roomCodeDisplay.style.display = 'none'; // Ensure this is hidden on lobby entry
             showScreen(screens.lobby);
             initPeer();
         };
 
         // --- Name Handling ---
         nameForm.addEventListener('submit', (e) => { e.preventDefault(); const n = nameInput.value.trim(); if(n){username = n; localStorage.setItem('resilient-chat-username', username); initLobby();} });
+        
         editNameBtn.addEventListener('click', () => {
-             const newName = prompt("Enter your new name:", username);
+            const newName = prompt("Enter your new name:", username);
             if (newName && newName.trim() !== "" && newName.trim() !== username) {
                 const oldName = username;
                 username = newName.trim();
@@ -256,12 +243,15 @@
         
         const handleNewConnection = (conn) => {
             conn.on('open', () => {
-                console.log(`Accepted connection from ${conn.peer}`);
+                if (screens.lobby.classList.contains('active')) {
+                    showScreen(screens.chat);
+                    displaySystemMessage(`You are now in room "${currentRoomName}".`);
+                }
                 conn.send({ type: 'welcome', roomName: currentRoomName, history: getMessageHistory(), peers: knownPeers, senderName: username });
                 addPeer(conn.peer);
                 broadcast({ type: 'peer-joined', peerId: conn.peer });
                 connections[conn.peer] = conn;
-                connections[conn.peer].username = "New User"; // Placeholder until they announce themselves
+                connections[conn.peer].username = "New User";
             });
             conn.on('data', data => handleData(data, conn.peer));
             conn.on('close', () => handleDisconnect(conn.peer));
@@ -273,7 +263,6 @@
             
             switch(data.type) {
                 case 'welcome':
-                    console.log(`Received welcome from ${data.senderName} (${peerId})`);
                     currentRoomName = data.roomName;
                     chatRoomTitle.textContent = currentRoomName;
                     knownPeers = [...new Set([peer.id, ...data.peers, peerId])];
@@ -304,8 +293,8 @@
             delete connections[peerId];
             removePeer(peerId);
             const systemMessage = { type: 'peer-left', peerId: peerId, senderName: peerName };
-            broadcast(systemMessage); // Inform others
-            displayMessage(systemMessage); // Show to myself
+            broadcast(systemMessage);
+            displayMessage(systemMessage);
             saveMessageToHistory(systemMessage);
             console.log(`Connection closed with ${peerId}`);
         };
@@ -315,26 +304,53 @@
             Object.values(connections).forEach(conn => conn.open && conn.send(data));
         };
         
-        // --- Room Management (Create, Join, State) ---
+        // --- Room Management (Create, Join, Share) ---
         createRoomBtn.addEventListener('click', () => {
-            if (!peer || peer.disconnected) { alert('Connection not established yet.'); return; }
-            
+            if (!peer || !peer.id) { alert('Connection not established yet. Please wait a moment.'); return; }
             const roomName = prompt("Enter a name for your new chat room:", "General Chat");
             if (roomName && roomName.trim() !== "") {
                 currentRoomId = peer.id;
                 currentRoomName = roomName.trim();
                 knownPeers = [peer.id];
-                messageContainer.innerHTML = '';
                 chatRoomTitle.textContent = currentRoomName;
-                saveState();
-                displaySystemMessage(`Room "${currentRoomName}" created. Share the code or link!`);
-                saveMessageToHistory({type: 'system', content: `${username} created the room "${currentRoomName}".`});
-                
+                localStorage.setItem(getRoomStateKey(currentRoomId), JSON.stringify({ roomName: currentRoomName, peers: [peer.id], messages: [] }));
+                localStorage.setItem('resilient-chat-lastroom', currentRoomId);
                 roomCodeEl.textContent = currentRoomId;
                 roomCodeDisplay.style.display = 'block';
                 gsap.from(roomCodeDisplay, { opacity: 0, y: 20, duration: 0.3 });
-                showScreen(screens.chat);
             }
+        });
+        
+        enterRoomBtn.addEventListener('click', () => {
+            if (currentRoomId && screens.lobby.classList.contains('active')) {
+                showScreen(screens.chat);
+                loadLocalRoomState(currentRoomId); 
+                displaySystemMessage(`You are now in room "${currentRoomName}". Waiting for others to join...`);
+            }
+        });
+
+        shareBtn.addEventListener('click', () => {
+            const shareUrl = `${window.location.origin}${window.location.pathname}?room=${currentRoomId}`;
+            const shareData = {
+                title: 'Join My Resilient Chat Room!',
+                text: `Let's chat! Join my room "${currentRoomName}" with this link.`,
+                url: shareUrl,
+            };
+            if (navigator.share) {
+                navigator.share(shareData).catch((error) => console.log('Error sharing', error));
+            } else {
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    shareBtn.innerHTML = '<i class="fas fa-check"></i> Link Copied!';
+                    setTimeout(() => { shareBtn.innerHTML = '<i class="fas fa-share-alt"></i> Share' }, 2000);
+                });
+            }
+        });
+
+        copyCodeBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(currentRoomId).then(() => {
+                copyCodeBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => { copyCodeBtn.innerHTML = '<i class="fas fa-copy"></i> Copy' }, 2000);
+            });
         });
 
         joinForm.addEventListener('submit', (e) => { e.preventDefault(); const code = joinCodeInput.value.trim(); if(code) joinRoom(code); });
@@ -342,14 +358,11 @@
         const joinRoom = async (roomId) => {
             if (!peer || peer.disconnected) { alert('Connection not established yet.'); return; }
             if (Object.keys(connections).length > 0) { alert("You are already in a room. Please leave first."); return; }
-            
             showLoading(true, `Joining room...`);
             currentRoomId = roomId;
-            loadLocalRoomState(roomId); // Pre-load local state for faster UI
-            
+            loadLocalRoomState(roomId);
             const peersToTry = [...new Set([roomId, ...knownPeers])];
             let connected = false;
-            
             for (const peerId of peersToTry) {
                 if (peerId === peer.id) continue;
                 try {
@@ -367,11 +380,8 @@
                         setTimeout(() => reject(new Error('Connection timed out')), 5000);
                     });
                     if (connected) break;
-                } catch (err) {
-                    console.warn(`Failed to connect to peer ${peerId}:`, err.message);
-                }
+                } catch (err) { console.warn(`Failed to connect to peer ${peerId}:`, err.message); }
             }
-
             showLoading(false);
             if (connected) {
                 showScreen(screens.chat);
@@ -392,7 +402,7 @@
             roomCodeDisplay.style.display = 'none';
             joinCodeInput.value = '';
             history.pushState(null, '', window.location.pathname);
-            initLobby(); // Re-initialize lobby to show rejoin button
+            initLobby();
         });
         
         // --- State & History Management ---
@@ -400,11 +410,7 @@
         
         const saveState = () => {
             if (!currentRoomId) return;
-            const state = {
-                roomName: currentRoomName,
-                peers: knownPeers,
-                messages: getMessageHistory()
-            };
+            const state = { roomName: currentRoomName, peers: knownPeers, messages: getMessageHistory() };
             localStorage.setItem(getRoomStateKey(currentRoomId), JSON.stringify(state));
             localStorage.setItem('resilient-chat-lastroom', currentRoomId);
         };
@@ -441,6 +447,7 @@
 
         // --- Message Display ---
         chatForm.addEventListener('submit', (e) => { e.preventDefault(); const content = chatInput.value.trim(); if (content) { const msg = { type: 'message', content, senderName: username }; broadcast(msg); displayMessage(msg); saveMessageToHistory(msg); chatInput.value = ''; } });
+        
         const displaySystemMessage = (content) => displayMessage({ type: 'system', content });
         
         const displayMessage = (msg) => {
@@ -457,7 +464,7 @@
                 div.innerHTML = `<div class="sender-name">${msg.senderName}</div><div class="message-bubble">${msg.content}</div>`;
             }
             messageContainer.appendChild(div);
-            if (document.hidden === false) {
+_           if (document.hidden === false) {
                 gsap.from(div, { opacity: 0, y: 10, duration: 0.3 });
             }
             messageContainer.scrollTop = messageContainer.scrollHeight;
