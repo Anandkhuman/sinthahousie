@@ -275,7 +275,7 @@
                     saveMessageToHistory(data);
                     break;
                 case 'peer-joined':
-                    if (peerId !== data.peerId) {
+                    if (peer.id !== data.peerId) {
                         addPeer(data.peerId);
                         displaySystemMessage(`${data.senderName} has joined.`);
                     }
@@ -296,7 +296,6 @@
             broadcast(systemMessage);
             displayMessage(systemMessage);
             saveMessageToHistory(systemMessage);
-            console.log(`Connection closed with ${peerId}`);
         };
 
         const broadcast = (data) => {
@@ -399,8 +398,6 @@
             currentRoomName = '';
             knownPeers = [];
             messageContainer.innerHTML = '';
-            roomCodeDisplay.style.display = 'none';
-            joinCodeInput.value = '';
             history.pushState(null, '', window.location.pathname);
             initLobby();
         });
@@ -464,7 +461,7 @@
                 div.innerHTML = `<div class="sender-name">${msg.senderName}</div><div class="message-bubble">${msg.content}</div>`;
             }
             messageContainer.appendChild(div);
-_           if (document.hidden === false) {
+            if (document.hidden === false) {
                 gsap.from(div, { opacity: 0, y: 10, duration: 0.3 });
             }
             messageContainer.scrollTop = messageContainer.scrollHeight;
