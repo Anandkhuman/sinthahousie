@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P 3D Chat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <!-- CSS STYLES EMBEDDED -->
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --card-bg: #16213e;
+            --primary-color: #0f3460;
+            --secondary-color: #e94560;
+            --text-color: #dcdcdc;
+            --input-bg: #2e2e48;
+            --font-family: 'Poppins', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+
+        .app-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .screen {
+            display: none;
+            width: 100%;
+            max-width: 400px;
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        .screen.active {
+            display: block;
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            border: 1px solid var(--primary-color);
+        }
+
+        h1, h2 {
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid var(--primary-color);
+            border-radius: 8px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-family: var(--font-family);
+            font-size: 1rem;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        button:hover {
+            background-color: #f06a81;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .divider {
+            margin: 20px 0;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .room-code-container {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--input-bg);
+            border-radius: 8px;
+        }
+
+        .code-box {
+            background: var(--bg-color);
+            padding: 10px;
+            border-radius: 5px;
+            word-wrap: break-word;
+            margin: 10px 0;
+            font-weight: bold;
+            letter-spacing: 1px;
+            border: 1px dashed var(--secondary-color);
+        }
+
+        #copy-code-btn {
+            width: auto;
+            padding: 8px 15px;
+            font-size: 0.8rem;
+            background-color: var(--primary-color);
+        }
+
+        #copy-code-btn:hover {
+            background-color: #2c5d9c;
+        }
+
+        /* Chat Screen */
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            height: 80vh;
+            background: var(--card-bg);
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--primary-color);
+        }
+
+        .chat-header {
+            padding: 15px 20px;
+            background: var(--primary-color);
+            border-bottom: 1px solid #0f3460;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h3 {
+            margin: 0;
+        }
+
+        #leave-btn {
+            width: auto;
+            padding: 5px 15px;
+            font-size: 0.9rem;
+        }
+
+        .messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Custom Scrollbar */
+        .messages::-webkit-scrollbar { width: 8px; }
+        .messages::-webkit-scrollbar-track { background: var(--card-bg); }
+        .messages::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 4px; }
+
+        .message {
+            margin-bottom: 15px;
+            max-width: 75%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message.sent { align-self: flex-end; align-items: flex-end; }
+        .message.received { align-self: flex-start; align-items: flex-start; }
+
+        .message .sender-name {
+            font-size: 0.75rem;
+            color: #aaa;
+            margin-bottom: 4px;
+            margin-left: 12px;
+            margin-right: 12px;
+        }
+
+        .message-bubble {
+            padding: 10px 15px;
+            border-radius: 20px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .message.sent .message-bubble { background: var(--secondary-color); color: white; border-bottom-right-radius: 5px; }
+        .message.received .message-bubble { background: #2e2e48; color: var(--text-color); border-bottom-left-radius: 5px; }
+        .message.system { align-self: center; text-align: center; font-style: italic; color: #888; font-size: 0.8rem; }
+
+        .chat-input-form {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid var(--primary-color);
+        }
+
+        .chat-input-form input { flex-grow: 1; margin-right: 10px; margin-bottom: 0; }
+        .chat-input-form button { width: auto; padding: 0 20px; }
+    </style>
+</head>
+<body>
+
+    <!-- 3D Background Canvas -->
+    <canvas id="bg"></canvas>
+
+    <!-- HTML STRUCTURE -->
+    <div class="app-container">
+
+        <!-- Name Entry Screen -->
+        <div id="name-screen" class="screen">
+            <div class="card">
+                <h1>Welcome to P2P 3D Chat</h1>
+                <p>Please enter your name to begin.</p>
+                <form id="name-form">
+                    <input type="text" id="name-input" placeholder="Your Name" required autocomplete="off">
+                    <button type="submit">Continue</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Lobby Screen -->
+        <div id="lobby-screen" class="screen">
+            <div class="card">
+                <h2 id="welcome-message"></h2>
+                <button id="create-room-btn">Create a New Room</button>
+                <div class="divider">OR</div>
+                <form id="join-form">
+                    <input type="text" id="join-code-input" placeholder="Enter Room Code to Join" required autocomplete="off">
+                    <button type="submit">Join Room</button>
+                </form>
+                 <div id="room-code-display" class="room-code-container" style="display: none;">
+                    <p>Share this code with your friends:</p>
+                    <div id="room-code" class="code-box"></div>
+                    <button id="copy-code-btn">Copy Code</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Screen -->
+        <div id="chat-screen" class="screen">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h3>Chat Room</h3>
+                    <button id="leave-btn">Leave</button>
+                </div>
+                <div class="messages" id="message-container">
+                    <!-- Messages will be injected here -->
+                </div>
+                <form class="chat-input-form" id="chat-form">
+                    <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off">
+                    <button type="submit">Send</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- EXTERNAL LIBRARIES -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.4.7/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+
+    <!-- JAVASCRIPT LOGIC EMBEDDED -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- DOM Elements ---
+            const nameScreen = document.getElementById('name-screen');
+            const lobbyScreen = document.getElementById('lobby-screen');
+            const chatScreen = document.getElementById('chat-screen');
+            
+            const nameForm = document.getElementById('name-form');
+            const nameInput = document.getElementById('name-input');
+            const welcomeMessage = document.getElementById('welcome-message');
+
+            const createRoomBtn = document.getElementById('create-room-btn');
+            const joinForm = document.getElementById('join-form');
+            const joinCodeInput = document.getElementById('join-code-input');
+            
+            const roomCodeDisplay = document.getElementById('room-code-display');
+            const roomCodeEl = document.getElementById('room-code');
+            const copyCodeBtn = document.getElementById('copy-code-btn');
+
+            const messageContainer = document.getElementById('message-container');
+            const chatForm = document.getElementById('chat-form');
+            const chatInput = document.getElementById('chat-input');
+            const leaveBtn = document.getElementById('leave-btn');
+
+            // --- App State ---
+            let peer;
+            let username = '';
+            let currentRoomId = null;
+            const connections = {};
+
+            // --- GSAP Timeline for screen transitions ---
+            const tl = gsap.timeline({ defaults: { duration: 0.4, ease: "power2.inOut" } });
+
+            function showScreen(screen) {
+                const currentActive = document.querySelector('.screen.active');
+                tl.to(currentActive, { opacity: 0, scale: 0.95, onComplete: () => currentActive.classList.remove('active') })
+                  .to(screen, { opacity: 1, scale: 1, onComplete: () => screen.classList.add('active') }, ">-0.2");
+            }
+
+            // --- 1. Three.js Background ---
+            function init3DBackground() {
+                const scene = new THREE.Scene();
+                const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg'), antialias: true });
+
+                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                camera.position.z = 5;
+
+                const starGeometry = new THREE.BufferGeometry();
+                const starCount = 5000;
+                const posArray = new Float32Array(starCount * 3);
+
+                for (let i = 0; i < starCount * 3; i++) {
+                    posArray[i] = (Math.random() - 0.5) * 100;
+                }
+
+                starGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+                const starMaterial = new THREE.PointsMaterial({ size: 0.015, color: 0xe94560 });
+                const starMesh = new THREE.Points(starGeometry, starMaterial);
+                scene.add(starMesh);
+
+                window.addEventListener('resize', () => {
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+                });
+
+                function animate() {
+                    requestAnimationFrame(animate);
+                    starMesh.rotation.y += 0.0002;
+                    starMesh.rotation.x += 0.0002;
+                    renderer.render(scene, camera);
+                }
+                animate();
+            }
+            
+            // --- 2. Initialization and Name Entry ---
+            function initialize() {
+                init3DBackground();
+                const savedName = localStorage.getItem('p2p-chat-username');
+                if (savedName) {
+                    username = savedName;
+                    nameInput.value = savedName;
+                    welcomeMessage.textContent = `Welcome, ${username}!`;
+                    showScreen(lobbyScreen);
+                    initPeer();
+                } else {
+                    nameScreen.classList.add('active');
+                    gsap.from(nameScreen.querySelector('.card'), {opacity: 0, y: 50, duration: 0.5, ease: 'power2.out'});
+                }
+            }
+
+            nameForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = nameInput.value.trim();
+                if (name) {
+                    username = name;
+                    localStorage.setItem('p2p-chat-username', username);
+                    welcomeMessage.textContent = `Welcome, ${username}!`;
+                    showScreen(lobbyScreen);
+                    initPeer();
+                }
+            });
+
+            // --- 3. PeerJS Logic ---
+            function initPeer() {
+                if(peer) peer.destroy();
+                
+                // Using the public PeerJS server. For production, consider hosting your own.
+                peer = new Peer();
+
+                peer.on('open', (id) => {
+                    console.log('My PeerJS ID is:', id);
+                    currentRoomId = id; // The user's own ID becomes the room ID if they create one.
+                });
+
+                peer.on('connection', (conn) => {
+                    handleNewConnection(conn);
+                });
+
+                peer.on('error', (err) => {
+                    console.error('PeerJS error:', err);
+                    alert(`An error occurred: ${err.message}. Please try refreshing.`);
+                });
+            }
+
+            function handleNewConnection(conn) {
+                connections[conn.peer] = conn;
+                console.log(`New connection from: ${conn.peer}`);
+                
+                conn.on('open', () => {
+                    // Send my info to the new peer
+                    conn.send({ type: 'user-info', username: username });
+
+                    // Announce new user to everyone else
+                    const joinMsg = { type: 'system', content: `${conn.metadata.username} has joined the chat.` };
+                    broadcast(joinMsg, conn.peer); // Broadcast to others, exclude the new peer
+                    displaySystemMessage(joinMsg.content);
+
+                    // Show chat screen for the host if it's the first connection
+                    if (!chatScreen.classList.contains('active')) {
+                        showScreen(chatScreen);
+                    }
+                });
+
+                conn.on('data', (data) => {
+                    handleData(data, conn.peer);
+                });
+
+                conn.on('close', () => {
+                    const disconnectedUser = connections[conn.peer]?.username || 'A user';
+                    displaySystemMessage(`${disconnectedUser} has left the chat.`);
+                    delete connections[conn.peer];
+                });
+            }
+            
+            function broadcast(data, excludePeerId = null) {
+                Object.values(connections).forEach(conn => {
+                    if (conn.open && conn.peer !== excludePeerId) {
+                        conn.send(data);
+                    }
+                });
+            }
+            
+            function handleData(data, peerId) {
+                switch(data.type) {
+                    case 'message':
+                        displayMessage(data.sender, data.content, 'received');
+                        break;
+                    case 'system':
+                         displaySystemMessage(data.content);
+                        break;
+                    case 'user-info':
+                        if (connections[peerId]) {
+                            connections[peerId].username = data.username;
+                        }
+                        break;
+                }
+            }
+
+            // --- 4. Lobby and Room Management ---
+            createRoomBtn.addEventListener('click', () => {
+                if (!peer || peer.disconnected) {
+                    alert('Connection not established. Please wait a moment.');
+                    return;
+                }
+                roomCodeEl.textContent = currentRoomId;
+                roomCodeDisplay.style.display = 'block';
+                gsap.from(roomCodeDisplay, { opacity: 0, y: 20, duration: 0.3 });
+            });
+
+            copyCodeBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(currentRoomId).then(() => {
+                    copyCodeBtn.textContent = 'Copied!';
+                    gsap.to(copyCodeBtn, { scale: 1.1, duration: 0.1, yoyo: true, repeat: 1});
+                    setTimeout(() => copyCodeBtn.textContent = 'Copy Code', 2000);
+                });
+            });
+
+            joinForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const roomToJoin = joinCodeInput.value.trim();
+                if (roomToJoin && roomToJoin !== peer.id) {
+                    joinRoom(roomToJoin);
+                }
+            });
+
+            function joinRoom(roomId) {
+                if (!peer || peer.disconnected) {
+                    alert('Connection not established. Please wait a moment.');
+                    return;
+                }
+                
+                const conn = peer.connect(roomId, { metadata: { username } });
+                
+                conn.on('open', () => {
+                    handleNewConnection(conn); // Set up handlers for this connection
+                    showScreen(chatScreen);
+                });
+
+                conn.on('error', (err) => {
+                    console.error('Connection error:', err);
+                    alert('Failed to connect. Please check the code and try again.');
+                });
+            }
+
+            // --- 5. Chat Screen Logic ---
+            chatForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const messageText = chatInput.value.trim();
+                if (messageText) {
+                    const message = {
+                        type: 'message',
+                        sender: username,
+                        content: messageText
+                    };
+                    broadcast(message);
+                    displayMessage(username, messageText, 'sent');
+                    chatInput.value = '';
+                }
+            });
+            
+            function displayMessage(sender, content, type) {
+                const msgDiv = document.createElement('div');
+                msgDiv.classList.add('message', type);
+
+                const senderName = document.createElement('div');
+                senderName.classList.add('sender-name');
+                senderName.textContent = sender;
+
+                const bubble = document.createElement('div');
+                bubble.classList.add('message-bubble');
+                bubble.textContent = content;
+
+                msgDiv.appendChild(senderName);
+                msgDiv.appendChild(bubble);
+                messageContainer.appendChild(msgDiv);
+                
+                gsap.from(msgDiv, { opacity: 0, y: 20, duration: 0.3, ease: 'power2.out' });
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+            }
+
+            function displaySystemMessage(content) {
+                const sysMsgDiv = document.createElement('div');
+                sysMsgDiv.classList.add('message', 'system');
+                sysMsgDiv.textContent = content;
+                messageContainer.appendChild(sysMsgDiv);
+                
+                gsap.from(sysMsgDiv, { opacity: 0, duration: 0.3 });
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+            }
+
+            leaveBtn.addEventListener('click', () => {
+                Object.values(connections).forEach(conn => conn.close());
+                for (let key in connections) delete connections[key];
+                
+                messageContainer.innerHTML = ''; // Clear chat history
+                roomCodeDisplay.style.display = 'none';
+                joinCodeInput.value = '';
+                showScreen(lobbyScreen);
+            });
+
+            // --- Start the App ---
+            initialize();
+        });
+    </script>
+
+</body>
+</html>
