@@ -3,29 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P2P 3D Chat</title>
+    <title>Sintha Chat</title>
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
     <!-- CSS STYLES EMBEDDED -->
     <style>
         :root {
-            --bg-color: #1a1a2e;
-            --card-bg: #16213e;
-            --primary-color: #0f3460;
-            --secondary-color: #e94560;
-            --text-color: #dcdcdc;
-            --input-bg: #2e2e48;
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --primary-color: #0d47a1;
+            --secondary-color: #bb86fc;
+            --text-color: #e0e0e0;
+            --input-bg: #2c2c2c;
             --font-family: 'Poppins', sans-serif;
+            --success-color: #03dac6;
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: var(--font-family);
             background-color: var(--bg-color);
@@ -36,14 +34,7 @@
             align-items: center;
             height: 100vh;
         }
-
-        #bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: -1;
-        }
-
+        #bg { position: fixed; top: 0; left: 0; z-index: -1; }
         .app-container {
             position: relative;
             width: 100%;
@@ -52,254 +43,173 @@
             justify-content: center;
             align-items: center;
         }
-
         .screen {
             display: none;
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
             opacity: 0;
             transform: scale(0.95);
         }
-
-        .screen.active {
-            display: block;
-            opacity: 1;
-            transform: scale(1);
-        }
-
+        .screen.active { display: block; opacity: 1; transform: scale(1); }
         .card {
             background-color: var(--card-bg);
-            padding: 30px;
+            padding: 30px 35px;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             text-align: center;
-            border: 1px solid var(--primary-color);
+            border: 1px solid #333;
         }
-
-        h1, h2 {
-            color: white;
-            margin-bottom: 10px;
-        }
-
-        p {
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-            line-height: 1.5;
-        }
-
+        h1, h2, h3 { color: white; margin-bottom: 10px; }
+        p { margin-bottom: 20px; font-size: 0.9rem; line-height: 1.6; color: #b0b0b0; }
         input[type="text"] {
             width: 100%;
             padding: 12px;
             margin-bottom: 20px;
-            border: 1px solid var(--primary-color);
+            border: 1px solid #444;
             border-radius: 8px;
             background-color: var(--input-bg);
             color: var(--text-color);
             font-family: var(--font-family);
             font-size: 1rem;
+            transition: border-color 0.3s;
         }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: var(--secondary-color);
-        }
-
+        input[type="text"]:focus { outline: none; border-color: var(--secondary-color); }
         button {
             width: 100%;
             padding: 12px;
             background-color: var(--secondary-color);
-            color: white;
+            color: #000;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             font-size: 1rem;
             font-weight: 600;
             transition: background-color 0.3s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
-
-        button:hover {
-            background-color: #f06a81;
+        button:hover { background-color: #d1a5ff; }
+        button:active { transform: scale(0.98); }
+        button#create-room-btn { background-color: var(--success-color); }
+        button#create-room-btn:hover { background-color: #36fddc; }
+        .divider { margin: 20px 0; font-weight: bold; color: #555; position: relative; }
+        .divider::before, .divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background: #444;
         }
-
-        button:active {
-            transform: scale(0.98);
-        }
-
-        .divider {
-            margin: 20px 0;
-            font-weight: bold;
-            color: #555;
-        }
-
+        .divider::before { left: 0; }
+        .divider::after { right: 0; }
+        
+        .name-container { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .name-container .edit-name-btn { all: unset; cursor: pointer; color: #888; transition: color 0.3s; }
+        .name-container .edit-name-btn:hover { color: var(--secondary-color); }
+        
         .room-code-container {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: var(--input-bg);
-            border-radius: 8px;
+            margin-top: 20px; padding: 15px; background-color: var(--input-bg); border-radius: 8px;
+            text-align: left;
         }
-
         .code-box {
-            background: var(--bg-color);
-            padding: 10px;
-            border-radius: 5px;
-            word-wrap: break-word;
-            margin: 10px 0;
-            font-weight: bold;
-            letter-spacing: 1px;
-            border: 1px dashed var(--secondary-color);
+            background: var(--bg-color); padding: 10px; border-radius: 5px; word-wrap: break-word;
+            margin: 10px 0; font-weight: bold; letter-spacing: 2px; text-align: center;
+            font-size: 1.5rem; border: 1px dashed var(--secondary-color);
         }
-
-        #copy-code-btn {
-            width: auto;
-            padding: 8px 15px;
-            font-size: 0.8rem;
-            background-color: var(--primary-color);
-        }
-
-        #copy-code-btn:hover {
-            background-color: #2c5d9c;
-        }
-
+        .room-actions { display: flex; gap: 10px; margin-top: 10px; }
+        .room-actions button { width: 50%; padding: 8px 15px; font-size: 0.8rem; }
+        #copy-code-btn { background-color: var(--primary-color); color: white; }
+        #copy-code-btn:hover { background-color: #1e5abc; }
+        
         /* Chat Screen */
         .chat-container {
-            width: 100%;
-            max-width: 600px;
-            height: 80vh;
-            background: var(--card-bg);
-            border-radius: 15px;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--primary-color);
+            width: 100%; max-width: 700px; height: 90vh; background: var(--card-bg);
+            border-radius: 15px; display: flex; flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); border: 1px solid #333;
         }
-
         .chat-header {
-            padding: 15px 20px;
-            background: var(--primary-color);
-            border-bottom: 1px solid #0f3460;
-            border-radius: 15px 15px 0 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 15px 20px; background: #2a2a2a; border-radius: 15px 15px 0 0;
+            display: flex; justify-content: space-between; align-items: center;
         }
-
-        .chat-header h3 {
-            margin: 0;
-        }
-
-        #leave-btn {
-            width: auto;
-            padding: 5px 15px;
-            font-size: 0.9rem;
-        }
-
-        .messages {
-            flex-grow: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Custom Scrollbar */
+        #leave-btn { width: auto; padding: 8px 20px; font-size: 0.9rem; background: #c62828; color: white; }
+        #leave-btn:hover { background: #e53935; }
+        .messages { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 1px; }
         .messages::-webkit-scrollbar { width: 8px; }
         .messages::-webkit-scrollbar-track { background: var(--card-bg); }
         .messages::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 4px; }
-
-        .message {
-            margin-bottom: 15px;
-            max-width: 75%;
-            display: flex;
-            flex-direction: column;
-        }
-
+        .message { margin-bottom: 15px; max-width: 75%; display: flex; flex-direction: column; }
         .message.sent { align-self: flex-end; align-items: flex-end; }
         .message.received { align-self: flex-start; align-items: flex-start; }
-
-        .message .sender-name {
-            font-size: 0.75rem;
-            color: #aaa;
-            margin-bottom: 4px;
-            margin-left: 12px;
-            margin-right: 12px;
+        .message .sender-name { font-size: 0.75rem; color: #aaa; margin-bottom: 4px; margin-left: 12px; margin-right: 12px; }
+        .message-bubble { padding: 10px 15px; border-radius: 20px; line-height: 1.4; word-wrap: break-word; }
+        .message.sent .message-bubble { background: var(--primary-color); color: white; border-bottom-right-radius: 5px; }
+        .message.received .message-bubble { background: #363636; color: var(--text-color); border-bottom-left-radius: 5px; }
+        .message.system { align-self: center; text-align: center; font-style: italic; color: #888; font-size: 0.8rem; background: #2c2c2c; padding: 5px 15px; border-radius: 20px; }
+        .chat-input-form { display: flex; padding: 15px; border-top: 1px solid #333; gap: 10px; }
+        .chat-input-form input { margin-bottom: 0; }
+        .chat-input-form button { width: auto; padding: 0 25px; }
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); display: none; justify-content: center;
+            align-items: center; z-index: 1000; color: white; font-size: 1.2rem;
         }
-
-        .message-bubble {
-            padding: 10px 15px;
-            border-radius: 20px;
-            line-height: 1.4;
-            word-wrap: break-word;
-        }
-
-        .message.sent .message-bubble { background: var(--secondary-color); color: white; border-bottom-right-radius: 5px; }
-        .message.received .message-bubble { background: #2e2e48; color: var(--text-color); border-bottom-left-radius: 5px; }
-        .message.system { align-self: center; text-align: center; font-style: italic; color: #888; font-size: 0.8rem; }
-
-        .chat-input-form {
-            display: flex;
-            padding: 15px;
-            border-top: 1px solid var(--primary-color);
-        }
-
-        .chat-input-form input { flex-grow: 1; margin-right: 10px; margin-bottom: 0; }
-        .chat-input-form button { width: auto; padding: 0 20px; }
     </style>
 </head>
 <body>
-
-    <!-- 3D Background Canvas -->
     <canvas id="bg"></canvas>
-
-    <!-- HTML STRUCTURE -->
+    <div class="loading-overlay" id="loading-overlay">Connecting...</div>
     <div class="app-container">
-
-        <!-- Name Entry Screen -->
-        <div id="name-screen" class="screen">
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="screen">
             <div class="card">
-                <h1>Welcome to P2P 3D Chat</h1>
-                <p>Please enter your name to begin.</p>
+                <h1><i class="fas fa-comments" style="color: var(--secondary-color);"></i> Sintha Chat</h1>
+                <p>A decentralized, peer-to-peer chat application built with modern web tech. Your conversations are private and never touch a central server.</p>
                 <form id="name-form">
-                    <input type="text" id="name-input" placeholder="Your Name" required autocomplete="off">
-                    <button type="submit">Continue</button>
+                    <input type="text" id="name-input" placeholder="Enter Your Name" required autocomplete="off">
+                    <button type="submit">Continue <i class="fas fa-arrow-right"></i></button>
                 </form>
             </div>
         </div>
-
         <!-- Lobby Screen -->
         <div id="lobby-screen" class="screen">
             <div class="card">
-                <h2 id="welcome-message"></h2>
-                <button id="create-room-btn">Create a New Room</button>
+                <div class="name-container">
+                    <h2 id="welcome-message"></h2>
+                    <button class="edit-name-btn" id="edit-name-btn" title="Edit Name"><i class="fas fa-pencil-alt"></i></button>
+                </div>
+                <button id="create-room-btn">Create a New Room <i class="fas fa-plus-circle"></i></button>
                 <div class="divider">OR</div>
                 <form id="join-form">
-                    <input type="text" id="join-code-input" placeholder="Enter Room Code to Join" required autocomplete="off">
-                    <button type="submit">Join Room</button>
+                    <input type="text" id="join-code-input" placeholder="Enter 6-Digit Room Code" required autocomplete="off" maxlength="6">
+                    <button type="submit">Join Room <i class="fas fa-sign-in-alt"></i></button>
                 </form>
-                 <div id="room-code-display" class="room-code-container" style="display: none;">
-                    <p>Share this code with your friends:</p>
+                <div id="room-code-display" class="room-code-container" style="display: none;">
+                    <p>Your new room is ready! Share the code:</p>
                     <div id="room-code" class="code-box"></div>
-                    <button id="copy-code-btn">Copy Code</button>
+                    <div class="room-actions">
+                        <button id="share-btn"><i class="fas fa-share-alt"></i> Share Link</button>
+                        <button id="copy-code-btn"><i class="fas fa-copy"></i> Copy Code</button>
+                    </div>
                 </div>
             </div>
         </div>
-
         <!-- Chat Screen -->
         <div id="chat-screen" class="screen">
             <div class="chat-container">
                 <div class="chat-header">
-                    <h3>Chat Room</h3>
-                    <button id="leave-btn">Leave</button>
+                    <h3 id="chat-room-title">Chat Room</h3>
+                    <button id="leave-btn"><i class="fas fa-sign-out-alt"></i> Leave</button>
                 </div>
-                <div class="messages" id="message-container">
-                    <!-- Messages will be injected here -->
-                </div>
+                <div class="messages" id="message-container"></div>
                 <form class="chat-input-form" id="chat-form">
                     <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off">
-                    <button type="submit">Send</button>
+                    <button type="submit">Send <i class="fas fa-paper-plane"></i></button>
                 </form>
             </div>
         </div>
-
     </div>
 
     <!-- EXTERNAL LIBRARIES -->
@@ -307,295 +217,398 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
 
-    <!-- JAVASCRIPT LOGIC EMBEDDED -->
+    <!-- JAVASCRIPT LOGIC -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Constants ---
+        const KV_DATABASE_URL = "https://kv.replit.com/v0/eyJhbGciOiJIUzUxMiIsImRhdGFiYXNlX2lkIjoiNTc5YTUyYTAtMDNkNi00Y2E5LWE5MDUtYjAwZGU4MzQyYzE3IiwidHlwIjoiSldUIn0.eyJpc3MiOiJjb25tYW4iLCJleHAiOjE3NjM1NTUxMDAsImlhdCI6MTY5NjQ4MzEwMCwiZGF0YWJhc2VfaWQiOiI1NzlhNTJhZC0wM2Q2LTRjYTktYTkwNS1iMDBkZTgzNDJjMTciLCJ1c2VyIjoiQ29uTWFuIn0.9i2hB05hKz7Sn7Gj_jTB2xKk89f0zJgCg4yZ4uFpQ2M3Y-K77G13iNlSY01D-hX9xCysL9JdFDVw_1uT8K6YfA"; // A public Replit KV store
+        
+        // --- DOM Elements ---
+        const screens = {
+            welcome: document.getElementById('welcome-screen'),
+            lobby: document.getElementById('lobby-screen'),
+            chat: document.getElementById('chat-screen'),
+        };
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const nameForm = document.getElementById('name-form');
+        const nameInput = document.getElementById('name-input');
+        const welcomeMessage = document.getElementById('welcome-message');
+        const editNameBtn = document.getElementById('edit-name-btn');
+        const createRoomBtn = document.getElementById('create-room-btn');
+        const joinForm = document.getElementById('join-form');
+        const joinCodeInput = document.getElementById('join-code-input');
+        const roomCodeDisplay = document.getElementById('room-code-display');
+        const roomCodeEl = document.getElementById('room-code');
+        const copyCodeBtn = document.getElementById('copy-code-btn');
+        const shareBtn = document.getElementById('share-btn');
+        const messageContainer = document.getElementById('message-container');
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const leaveBtn = document.getElementById('leave-btn');
 
-            // --- DOM Elements ---
-            const nameScreen = document.getElementById('name-screen');
-            const lobbyScreen = document.getElementById('lobby-screen');
-            const chatScreen = document.getElementById('chat-screen');
-            
-            const nameForm = document.getElementById('name-form');
-            const nameInput = document.getElementById('name-input');
-            const welcomeMessage = document.getElementById('welcome-message');
+        // --- App State ---
+        let peer;
+        let username = '';
+        let currentRoomCode = null;
+        let connections = {};
+        let roomToJoinFromUrl = null;
 
-            const createRoomBtn = document.getElementById('create-room-btn');
-            const joinForm = document.getElementById('join-form');
-            const joinCodeInput = document.getElementById('join-code-input');
-            
-            const roomCodeDisplay = document.getElementById('room-code-display');
-            const roomCodeEl = document.getElementById('room-code');
-            const copyCodeBtn = document.getElementById('copy-code-btn');
-
-            const messageContainer = document.getElementById('message-container');
-            const chatForm = document.getElementById('chat-form');
-            const chatInput = document.getElementById('chat-input');
-            const leaveBtn = document.getElementById('leave-btn');
-
-            // --- App State ---
-            let peer;
-            let username = '';
-            let currentRoomId = null;
-            const connections = {};
-
-            // --- GSAP Timeline for screen transitions ---
-            const tl = gsap.timeline({ defaults: { duration: 0.4, ease: "power2.inOut" } });
-
-            function showScreen(screen) {
-                const currentActive = document.querySelector('.screen.active');
-                tl.to(currentActive, { opacity: 0, scale: 0.95, onComplete: () => currentActive.classList.remove('active') })
-                  .to(screen, { opacity: 1, scale: 1, onComplete: () => screen.classList.add('active') }, ">-0.2");
+        // --- GSAP Timeline ---
+        const tl = gsap.timeline({ defaults: { duration: 0.4, ease: "power2.inOut" }});
+        const showScreen = (screen) => {
+            const currentActive = document.querySelector('.screen.active');
+            if (currentActive) {
+                tl.to(currentActive, { opacity: 0, scale: 0.95, onComplete: () => currentActive.classList.remove('active') });
             }
+            tl.to(screen, { opacity: 1, scale: 1, onComplete: () => screen.classList.add('active') }, currentActive ? ">-0.2" : ">");
+        };
 
-            // --- 1. Three.js Background ---
-            function init3DBackground() {
-                const scene = new THREE.Scene();
-                const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-                const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg'), antialias: true });
+        const showLoading = (show) => {
+            loadingOverlay.style.display = show ? 'flex' : 'none';
+        };
 
-                renderer.setPixelRatio(window.devicePixelRatio);
-                renderer.setSize(window.innerWidth, window.innerHeight);
-                camera.position.z = 5;
+        // --- 1. Three.js Background ---
+        (() => {
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg'), antialias: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            camera.position.z = 2;
 
-                const starGeometry = new THREE.BufferGeometry();
-                const starCount = 5000;
-                const posArray = new Float32Array(starCount * 3);
-
-                for (let i = 0; i < starCount * 3; i++) {
-                    posArray[i] = (Math.random() - 0.5) * 100;
-                }
-
-                starGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-                const starMaterial = new THREE.PointsMaterial({ size: 0.015, color: 0xe94560 });
-                const starMesh = new THREE.Points(starGeometry, starMaterial);
-                scene.add(starMesh);
-
-                window.addEventListener('resize', () => {
-                    renderer.setSize(window.innerWidth, window.innerHeight);
-                    camera.aspect = window.innerWidth / window.innerHeight;
-                    camera.updateProjectionMatrix();
-                });
-
-                function animate() {
-                    requestAnimationFrame(animate);
-                    starMesh.rotation.y += 0.0002;
-                    starMesh.rotation.x += 0.0002;
-                    renderer.render(scene, camera);
-                }
-                animate();
+            const starGeometry = new THREE.BufferGeometry();
+            const starCount = 8000;
+            const posArray = new Float32Array(starCount * 3);
+            for (let i = 0; i < starCount * 3; i++) {
+                posArray[i] = (Math.random() - 0.5) * (Math.random() * 50);
             }
+            starGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            const starMaterial = new THREE.PointsMaterial({ size: 0.008, color: 0xbb86fc, transparent: true, opacity: 0.8 });
+            const starMesh = new THREE.Points(starGeometry, starMaterial);
+            scene.add(starMesh);
             
-            // --- 2. Initialization and Name Entry ---
-            function initialize() {
-                init3DBackground();
-                const savedName = localStorage.getItem('p2p-chat-username');
-                if (savedName) {
-                    username = savedName;
-                    nameInput.value = savedName;
-                    welcomeMessage.textContent = `Welcome, ${username}!`;
-                    showScreen(lobbyScreen);
-                    initPeer();
-                } else {
-                    nameScreen.classList.add('active');
-                    gsap.from(nameScreen.querySelector('.card'), {opacity: 0, y: 50, duration: 0.5, ease: 'power2.out'});
-                }
-            }
-
-            nameForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const name = nameInput.value.trim();
-                if (name) {
-                    username = name;
-                    localStorage.setItem('p2p-chat-username', username);
-                    welcomeMessage.textContent = `Welcome, ${username}!`;
-                    showScreen(lobbyScreen);
-                    initPeer();
-                }
+            let mouseX = 0, mouseY = 0;
+            document.addEventListener('mousemove', (e) => {
+                mouseX = (e.clientX - window.innerWidth / 2) / 100;
+                mouseY = (e.clientY - window.innerHeight / 2) / 100;
             });
 
-            // --- 3. PeerJS Logic ---
-            function initPeer() {
-                if(peer) peer.destroy();
-                
-                // Using the public PeerJS server. For production, consider hosting your own.
-                peer = new Peer();
+            const animate = () => {
+                requestAnimationFrame(animate);
+                starMesh.rotation.y += 0.0001;
+                camera.position.x += (mouseX - camera.position.x) * 0.01;
+                camera.position.y += (-mouseY - camera.position.y) * 0.01;
+                camera.lookAt(scene.position);
+                renderer.render(scene, camera);
+            };
+            animate();
+            window.addEventListener('resize', () => {
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+            });
+        })();
 
-                peer.on('open', (id) => {
-                    console.log('My PeerJS ID is:', id);
-                    currentRoomId = id; // The user's own ID becomes the room ID if they create one.
-                });
-
-                peer.on('connection', (conn) => {
-                    handleNewConnection(conn);
-                });
-
-                peer.on('error', (err) => {
-                    console.error('PeerJS error:', err);
-                    alert(`An error occurred: ${err.message}. Please try refreshing.`);
-                });
-            }
-
-            function handleNewConnection(conn) {
-                connections[conn.peer] = conn;
-                console.log(`New connection from: ${conn.peer}`);
-                
-                conn.on('open', () => {
-                    // Send my info to the new peer
-                    conn.send({ type: 'user-info', username: username });
-
-                    // Announce new user to everyone else
-                    const joinMsg = { type: 'system', content: `${conn.metadata.username} has joined the chat.` };
-                    broadcast(joinMsg, conn.peer); // Broadcast to others, exclude the new peer
-                    displaySystemMessage(joinMsg.content);
-
-                    // Show chat screen for the host if it's the first connection
-                    if (!chatScreen.classList.contains('active')) {
-                        showScreen(chatScreen);
-                    }
-                });
-
-                conn.on('data', (data) => {
-                    handleData(data, conn.peer);
-                });
-
-                conn.on('close', () => {
-                    const disconnectedUser = connections[conn.peer]?.username || 'A user';
-                    displaySystemMessage(`${disconnectedUser} has left the chat.`);
-                    delete connections[conn.peer];
-                });
-            }
+        // --- 2. Initialization and Name Handling ---
+        const initialize = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            roomToJoinFromUrl = urlParams.get('room');
             
-            function broadcast(data, excludePeerId = null) {
-                Object.values(connections).forEach(conn => {
-                    if (conn.open && conn.peer !== excludePeerId) {
-                        conn.send(data);
-                    }
-                });
+            const savedName = localStorage.getItem('fluid-chat-username');
+            if (savedName) {
+                username = savedName;
+                initLobby();
+                if (roomToJoinFromUrl) {
+                    joinCodeInput.value = roomToJoinFromUrl;
+                    joinRoom(roomToJoinFromUrl);
+                }
+            } else {
+                screens.welcome.classList.add('active'); // No animation for first screen
             }
-            
-            function handleData(data, peerId) {
-                switch(data.type) {
-                    case 'message':
-                        displayMessage(data.sender, data.content, 'received');
-                        break;
-                    case 'system':
-                         displaySystemMessage(data.content);
-                        break;
-                    case 'user-info':
-                        if (connections[peerId]) {
-                            connections[peerId].username = data.username;
-                        }
-                        break;
+        };
+
+        nameForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = nameInput.value.trim();
+            if (name) {
+                username = name;
+                localStorage.setItem('fluid-chat-username', username);
+                initLobby();
+                if (roomToJoinFromUrl) {
+                    joinCodeInput.value = roomToJoinFromUrl;
+                    joinRoom(roomToJoinFromUrl);
+                    roomToJoinFromUrl = null; // Consume it
                 }
             }
+        });
 
-            // --- 4. Lobby and Room Management ---
-            createRoomBtn.addEventListener('click', () => {
-                if (!peer || peer.disconnected) {
-                    alert('Connection not established. Please wait a moment.');
-                    return;
-                }
-                roomCodeEl.textContent = currentRoomId;
+        const initLobby = () => {
+            welcomeMessage.textContent = `Welcome, ${username}!`;
+            showScreen(screens.lobby);
+            initPeer();
+        };
+
+        editNameBtn.addEventListener('click', () => {
+            const newName = prompt("Enter your new name:", username);
+            if (newName && newName.trim() !== "") {
+                const oldName = username;
+                username = newName.trim();
+                localStorage.setItem('fluid-chat-username', username);
+                welcomeMessage.textContent = `Welcome, ${username}!`;
+                broadcast({ type: 'name-change', oldName: oldName, newName: username });
+            }
+        });
+
+        // --- 3. PeerJS & Core Connection Logic ---
+        const initPeer = () => {
+            if (peer) peer.destroy();
+            peer = new Peer();
+            peer.on('open', id => console.log('My PeerJS ID is:', id));
+            peer.on('connection', handleNewConnection);
+            peer.on('error', err => {
+                console.error('PeerJS error:', err);
+                alert(`A connection error occurred: ${err.message}. Please refresh.`);
+                showLoading(false);
+            });
+        };
+
+        const handleNewConnection = (conn) => {
+            connections[conn.peer] = conn;
+            conn.on('open', () => {
+                conn.send({ type: 'user-info', username: username, peerId: peer.id });
+                // Get chat history from the peer who connected us
+                conn.send({ type: 'request-history' });
+            });
+            conn.on('data', data => handleData(data, conn.peer));
+            conn.on('close', () => handleDisconnect(conn.peer));
+        };
+
+        const handleDisconnect = (peerId) => {
+            const disconnectedUser = connections[peerId]?.username || 'A user';
+            const systemMessage = { type: 'system', content: `${disconnectedUser} has left.` };
+            displayMessage(systemMessage);
+            saveMessageToHistory(systemMessage);
+            delete connections[peerId];
+        }
+
+        const broadcast = (data) => {
+            Object.values(connections).forEach(conn => conn.open && conn.send(data));
+        };
+
+        const handleData = (data, peerId) => {
+            switch (data.type) {
+                case 'message':
+                case 'system':
+                case 'name-change':
+                    displayMessage(data);
+                    saveMessageToHistory(data);
+                    if (data.type === 'name-change' && connections[peerId]) {
+                        connections[peerId].username = data.newName;
+                    }
+                    break;
+                case 'user-info':
+                    if (connections[peerId]) {
+                        connections[peerId].username = data.username;
+                    }
+                    const welcomeMsg = { type: 'system', content: `${data.username} has joined!` };
+                    broadcast(welcomeMsg);
+                    displayMessage(welcomeMsg);
+                    saveMessageToHistory(welcomeMsg);
+                    break;
+                case 'request-history':
+                    const history = getChatHistory();
+                    if (history.length > 0) {
+                        connections[peerId].send({ type: 'history-sync', history: history });
+                    }
+                    break;
+                case 'history-sync':
+                    loadChatHistory(data.history);
+                    break;
+            }
+        };
+
+        // --- 4. Room Management (Create, Join, Share) ---
+        createRoomBtn.addEventListener('click', async () => {
+            showLoading(true);
+            const newCode = Math.floor(100000 + Math.random() * 900000).toString();
+            try {
+                // We store an array of peer IDs to allow for robust rejoining
+                await fetch(`${KV_DATABASE_URL}/${newCode}`, {
+                    method: 'POST',
+                    body: JSON.stringify({ peerIds: [peer.id] })
+                });
+                currentRoomCode = newCode;
+                roomCodeEl.textContent = currentRoomCode;
                 roomCodeDisplay.style.display = 'block';
                 gsap.from(roomCodeDisplay, { opacity: 0, y: 20, duration: 0.3 });
-            });
+                showScreen(screens.chat);
+                displayMessage({ type: 'system', content: `Room created. Share code: ${currentRoomCode}` });
+            } catch (error) {
+                console.error("Failed to create room:", error);
+                alert("Could not create room. The network may be busy. Please try again.");
+            } finally {
+                showLoading(false);
+            }
+        });
 
-            copyCodeBtn.addEventListener('click', () => {
-                navigator.clipboard.writeText(currentRoomId).then(() => {
-                    copyCodeBtn.textContent = 'Copied!';
-                    gsap.to(copyCodeBtn, { scale: 1.1, duration: 0.1, yoyo: true, repeat: 1});
-                    setTimeout(() => copyCodeBtn.textContent = 'Copy Code', 2000);
-                });
-            });
+        joinForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const code = joinCodeInput.value.trim();
+            if (code.length === 6 && /^\d+$/.test(code)) {
+                joinRoom(code);
+            } else {
+                alert("Please enter a valid 6-digit room code.");
+            }
+        });
 
-            joinForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const roomToJoin = joinCodeInput.value.trim();
-                if (roomToJoin && roomToJoin !== peer.id) {
-                    joinRoom(roomToJoin);
-                }
-            });
-
-            function joinRoom(roomId) {
-                if (!peer || peer.disconnected) {
-                    alert('Connection not established. Please wait a moment.');
-                    return;
-                }
+        const joinRoom = async (code) => {
+            showLoading(true);
+            try {
+                const response = await fetch(`${KV_DATABASE_URL}/${code}`);
+                if (!response.ok) throw new Error("Room not found.");
                 
-                const conn = peer.connect(roomId, { metadata: { username } });
-                
-                conn.on('open', () => {
-                    handleNewConnection(conn); // Set up handlers for this connection
-                    showScreen(chatScreen);
+                const data = await response.json();
+                const existingPeers = data.value.peerIds || [];
+
+                if (existingPeers.length === 0) throw new Error("Room is empty or has expired.");
+
+                // Try to connect to existing peers
+                let connected = false;
+                for (const peerId of existingPeers) {
+                    if (peerId === peer.id) continue;
+                    try {
+                        const conn = peer.connect(peerId);
+                        await new Promise((resolve, reject) => {
+                            conn.on('open', resolve);
+                            conn.on('error', reject);
+                            setTimeout(() => reject(new Error('Connection timed out')), 5000);
+                        });
+                        handleNewConnection(conn);
+                        connected = true;
+                        break; // Stop after first successful connection
+                    } catch (err) {
+                        console.warn(`Could not connect to peer ${peerId}`, err);
+                    }
+                }
+
+                if (!connected) throw new Error("Could not connect to anyone in the room.");
+
+                // Add myself to the list of peers for this room
+                const newPeerList = [...new Set([...existingPeers, peer.id])];
+                await fetch(`${KV_DATABASE_URL}/${code}`, {
+                    method: 'POST',
+                    body: JSON.stringify({ peerIds: newPeerList })
                 });
 
-                conn.on('error', (err) => {
-                    console.error('Connection error:', err);
-                    alert('Failed to connect. Please check the code and try again.');
+                currentRoomCode = code;
+                showScreen(screens.chat);
+            } catch (error) {
+                console.error("Failed to join room:", error);
+                alert(`Error joining room: ${error.message}`);
+            } finally {
+                showLoading(false);
+            }
+        };
+
+        shareBtn.addEventListener('click', () => {
+            const shareUrl = `${window.location.origin}${window.location.pathname}?room=${currentRoomCode}`;
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Join my Fluid Chat Room!',
+                    text: `Join my chat with code: ${currentRoomCode}`,
+                    url: shareUrl,
+                });
+            } else {
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    shareBtn.innerHTML = '<i class="fas fa-check"></i> Link Copied!';
+                    setTimeout(() => shareBtn.innerHTML = '<i class="fas fa-share-alt"></i> Share Link', 2000);
                 });
             }
-
-            // --- 5. Chat Screen Logic ---
-            chatForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const messageText = chatInput.value.trim();
-                if (messageText) {
-                    const message = {
-                        type: 'message',
-                        sender: username,
-                        content: messageText
-                    };
-                    broadcast(message);
-                    displayMessage(username, messageText, 'sent');
-                    chatInput.value = '';
-                }
+        });
+        
+        copyCodeBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(currentRoomCode).then(() => {
+                copyCodeBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => copyCodeBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Code', 2000);
             });
-            
-            function displayMessage(sender, content, type) {
-                const msgDiv = document.createElement('div');
-                msgDiv.classList.add('message', type);
+        });
 
+        // --- 5. Chat & Message History Logic ---
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const content = chatInput.value.trim();
+            if (content) {
+                const message = { type: 'message', sender: username, content };
+                broadcast(message);
+                displayMessage(message);
+                saveMessageToHistory(message);
+                chatInput.value = '';
+            }
+        });
+
+        const displayMessage = (msg) => {
+            const div = document.createElement('div');
+            div.classList.add('message');
+            
+            if (msg.type === 'system') {
+                div.classList.add('system');
+                div.textContent = msg.content;
+            } else if (msg.type === 'name-change') {
+                div.classList.add('system');
+                div.textContent = `${msg.oldName} is now known as ${msg.newName}.`;
+            } else {
+                div.classList.add(msg.sender === username ? 'sent' : 'received');
                 const senderName = document.createElement('div');
                 senderName.classList.add('sender-name');
-                senderName.textContent = sender;
-
+                senderName.textContent = msg.sender;
+                
                 const bubble = document.createElement('div');
                 bubble.classList.add('message-bubble');
-                bubble.textContent = content;
-
-                msgDiv.appendChild(senderName);
-                msgDiv.appendChild(bubble);
-                messageContainer.appendChild(msgDiv);
+                bubble.textContent = msg.content;
                 
-                gsap.from(msgDiv, { opacity: 0, y: 20, duration: 0.3, ease: 'power2.out' });
-                messageContainer.scrollTop = messageContainer.scrollHeight;
+                div.appendChild(senderName);
+                div.appendChild(bubble);
             }
+            messageContainer.appendChild(div);
+            gsap.from(div, { opacity: 0, y: 10, duration: 0.3 });
+            messageContainer.scrollTop = messageContainer.scrollHeight;
+        };
 
-            function displaySystemMessage(content) {
-                const sysMsgDiv = document.createElement('div');
-                sysMsgDiv.classList.add('message', 'system');
-                sysMsgDiv.textContent = content;
-                messageContainer.appendChild(sysMsgDiv);
-                
-                gsap.from(sysMsgDiv, { opacity: 0, duration: 0.3 });
-                messageContainer.scrollTop = messageContainer.scrollHeight;
-            }
+        const getChatHistoryKey = () => `chat-history-${currentRoomCode}`;
 
-            leaveBtn.addEventListener('click', () => {
-                Object.values(connections).forEach(conn => conn.close());
-                for (let key in connections) delete connections[key];
-                
-                messageContainer.innerHTML = ''; // Clear chat history
-                roomCodeDisplay.style.display = 'none';
-                joinCodeInput.value = '';
-                showScreen(lobbyScreen);
-            });
+        const saveMessageToHistory = (message) => {
+            if (!currentRoomCode) return;
+            const history = getChatHistory();
+            history.push(message);
+            localStorage.setItem(getChatHistoryKey(), JSON.stringify(history));
+        };
 
-            // --- Start the App ---
-            initialize();
+        const getChatHistory = () => {
+            if (!currentRoomCode) return [];
+            const history = localStorage.getItem(getChatHistoryKey());
+            return history ? JSON.parse(history) : [];
+        };
+
+        const loadChatHistory = (history) => {
+            messageContainer.innerHTML = '';
+            history.forEach(msg => displayMessage(msg));
+            localStorage.setItem(getChatHistoryKey(), JSON.stringify(history));
+        };
+
+        leaveBtn.addEventListener('click', () => {
+            Object.values(connections).forEach(conn => conn.close());
+            connections = {};
+            currentRoomCode = null;
+            messageContainer.innerHTML = '';
+            roomCodeDisplay.style.display = 'none';
+            joinCodeInput.value = '';
+            history.pushState(null, '', window.location.pathname); // Clear URL params
+            showScreen(screens.lobby);
         });
-    </script>
 
+        // --- Start the App ---
+        initialize();
+    });
+    </script>
 </body>
 </html>
