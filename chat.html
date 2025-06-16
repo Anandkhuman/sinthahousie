@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sintha Chat</title>
+    <title>Fluid P2P Chat</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -96,12 +96,7 @@
         button#create-room-btn:hover { background-color: #36fddc; }
         .divider { margin: 20px 0; font-weight: bold; color: #555; position: relative; }
         .divider::before, .divider::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            width: 40%;
-            height: 1px;
-            background: #444;
+            content: ''; position: absolute; top: 50%; width: 40%; height: 1px; background: #444;
         }
         .divider::before { left: 0; }
         .divider::after { right: 0; }
@@ -110,21 +105,17 @@
         .name-container .edit-name-btn { all: unset; cursor: pointer; color: #888; transition: color 0.3s; }
         .name-container .edit-name-btn:hover { color: var(--secondary-color); }
         
-        .room-code-container {
-            margin-top: 20px; padding: 15px; background-color: var(--input-bg); border-radius: 8px;
-            text-align: left;
-        }
+        .room-code-container { margin-top: 20px; padding: 15px; background-color: var(--input-bg); border-radius: 8px; text-align: left; }
         .code-box {
             background: var(--bg-color); padding: 10px; border-radius: 5px; word-wrap: break-word;
-            margin: 10px 0; font-weight: bold; letter-spacing: 2px; text-align: center;
-            font-size: 1.5rem; border: 1px dashed var(--secondary-color);
+            margin: 10px 0; font-weight: bold; text-align: center;
+            border: 1px dashed var(--secondary-color); user-select: all;
         }
         .room-actions { display: flex; gap: 10px; margin-top: 10px; }
         .room-actions button { width: 50%; padding: 8px 15px; font-size: 0.8rem; }
         #copy-code-btn { background-color: var(--primary-color); color: white; }
         #copy-code-btn:hover { background-color: #1e5abc; }
         
-        /* Chat Screen */
         .chat-container {
             width: 100%; max-width: 700px; height: 90vh; background: var(--card-bg);
             border-radius: 15px; display: flex; flex-direction: column;
@@ -165,8 +156,8 @@
         <!-- Welcome Screen -->
         <div id="welcome-screen" class="screen">
             <div class="card">
-                <h1><i class="fas fa-comments" style="color: var(--secondary-color);"></i> Sintha Chat</h1>
-                <p>A decentralized, peer-to-peer chat application built with modern web tech. Your conversations are private and never touch a central server.</p>
+                <h1><i class="fas fa-comments" style="color: var(--secondary-color);"></i> Fluid Chat</h1>
+                <p>A decentralized, peer-to-peer chat application. Your conversations are private and never touch a central server.</p>
                 <form id="name-form">
                     <input type="text" id="name-input" placeholder="Enter Your Name" required autocomplete="off">
                     <button type="submit">Continue <i class="fas fa-arrow-right"></i></button>
@@ -183,11 +174,11 @@
                 <button id="create-room-btn">Create a New Room <i class="fas fa-plus-circle"></i></button>
                 <div class="divider">OR</div>
                 <form id="join-form">
-                    <input type="text" id="join-code-input" placeholder="Enter 6-Digit Room Code" required autocomplete="off" maxlength="6">
+                    <input type="text" id="join-code-input" placeholder="Enter Room Code" required autocomplete="off">
                     <button type="submit">Join Room <i class="fas fa-sign-in-alt"></i></button>
                 </form>
                 <div id="room-code-display" class="room-code-container" style="display: none;">
-                    <p>Your new room is ready! Share the code:</p>
+                    <p>Your room is ready! Share this code:</p>
                     <div id="room-code" class="code-box"></div>
                     <div class="room-actions">
                         <button id="share-btn"><i class="fas fa-share-alt"></i> Share Link</button>
@@ -220,9 +211,6 @@
     <!-- JAVASCRIPT LOGIC -->
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // --- Constants ---
-        const KV_DATABASE_URL = "https://kv.replit.com/v0/eyJhbGciOiJIUzUxMiIsImRhdGFiYXNlX2lkIjoiNTc5YTUyYTAtMDNkNi00Y2E5LWE5MDUtYjAwZGU4MzQyYzE3IiwidHlwIjoiSldUIn0.eyJpc3MiOiJjb25tYW4iLCJleHAiOjE3NjM1NTUxMDAsImlhdCI6MTY5NjQ4MzEwMCwiZGF0YWJhc2VfaWQiOiI1NzlhNTJhZC0wM2Q2LTRjYTktYTkwNS1iMDBkZTgzNDJjMTciLCJ1c2VyIjoiQ29uTWFuIn0.9i2hB05hKz7Sn7Gj_jTB2xKk89f0zJgCg4yZ4uFpQ2M3Y-K77G13iNlSY01D-hX9xCysL9JdFDVw_1uT8K6YfA"; // A public Replit KV store
-        
         // --- DOM Elements ---
         const screens = {
             welcome: document.getElementById('welcome-screen'),
@@ -249,11 +237,11 @@
         // --- App State ---
         let peer;
         let username = '';
-        let currentRoomCode = null;
+        let currentRoomId = null;
         let connections = {};
         let roomToJoinFromUrl = null;
 
-        // --- GSAP Timeline ---
+        // --- GSAP Timeline & UI Functions ---
         const tl = gsap.timeline({ defaults: { duration: 0.4, ease: "power2.inOut" }});
         const showScreen = (screen) => {
             const currentActive = document.querySelector('.screen.active');
@@ -262,10 +250,7 @@
             }
             tl.to(screen, { opacity: 1, scale: 1, onComplete: () => screen.classList.add('active') }, currentActive ? ">-0.2" : ">");
         };
-
-        const showLoading = (show) => {
-            loadingOverlay.style.display = show ? 'flex' : 'none';
-        };
+        const showLoading = (show) => loadingOverlay.style.display = show ? 'flex' : 'none';
 
         // --- 1. Three.js Background ---
         (() => {
@@ -275,24 +260,19 @@
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
             camera.position.z = 2;
-
             const starGeometry = new THREE.BufferGeometry();
             const starCount = 8000;
             const posArray = new Float32Array(starCount * 3);
-            for (let i = 0; i < starCount * 3; i++) {
-                posArray[i] = (Math.random() - 0.5) * (Math.random() * 50);
-            }
+            for (let i = 0; i < starCount * 3; i++) posArray[i] = (Math.random() - 0.5) * (Math.random() * 50);
             starGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
             const starMaterial = new THREE.PointsMaterial({ size: 0.008, color: 0xbb86fc, transparent: true, opacity: 0.8 });
             const starMesh = new THREE.Points(starGeometry, starMaterial);
             scene.add(starMesh);
-            
             let mouseX = 0, mouseY = 0;
-            document.addEventListener('mousemove', (e) => {
+            document.addEventListener('mousemove', e => {
                 mouseX = (e.clientX - window.innerWidth / 2) / 100;
                 mouseY = (e.clientY - window.innerHeight / 2) / 100;
             });
-
             const animate = () => {
                 requestAnimationFrame(animate);
                 starMesh.rotation.y += 0.0001;
@@ -313,17 +293,12 @@
         const initialize = () => {
             const urlParams = new URLSearchParams(window.location.search);
             roomToJoinFromUrl = urlParams.get('room');
-            
             const savedName = localStorage.getItem('fluid-chat-username');
             if (savedName) {
                 username = savedName;
                 initLobby();
-                if (roomToJoinFromUrl) {
-                    joinCodeInput.value = roomToJoinFromUrl;
-                    joinRoom(roomToJoinFromUrl);
-                }
             } else {
-                screens.welcome.classList.add('active'); // No animation for first screen
+                screens.welcome.classList.add('active');
             }
         };
 
@@ -334,11 +309,6 @@
                 username = name;
                 localStorage.setItem('fluid-chat-username', username);
                 initLobby();
-                if (roomToJoinFromUrl) {
-                    joinCodeInput.value = roomToJoinFromUrl;
-                    joinRoom(roomToJoinFromUrl);
-                    roomToJoinFromUrl = null; // Consume it
-                }
             }
         });
 
@@ -350,12 +320,15 @@
 
         editNameBtn.addEventListener('click', () => {
             const newName = prompt("Enter your new name:", username);
-            if (newName && newName.trim() !== "") {
+            if (newName && newName.trim() !== "" && newName.trim() !== username) {
                 const oldName = username;
                 username = newName.trim();
                 localStorage.setItem('fluid-chat-username', username);
                 welcomeMessage.textContent = `Welcome, ${username}!`;
-                broadcast({ type: 'name-change', oldName: oldName, newName: username });
+                broadcast({ type: 'name-change', oldName, newName: username });
+                const systemMessage = {type: 'system', content: `${oldName} is now known as ${username}.`};
+                displayMessage(systemMessage);
+                saveMessageToHistory(systemMessage);
             }
         });
 
@@ -363,7 +336,14 @@
         const initPeer = () => {
             if (peer) peer.destroy();
             peer = new Peer();
-            peer.on('open', id => console.log('My PeerJS ID is:', id));
+            peer.on('open', id => {
+                console.log('My PeerJS ID is:', id);
+                // If a room was specified in the URL, try to join it now that we have a Peer ID.
+                if (roomToJoinFromUrl) {
+                    joinRoom(roomToJoinFromUrl);
+                    roomToJoinFromUrl = null; // Consume it
+                }
+            });
             peer.on('connection', handleNewConnection);
             peer.on('error', err => {
                 console.error('PeerJS error:', err);
@@ -373,14 +353,52 @@
         };
 
         const handleNewConnection = (conn) => {
-            connections[conn.peer] = conn;
+            showLoading(true);
             conn.on('open', () => {
-                conn.send({ type: 'user-info', username: username, peerId: peer.id });
-                // Get chat history from the peer who connected us
-                conn.send({ type: 'request-history' });
+                connections[conn.peer] = conn;
+                // When a new person connects, the host moves to the chat screen
+                if (!screens.chat.classList.contains('active')) {
+                    currentRoomId = peer.id; // The host's ID is the room ID
+                    showScreen(screens.chat);
+                    loadChatHistory(); // Host loads their own history
+                    const systemMessage = {type: 'system', content: `You created the room. Share code: ${currentRoomId}`};
+                    displayMessage(systemMessage);
+                    saveMessageToHistory(systemMessage);
+                }
+                conn.send({ type: 'history-request', peerId: peer.id });
+                showLoading(false);
             });
             conn.on('data', data => handleData(data, conn.peer));
             conn.on('close', () => handleDisconnect(conn.peer));
+        };
+        
+        const handleData = (data, peerId) => {
+            switch (data.type) {
+                case 'message': case 'system': case 'name-change':
+                    displayMessage(data);
+                    saveMessageToHistory(data);
+                    if (data.type === 'name-change' && connections[peerId]) {
+                        connections[peerId].username = data.newName;
+                    }
+                    break;
+                case 'history-request':
+                    connections[peerId].send({ type: 'user-info', username: username });
+                    connections[peerId].send({ type: 'history-sync', history: getChatHistory() });
+                    const welcomeMsg = { type: 'system', content: `${username} has joined!` };
+                    broadcast(welcomeMsg);
+                    displayMessage(welcomeMsg);
+                    saveMessageToHistory(welcomeMsg);
+                    break;
+                case 'history-sync':
+                    loadChatHistory(data.history);
+                    break;
+                case 'user-info':
+                    if (connections[peerId]) connections[peerId].username = data.username;
+                    const joinMsg = { type: 'system', content: `${data.username} has joined!` };
+                    displayMessage(joinMsg);
+                    saveMessageToHistory(joinMsg);
+                    break;
+            }
         };
 
         const handleDisconnect = (peerId) => {
@@ -389,145 +407,68 @@
             displayMessage(systemMessage);
             saveMessageToHistory(systemMessage);
             delete connections[peerId];
-        }
+        };
 
         const broadcast = (data) => {
             Object.values(connections).forEach(conn => conn.open && conn.send(data));
         };
 
-        const handleData = (data, peerId) => {
-            switch (data.type) {
-                case 'message':
-                case 'system':
-                case 'name-change':
-                    displayMessage(data);
-                    saveMessageToHistory(data);
-                    if (data.type === 'name-change' && connections[peerId]) {
-                        connections[peerId].username = data.newName;
-                    }
-                    break;
-                case 'user-info':
-                    if (connections[peerId]) {
-                        connections[peerId].username = data.username;
-                    }
-                    const welcomeMsg = { type: 'system', content: `${data.username} has joined!` };
-                    broadcast(welcomeMsg);
-                    displayMessage(welcomeMsg);
-                    saveMessageToHistory(welcomeMsg);
-                    break;
-                case 'request-history':
-                    const history = getChatHistory();
-                    if (history.length > 0) {
-                        connections[peerId].send({ type: 'history-sync', history: history });
-                    }
-                    break;
-                case 'history-sync':
-                    loadChatHistory(data.history);
-                    break;
-            }
-        };
-
         // --- 4. Room Management (Create, Join, Share) ---
-        createRoomBtn.addEventListener('click', async () => {
-            showLoading(true);
-            const newCode = Math.floor(100000 + Math.random() * 900000).toString();
-            try {
-                // We store an array of peer IDs to allow for robust rejoining
-                await fetch(`${KV_DATABASE_URL}/${newCode}`, {
-                    method: 'POST',
-                    body: JSON.stringify({ peerIds: [peer.id] })
-                });
-                currentRoomCode = newCode;
-                roomCodeEl.textContent = currentRoomCode;
-                roomCodeDisplay.style.display = 'block';
-                gsap.from(roomCodeDisplay, { opacity: 0, y: 20, duration: 0.3 });
-                showScreen(screens.chat);
-                displayMessage({ type: 'system', content: `Room created. Share code: ${currentRoomCode}` });
-            } catch (error) {
-                console.error("Failed to create room:", error);
-                alert("Could not create room. The network may be busy. Please try again.");
-            } finally {
-                showLoading(false);
+        createRoomBtn.addEventListener('click', () => {
+            if (!peer || peer.disconnected) {
+                alert('Connection not established. Please wait a moment.');
+                return;
             }
+            currentRoomId = peer.id;
+            roomCodeEl.textContent = currentRoomId;
+            roomCodeDisplay.style.display = 'block';
+            gsap.from(roomCodeDisplay, { opacity: 0, y: 20, duration: 0.3 });
+            // The host now waits for a connection to be moved to the chat screen.
         });
 
         joinForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const code = joinCodeInput.value.trim();
-            if (code.length === 6 && /^\d+$/.test(code)) {
-                joinRoom(code);
-            } else {
-                alert("Please enter a valid 6-digit room code.");
-            }
+            if (code) joinRoom(code);
         });
 
-        const joinRoom = async (code) => {
-            showLoading(true);
-            try {
-                const response = await fetch(`${KV_DATABASE_URL}/${code}`);
-                if (!response.ok) throw new Error("Room not found.");
-                
-                const data = await response.json();
-                const existingPeers = data.value.peerIds || [];
-
-                if (existingPeers.length === 0) throw new Error("Room is empty or has expired.");
-
-                // Try to connect to existing peers
-                let connected = false;
-                for (const peerId of existingPeers) {
-                    if (peerId === peer.id) continue;
-                    try {
-                        const conn = peer.connect(peerId);
-                        await new Promise((resolve, reject) => {
-                            conn.on('open', resolve);
-                            conn.on('error', reject);
-                            setTimeout(() => reject(new Error('Connection timed out')), 5000);
-                        });
-                        handleNewConnection(conn);
-                        connected = true;
-                        break; // Stop after first successful connection
-                    } catch (err) {
-                        console.warn(`Could not connect to peer ${peerId}`, err);
-                    }
-                }
-
-                if (!connected) throw new Error("Could not connect to anyone in the room.");
-
-                // Add myself to the list of peers for this room
-                const newPeerList = [...new Set([...existingPeers, peer.id])];
-                await fetch(`${KV_DATABASE_URL}/${code}`, {
-                    method: 'POST',
-                    body: JSON.stringify({ peerIds: newPeerList })
-                });
-
-                currentRoomCode = code;
-                showScreen(screens.chat);
-            } catch (error) {
-                console.error("Failed to join room:", error);
-                alert(`Error joining room: ${error.message}`);
-            } finally {
-                showLoading(false);
+        const joinRoom = (code) => {
+            if (!peer || peer.disconnected) {
+                alert('Connection not established. Please wait a moment.');
+                return;
             }
+            if (code === peer.id) {
+                alert("You can't join your own room code.");
+                return;
+            }
+            showLoading(true);
+            const conn = peer.connect(code);
+            conn.on('open', () => {
+                connections[conn.peer] = conn;
+                currentRoomId = code;
+                showScreen(screens.chat);
+                conn.send({ type: 'user-info', username: username });
+                // History will be sent by the host upon receiving user-info
+            });
+            conn.on('data', data => handleData(data, conn.peer));
+            conn.on('close', () => handleDisconnect(conn.peer));
+            conn.on('error', err => {
+                alert("Failed to connect to room. The code might be invalid or the host has left.");
+                console.error(err);
+                showLoading(false);
+            });
         };
 
         shareBtn.addEventListener('click', () => {
-            const shareUrl = `${window.location.origin}${window.location.pathname}?room=${currentRoomCode}`;
-            if (navigator.share) {
-                navigator.share({
-                    title: 'Join my Fluid Chat Room!',
-                    text: `Join my chat with code: ${currentRoomCode}`,
-                    url: shareUrl,
-                });
-            } else {
-                navigator.clipboard.writeText(shareUrl).then(() => {
-                    shareBtn.innerHTML = '<i class="fas fa-check"></i> Link Copied!';
-                    setTimeout(() => shareBtn.innerHTML = '<i class="fas fa-share-alt"></i> Share Link', 2000);
-                });
-            }
+            const shareUrl = `${window.location.origin}${window.location.pathname}?room=${currentRoomId}`;
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                shareBtn.innerHTML = '<i class="fas fa-check"></i> Link Copied!';
+                setTimeout(() => shareBtn.innerHTML = '<i class="fas fa-share-alt"></i> Share Link', 2000);
+            });
         });
         
         copyCodeBtn.addEventListener('click', () => {
-            navigator.clipboard.writeText(currentRoomCode).then(() => {
+            navigator.clipboard.writeText(currentRoomId).then(() => {
                 copyCodeBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
                 setTimeout(() => copyCodeBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Code', 2000);
             });
@@ -549,7 +490,6 @@
         const displayMessage = (msg) => {
             const div = document.createElement('div');
             div.classList.add('message');
-            
             if (msg.type === 'system') {
                 div.classList.add('system');
                 div.textContent = msg.content;
@@ -558,47 +498,37 @@
                 div.textContent = `${msg.oldName} is now known as ${msg.newName}.`;
             } else {
                 div.classList.add(msg.sender === username ? 'sent' : 'received');
-                const senderName = document.createElement('div');
-                senderName.classList.add('sender-name');
-                senderName.textContent = msg.sender;
-                
-                const bubble = document.createElement('div');
-                bubble.classList.add('message-bubble');
-                bubble.textContent = msg.content;
-                
-                div.appendChild(senderName);
-                div.appendChild(bubble);
+                div.innerHTML = `<div class="sender-name">${msg.sender}</div><div class="message-bubble">${msg.content}</div>`;
             }
             messageContainer.appendChild(div);
             gsap.from(div, { opacity: 0, y: 10, duration: 0.3 });
             messageContainer.scrollTop = messageContainer.scrollHeight;
         };
 
-        const getChatHistoryKey = () => `chat-history-${currentRoomCode}`;
-
+        const getChatHistoryKey = () => `chat-history-${currentRoomId}`;
         const saveMessageToHistory = (message) => {
-            if (!currentRoomCode) return;
+            if (!currentRoomId) return;
             const history = getChatHistory();
             history.push(message);
-            localStorage.setItem(getChatHistoryKey(), JSON.stringify(history));
+            localStorage.setItem(getChatHistoryKey(), JSON.stringify(history.slice(-100))); // Save last 100 messages
         };
-
         const getChatHistory = () => {
-            if (!currentRoomCode) return [];
-            const history = localStorage.getItem(getChatHistoryKey());
-            return history ? JSON.parse(history) : [];
+            if (!currentRoomId) return [];
+            return JSON.parse(localStorage.getItem(getChatHistoryKey()) || '[]');
         };
-
-        const loadChatHistory = (history) => {
+        const loadChatHistory = (history = null) => {
+            const chatHistory = history || getChatHistory();
             messageContainer.innerHTML = '';
-            history.forEach(msg => displayMessage(msg));
-            localStorage.setItem(getChatHistoryKey(), JSON.stringify(history));
+            chatHistory.forEach(msg => displayMessage(msg));
+            if (history) { // If we received history from a peer, save it
+                localStorage.setItem(getChatHistoryKey(), JSON.stringify(chatHistory.slice(-100)));
+            }
         };
 
         leaveBtn.addEventListener('click', () => {
             Object.values(connections).forEach(conn => conn.close());
             connections = {};
-            currentRoomCode = null;
+            currentRoomId = null;
             messageContainer.innerHTML = '';
             roomCodeDisplay.style.display = 'none';
             joinCodeInput.value = '';
