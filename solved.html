@@ -239,8 +239,9 @@
         // --- 1. GLOBAL VARIABLES & DOM SELECTION ---
         
         // PASTE YOUR GOOGLE AI STUDIO API KEY HERE
-        // WARNING: For local development only. Do not deploy with a visible API key.
-        let apiKey = 'AIzaSyCRswXekCH3Yh8RhYpRGKS02J0rpKEPFcs'; 
+        // This code uses the free tier of the Gemini API by default.
+        // WARNING: For local development only. Do not deploy publicly with a visible API key.
+        let apiKey = 'AIzaSyDcKSRWrPygNFIt_kqJjo28vVTTqVBOaU8'; 
 
         let cameraStream;
 
@@ -394,7 +395,7 @@
             stopCamera();
             hideAllSections();
             controls.classList.remove('hidden');
-            fileInput.value = ''; // Reset file input
+            fileInput.value = '';
             gsap.from(controls, { duration: 0.5, opacity: 0 });
         }
 
@@ -407,7 +408,6 @@
         }
 
         // --- Initial State ---
-        // Since the API key is hard-coded, we check it and show the controls.
         function initialize() {
             if (!apiKey || apiKey === 'YOUR_API_KEY_HERE') {
                 alert("Welcome! Please add your Google AI API key to the script in index.html to use the app.");
@@ -418,7 +418,6 @@
             }
         }
         
-        // Run the initialization function when the page loads
         document.addEventListener('DOMContentLoaded', initialize);
     </script>
 </body>
