@@ -142,11 +142,107 @@
         .modal-content { background: var(--surface-color); padding: 40px; border-radius: 15px; text-align: center; max-width: 400px; width: 90%; border: 1px solid var(--border-color); transform: scale(0.9); transition: transform 0.3s ease; }
         .modal-overlay.visible .modal-content { transform: scale(1); }
         
+        /* --- CHANGED: MOBILE APP-LIKE VIEW --- */
         @media (max-width: 768px) {
-            .page { padding: 20px; }
-            #quiz.page { padding-top: 80px; }
+            /* --- APP-LIKE LAYOUT --- */
+            /* Make page container full-screen */
+            .page {
+                width: 100%;
+                height: 100%;
+                max-height: 100vh;
+                padding: 0; /* Remove padding from container */
+                border-radius: 0;
+                box-shadow: none;
+                border: none;
+                display: flex;
+                flex-direction: column;
+            }
+
+            /* Content area handles scrolling and has all padding */
+            .page-content {
+                flex-grow: 1; /* Take up available vertical space */
+                padding: 20px 20px 100px 20px; /* Top, LR, Bottom padding */
+                /* Bottom padding makes space for the fixed footer */
+            }
+            
+            #quiz.page {
+                padding-top: 0; /* Reset old padding */
+            }
+            
+            /* Quiz content needs padding to avoid the fixed top bar */
+            #quiz .page-content {
+                padding-top: 80px; 
+            }
+
+            /* Adjust quiz top bar for smaller screens */
+            #quiz-top-bar {
+                padding: 10px 20px;
+            }
+
+            #quiz-top-bar #timer {
+                font-size: 1.6em;
+            }
+
+            /* --- FIXED FOOTER BUTTONS --- */
+            /* Select all bottom action buttons/groups and style as a fixed footer */
+            #home .btn-group,
+            #setup #start-quiz-btn,
+            #quiz #submit-quiz-btn,
+            #results #restart-quiz-btn,
+            #history #back-home-btn {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                margin: 0;
+                padding: 15px;
+                background-color: var(--surface-color);
+                border-top: 1px solid var(--border-color);
+                box-shadow: 0 -4px 12px var(--shadow-color);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 15px;
+                z-index: 100;
+            }
+            
+            /* Make single buttons wide */
+            #setup #start-quiz-btn,
+            #quiz #submit-quiz-btn,
+            #results #restart-quiz-btn,
+            #history #back-home-btn {
+                flex-grow: 1; /* Take up all space in the flex container */
+                max-width: 400px; /* But not ridiculously wide on tablets */
+            }
+
+            /* Make buttons in a group share space */
+            #home .btn-group .btn {
+                flex: 1;
+            }
+            
+            /* --- FONT & ELEMENT TWEAKS --- */
+            h1 { font-size: 2.1em; }
+            h2 { font-size: 1.7em; }
             .form-row { flex-direction: column; gap: 0; }
-            .history-item { flex-direction: column; align-items: flex-start; }
+            .history-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .question-item { padding: 20px; }
+            .options-list label { padding: 15px; } /* Bigger tap targets */
+
+            /* --- MODAL TWEAKS --- */
+            .modal-content {
+                width: 90%;
+                padding: 30px 20px;
+            }
+            .modal-buttons {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                width: 100%;
+            }
+            .modal-buttons .btn {
+                width: 100%;
+                margin: 0;
+            }
         }
     </style>
 </head>
@@ -174,8 +270,10 @@
 
     <div id="app-container">
         <section id="home" class="page">
-            <h1>Sintha Quizzes</h1>
-            <p>Your ultimate AI-powered trivia challenge.</p>
+            <div class="page-content">
+                <h1>Sintha Quizzes</h1>
+                <p>Your ultimate AI-powered trivia challenge.</p>
+            </div>
             <div class="btn-group">
                 <button id="join-quiz-btn" class="btn"><i class="fa-solid fa-wand-magic-sparkles"></i> New Quiz</button>
                 <button id="history-btn" class="btn btn-secondary"><i class="fa-solid fa-clock-rotate-left"></i> View History</button>
@@ -183,47 +281,51 @@
         </section>
 
         <section id="setup" class="page">
-            <h2>Quiz Setup</h2>
-            <div class="page-content"><form id="setup-form">
-                <div class="form-group"><label for="name">Your Name</label><input type="text" id="name" class="form-control" required></div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="num-questions">Number of Questions</label>
-                        <input type="number" id="num-questions" class="form-control" value="10" min="1" max="50" required>
+            <div class="page-content">
+                <h2>Quiz Setup</h2>
+                <form id="setup-form">
+                    <div class="form-group"><label for="name">Your Name</label><input type="text" id="name" class="form-control" required></div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="num-questions">Number of Questions</label>
+                            <input type="number" id="num-questions" class="form-control" value="10" min="1" max="50" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="total-quiz-time">Total Quiz Time (minutes)</label>
+                            <input type="number" id="total-quiz-time" class="form-control" value="10" min="1" max="60" required>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="total-quiz-time">Total Quiz Time (minutes)</label>
-                        <input type="number" id="total-quiz-time" class="form-control" value="10" min="1" max="60" required>
-                    </div>
-                </div>
-                <div class="form-group"><label for="difficulty">Difficulty</label><select id="difficulty" class="form-control"><option value="Easy">Easy</option><option value="Medium" selected>Medium</option><option value="Hard">Hard</option></select></div>
-                <div class="form-group"><label for="topic">Topic</label><input type="text" id="topic" class="form-control" placeholder="e.g. The Renaissance" required></div>
-                <button type="submit" id="start-quiz-btn" class="btn"><i class="fa-solid fa-robot"></i> Generate Quiz</button>
-            </form></div>
+                    <div class="form-group"><label for="difficulty">Difficulty</label><select id="difficulty" class="form-control"><option value="Easy">Easy</option><option value="Medium" selected>Medium</option><option value="Hard">Hard</option></select></div>
+                    <div class="form-group"><label for="topic">Topic</label><input type="text" id="topic" class="form-control" placeholder="e.g. The Renaissance" required></div>
+                    <button type="submit" id="start-quiz-btn" class="btn"><i class="fa-solid fa-robot"></i> Generate Quiz</button>
+                </form>
+            </div>
         </section>
 
         <section id="quiz" class="page">
-            <div id="quiz-header"><h2 id="quiz-topic-title">Quiz</h2></div>
-            <div class="page-content"><div id="quiz-content"></div></div>
-            <button id="submit-quiz-btn" class="btn" style="margin-top: 20px;"><i class="fa-solid fa-paper-plane"></i> Submit Quiz</button>
+            <div class="page-content">
+                <div id="quiz-header"><h2 id="quiz-topic-title">Quiz</h2></div>
+                <div id="quiz-content"></div>
+            </div>
+            <button id="submit-quiz-btn" class="btn"><i class="fa-solid fa-paper-plane"></i> Submit Quiz</button>
         </section>
 
         <section id="results" class="page">
-            <h2 id="results-title">Quiz Results</h2>
             <div class="page-content">
+                <h2 id="results-title">Quiz Results</h2>
                 <div id="score-display"></div>
                 <div id="results-details"></div>
             </div>
-            <button id="restart-quiz-btn" class="btn" style="margin-top: 20px;"><i class="fa-solid fa-house"></i> Back to Home</button>
+            <button id="restart-quiz-btn" class="btn"><i class="fa-solid fa-house"></i> Back to Home</button>
         </section>
 
         <section id="history" class="page">
-            <h2>Quiz History</h2>
             <div class="page-content">
+                <h2>Quiz History</h2>
                 <div id="favorites-list"></div>
                 <div id="history-list"></div>
             </div>
-            <button id="back-home-btn" class="btn" style="margin-top: 20px;"><i class="fa-solid fa-house"></i> Back to Home</button>
+            <button id="back-home-btn" class="btn"><i class="fa-solid fa-house"></i> Back to Home</button>
         </section>
     </div>
 
@@ -232,6 +334,7 @@
     <script type="importmap">{ "imports": { "@google/generative-ai": "https://esm.run/@google/generative-ai" } }</script>
     <script type="module">
         // ===================================================================================
+        // IMPORTANT: REPLACE WITH YOUR OWN GOOGLE AI API KEY
         const API_KEY = "AIzaSyCRswXekCH3Yh8RhYpRGKS02J0rpKEPFcs";
         // ===================================================================================
 
