@@ -38,7 +38,7 @@
             display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
         #splash-icon { font-size: 5rem; color: var(--primary-color); margin-bottom: 20px; opacity: 0; }
-        #splash-title { font-size: 2rem; color: var(--text-color); opacity: 0; }
+        #splash-title { font-size: 2rem; color: var(--text-color); opacity: 0; text-align: center; padding: 0 15px; }
 
         #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
 
@@ -67,7 +67,7 @@
         h1, h2, h3 { color: var(--primary-color); font-weight: 600; }
         h1 { font-size: 2.5em; text-align: center; margin-bottom: 10px; }
         h2 { font-size: 2em; text-align: center; margin-bottom: 20px; }
-        h3 { font-size: 1.2em; }
+        h3 { font-size: 1.3em; }
         p { text-align: center; color: var(--subtle-text); margin-bottom: 30px; }
 
         .btn {
@@ -85,30 +85,23 @@
         .form-group { width: 100%; margin-bottom: 25px; }
         .form-group label { display: block; margin-bottom: 8px; color: var(--subtle-text); font-weight: 400; }
         .form-control { width: 100%; padding: 12px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-color); font-size: 1em; }
+        .form-control:disabled { background-color: #2a2a2a; cursor: not-allowed; }
         .form-row { display: flex; gap: 20px; }
         .form-row .form-group { flex: 1; }
         
-        /* NEW: Topic Suggestion Styling */
-        #topic-suggestion-container {
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto 40px auto;
-            padding: 20px;
+        /* --- MOTIVATIONAL QUOTE STYLING --- */
+        .motivation-quote {
+            max-width: 700px;
+            margin: 20px auto 40px auto;
+            padding: 25px;
             text-align: center;
-        }
-        #topic-suggestion {
-            font-size: 1.2em;
+            border-left: 4px solid var(--primary-color);
+            background: rgba(0,0,0,0.15);
+            font-size: 1.1em;
+            font-style: italic;
+            line-height: 1.7;
             color: var(--text-color);
-            margin: 0;
-            font-weight: 400;
-            min-height: 30px; /* Prevents layout shift */
-            transition: opacity 0.5s ease-in-out;
         }
-        #topic-suggestion .fa-lightbulb {
-            color: var(--primary-color);
-            margin-right: 10px;
-        }
-
 
         .loader-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 1000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .loader-dual-ring { display: inline-block; width: 80px; height: 80px; }
@@ -178,12 +171,14 @@
                 display: flex; justify-content: center; align-items: center; gap: 15px; z-index: 100;
             }
             #setup #start-quiz-btn, #quiz #submit-quiz-btn, #results #restart-quiz-btn, #history #back-home-btn { flex-grow: 1; max-width: 400px; }
+            #splash-title { font-size: 2.5rem; }
             h1 { font-size: 2.1em; }
             h2 { font-size: 1.7em; }
             .form-row { flex-direction: column; gap: 0; }
             .history-item { flex-direction: column; align-items: flex-start; gap: 10px; }
-            .question-item { padding: 20px; }
+            .question-item { padding: 15px; }
             .options-list label { padding: 15px; }
+            .motivation-quote { font-size: 1em; padding: 20px; }
             .modal-content { width: 90%; padding: 30px 20px; }
             .modal-buttons { display: flex; flex-direction: column; gap: 12px; width: 100%; }
             .modal-buttons .btn { width: 100%; margin: 0; }
@@ -227,10 +222,10 @@
             <div class="page-content">
                 <h1>Sintha Quizzes</h1>
                 <p>Your ultimate AI-powered trivia challenge.</p>
-                <!-- NEW: Topic Suggestion Area -->
-                <div id="topic-suggestion-container">
-                    <p id="topic-suggestion"><i class="fa-solid fa-lightbulb"></i> Discover a new topic...</p>
-                </div>
+                <!-- MOTIVATIONAL PARAGRAPH -->
+                <p class="motivation-quote">
+                    Every question you answer is a step forward on the path of knowledge. Don't fear the unknown; embrace the challenge. The greatest minds were not born, they were built—one fact, one idea, one quiz at a time. Today, you build.
+                </p>
             </div>
             <div class="btn-group">
                 <button id="join-quiz-btn" class="btn"><i class="fa-solid fa-wand-magic-sparkles"></i> New Quiz</button>
@@ -249,7 +244,7 @@
                             <div class="form-group"><label for="total-quiz-time">Total Quiz Time (minutes)</label><input type="number" id="total-quiz-time" class="form-control" value="10" min="1" max="60" required></div>
                         </div>
                         <div class="form-group"><label for="difficulty">Difficulty</label><select id="difficulty" class="form-control"><option value="Easy">Easy</option><option value="Medium" selected>Medium</option><option value="Hard">Hard</option></select></div>
-                        <div class="form-group"><label for="topic">Topic</label><input type="text" id="topic" class="form-control" placeholder="e.g. 2024 World Events" required></div>
+                        <div class="form-group"><label for="topic">Topic</label><input type="text" id="topic" class="form-control" placeholder="e.g. The Renaissance" required></div>
                     </div>
                     <button type="submit" id="start-quiz-btn" class="btn"><i class="fa-solid fa-robot"></i> Generate Quiz</button>
                 </form>
@@ -266,7 +261,7 @@
     <script type="importmap">{ "imports": { "@google/generative-ai": "https://esm.run/@google/generative-ai" } }</script>
     <script type="module">
         // ===================================================================================
-        const API_KEY = "AIzaSyCRswXekCH3Yh8RhYpRGKS02J0rpKEPFcs";
+        const API_KEY = "AIzaSyCRswXekCH3Yh8RhYpRGKS02J0rpKEPFcs"; // IMPORTANT: Replace with your actual Google AI API Key
         // ===================================================================================
 
         import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -292,15 +287,13 @@
         const restartQuizBtn = document.getElementById('restart-quiz-btn');
         const favoritesList = document.getElementById('favorites-list');
         const historyList = document.getElementById('history-list');
-        const topicSuggestionEl = document.getElementById('topic-suggestion');
         const snackbar = document.getElementById('snackbar');
         const comparisonCloseBtn = document.getElementById('comparison-close-btn');
 
         let state = { name: '', numQuestions: 10, difficulty: 'Medium', topic: '', totalTime: 10, questions: [], userAnswers: [], score: 0, timerId: null, timeRemaining: 0 };
         const optionLabels = ['A', 'B', 'C', 'D'];
         let sharedQuizData = null; 
-        let topicIntervalId = null; 
-
+        
         const getHistory = () => JSON.parse(localStorage.getItem('quizHistory') || '[]');
         const saveHistory = (history) => localStorage.setItem('quizHistory', JSON.stringify(history));
         const getFavorites = () => JSON.parse(localStorage.getItem('quizFavorites') || '[]');
@@ -310,33 +303,6 @@
             snackbar.textContent = message;
             snackbar.className = "show";
             setTimeout(() => { snackbar.className = snackbar.className.replace("show", ""); }, 3000);
-        }
-
-        function displayFallbackTopic() {
-            const fallbackTopics = ['Global Economic Trends 2024', 'Major International Conflicts', 'Recent Technological Breakthroughs', 'Climate Change Summits', 'Key Political Elections This Year'];
-            const randomTopic = fallbackTopics[Math.floor(Math.random() * fallbackTopics.length)];
-            topicSuggestionEl.innerHTML = `<i class="fa-solid fa-lightbulb"></i> ${randomTopic}`;
-        }
-        async function fetchAndDisplayTopic() {
-            if (API_KEY === "YOUR_GOOGLE_AI_API_KEY") { displayFallbackTopic(); return; }
-            try {
-                topicSuggestionEl.style.opacity = 0;
-                const genAI = new GoogleGenerativeAI(API_KEY);
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-                const prompt = `Generate a single, short, interesting, and specific topic about current affairs for a quiz. The topic should be just a few words. For example: "Recent UN Resolutions", "The 2024 Global Elections", "Advances in AI Ethics", "The Global Supply Chain", "Major Environmental Policies". Provide the response as a simple raw string, not JSON. Just the topic text itself.`;
-                const result = await model.generateContent(prompt);
-                const response = await result.response;
-                const topic = response.text().trim().replace(/"/g, '');
-                
-                setTimeout(() => {
-                    if (topic) { topicSuggestionEl.innerHTML = `<i class="fa-solid fa-lightbulb"></i> ${topic}`; } 
-                    else { displayFallbackTopic(); }
-                    topicSuggestionEl.style.opacity = 1;
-                }, 500); 
-            } catch (error) { 
-                console.error("Error fetching AI topic:", error); 
-                setTimeout(() => { displayFallbackTopic(); topicSuggestionEl.style.opacity = 1; }, 500);
-            }
         }
 
         function addQuizToHistory(result) {
@@ -465,7 +431,7 @@
             e.preventDefault();
             const nameInput = document.getElementById('name');
             state.name = nameInput.value.trim();
-            if (!state.name) { alert("Your name is required."); return; }
+            if (!state.name) { showSnackbar("Your name is required."); return; }
             localStorage.setItem('quizUserName', state.name);
 
             if (sharedQuizData) {
@@ -481,12 +447,12 @@
                 return;
             }
 
-            if (API_KEY === "YOUR_GOOGLE_AI_API_KEY") { alert("Please enter your Google AI API Key."); return; }
+            if (API_KEY === "YOUR_GOOGLE_AI_API_KEY") { alert("Please enter your Google AI API Key at the top of the script."); return; }
             state.numQuestions = parseInt(document.getElementById('num-questions').value) || 10;
             state.totalTime = parseInt(document.getElementById('total-quiz-time').value) || 10;
             state.difficulty = document.getElementById('difficulty').value;
             state.topic = document.getElementById('topic').value.trim();
-            if (!state.topic) { alert("Topic is required."); return; }
+            if (!state.topic) { showSnackbar("Topic is required."); return; }
 
             loaderOverlay.style.display = 'flex';
             try {
@@ -533,11 +499,6 @@
         function hideConfirmModal(){ confirmModal.classList.remove("visible"); }
 
         function showPage(pageId){
-            if (topicIntervalId) {
-                clearInterval(topicIntervalId);
-                topicIntervalId = null;
-            }
-
             const activePage = document.querySelector(".page.active");
             const newPage = pages[pageId];
             if (activePage === newPage) return;
@@ -549,11 +510,6 @@
                 if (activePage) activePage.classList.remove('active'); 
                 newPage.classList.add('active'); 
                 gsap.set(activePage, { autoAlpha: 0 }); 
-
-                if(pageId === 'home') {
-                    fetchAndDisplayTopic(); // Fetch immediately on showing home
-                    topicIntervalId = setInterval(fetchAndDisplayTopic, 10000); // Then every 10 seconds
-                }
             } });
             if (activePage) { tl.to(activePage, { rotationY: 90, scale: 0.9, autoAlpha: 0, duration: 0.5, ease: 'power3.in' }); }
             tl.fromTo(newPage, { rotationY: -90, scale: 0.9, autoAlpha: 1 }, { rotationY: 0, scale: 1, duration: 0.5, ease: 'power3.out' });
@@ -574,13 +530,24 @@
         function animateThree(){ requestAnimationFrame(animateThree); const time = Date.now() * 0.0001; camera.position.x = 10 * Math.cos(time); camera.position.z = 10 * Math.sin(time); camera.lookAt(scene.position); shapes.forEach(shape => { shape.rotation.x += shape.userData.rotSpeed.x; shape.rotation.y += shape.userData.rotSpeed.y; shape.rotation.z += shape.userData.rotSpeed.z; }); renderer.render(scene, camera); }
         window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
 
+        function setQuizConfigInputs(enabled) {
+            const inputs = document.querySelectorAll('#quiz-config-inputs .form-control');
+            inputs.forEach(input => {
+                input.disabled = !enabled;
+                if (input.type !== 'select-one') {
+                   input.required = enabled;
+                }
+            });
+        }
+
         function prepareForNewQuiz() {
             sharedQuizData = null;
             document.getElementById('quiz-config-inputs').style.display = 'block';
             document.getElementById('setup-title').textContent = 'Quiz Setup';
             document.getElementById('start-quiz-btn').innerHTML = `<i class="fa-solid fa-robot"></i> Generate Quiz`;
-            const nameInput = document.getElementById('name');
-            nameInput.value = localStorage.getItem('quizUserName') || '';
+            setQuizConfigInputs(true); // Enable inputs
+            document.getElementById('name').value = localStorage.getItem('quizUserName') || '';
+            document.getElementById('topic').value = ''; // Clear topic field
             showPage('setup');
         }
 
@@ -588,8 +555,8 @@
             document.getElementById('setup-title').textContent = `Challenge from ${sharedQuizData.name}`;
             document.getElementById('quiz-config-inputs').style.display = 'none';
             document.getElementById('start-quiz-btn').innerHTML = `<i class="fa-solid fa-play"></i> Start Challenge`;
-            const nameInput = document.getElementById('name');
-            nameInput.value = localStorage.getItem('quizUserName') || '';
+            setQuizConfigInputs(false); // Disable inputs to fix submission bug
+            document.getElementById('name').value = localStorage.getItem('quizUserName') || '';
             showPage('setup');
         }
 
@@ -615,7 +582,7 @@
                             try {
                                 const encodedData = window.location.hash.substring(12);
                                 sharedQuizData = JSON.parse(atob(encodedData));
-                                window.location.hash = '';
+                                window.location.hash = ''; // Clear hash
                                 prepareForChallengeQuiz();
                             } catch (e) {
                                 console.error('Failed to decode shared quiz:', e);
