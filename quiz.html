@@ -88,13 +88,27 @@
         .form-row { display: flex; gap: 20px; }
         .form-row .form-group { flex: 1; }
         
-        /* Quote Styling */
-        #quote-container { position: relative; width: 100%; max-width: 600px; margin: 0 auto 40px auto; padding: 10px 20px; }
-        #quote-display { font-size: 1.1em; font-style: italic; color: var(--subtle-text); border-left: 3px solid var(--primary-color); padding-left: 20px; margin: 0; min-height: 50px; }
-        #quote-display figcaption { font-style: normal; font-size: 0.9em; text-align: right; color: var(--text-color); margin-top: 10px; font-weight: 600; }
-        .quote-actions { position: absolute; bottom: -10px; right: 15px; display: flex; gap: 15px; }
-        .quote-actions button { background: none; border: none; color: var(--subtle-text); font-size: 16px; cursor: pointer; transition: color 0.2s; }
-        .quote-actions button:hover { color: var(--primary-color); }
+        /* NEW: Topic Suggestion Styling */
+        #topic-suggestion-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 40px auto;
+            padding: 20px;
+            text-align: center;
+        }
+        #topic-suggestion {
+            font-size: 1.2em;
+            color: var(--text-color);
+            margin: 0;
+            font-weight: 400;
+            min-height: 30px; /* Prevents layout shift */
+            transition: opacity 0.5s ease-in-out;
+        }
+        #topic-suggestion .fa-lightbulb {
+            color: var(--primary-color);
+            margin-right: 10px;
+        }
+
 
         .loader-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 1000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .loader-dual-ring { display: inline-block; width: 80px; height: 80px; }
@@ -213,12 +227,9 @@
             <div class="page-content">
                 <h1>Sintha Quizzes</h1>
                 <p>Your ultimate AI-powered trivia challenge.</p>
-                <div id="quote-container">
-                    <blockquote id="quote-display">Fetching a thought for you...</blockquote>
-                    <div class="quote-actions">
-                        <button id="copy-quote-btn" title="Copy Quote"><i class="fa-solid fa-copy"></i></button>
-                        <button id="share-quote-btn" title="Share Quote"><i class="fa-solid fa-share-nodes"></i></button>
-                    </div>
+                <!-- NEW: Topic Suggestion Area -->
+                <div id="topic-suggestion-container">
+                    <p id="topic-suggestion"><i class="fa-solid fa-lightbulb"></i> Discover a new topic...</p>
                 </div>
             </div>
             <div class="btn-group">
@@ -238,7 +249,7 @@
                             <div class="form-group"><label for="total-quiz-time">Total Quiz Time (minutes)</label><input type="number" id="total-quiz-time" class="form-control" value="10" min="1" max="60" required></div>
                         </div>
                         <div class="form-group"><label for="difficulty">Difficulty</label><select id="difficulty" class="form-control"><option value="Easy">Easy</option><option value="Medium" selected>Medium</option><option value="Hard">Hard</option></select></div>
-                        <div class="form-group"><label for="topic">Topic</label><input type="text" id="topic" class="form-control" placeholder="e.g. The Renaissance" required></div>
+                        <div class="form-group"><label for="topic">Topic</label><input type="text" id="topic" class="form-control" placeholder="e.g. 2024 World Events" required></div>
                     </div>
                     <button type="submit" id="start-quiz-btn" class="btn"><i class="fa-solid fa-robot"></i> Generate Quiz</button>
                 </form>
@@ -281,15 +292,14 @@
         const restartQuizBtn = document.getElementById('restart-quiz-btn');
         const favoritesList = document.getElementById('favorites-list');
         const historyList = document.getElementById('history-list');
-        const quoteDisplay = document.getElementById('quote-display');
-        const copyQuoteBtn = document.getElementById('copy-quote-btn');
-        const shareQuoteBtn = document.getElementById('share-quote-btn');
+        const topicSuggestionEl = document.getElementById('topic-suggestion');
         const snackbar = document.getElementById('snackbar');
         const comparisonCloseBtn = document.getElementById('comparison-close-btn');
 
         let state = { name: '', numQuestions: 10, difficulty: 'Medium', topic: '', totalTime: 10, questions: [], userAnswers: [], score: 0, timerId: null, timeRemaining: 0 };
         const optionLabels = ['A', 'B', 'C', 'D'];
-        let sharedQuizData = null; // Holds data from a shared link
+        let sharedQuizData = null; 
+        let topicIntervalId = null; 
 
         const getHistory = () => JSON.parse(localStorage.getItem('quizHistory') || '[]');
         const saveHistory = (history) => localStorage.setItem('quizHistory', JSON.stringify(history));
@@ -302,23 +312,31 @@
             setTimeout(() => { snackbar.className = snackbar.className.replace("show", ""); }, 3000);
         }
 
-        function displayFallbackQuote() {
-            const fallbackQuotes = [ { quote: "The only way to do great work is to love what you do.", author: "Steve Jobs" }, { quote: "Live as if you were to die tomorrow. Learn as if you were to live forever.", author: "Mahatma Gandhi" }, { quote: "The best way to predict the future is to invent it.", author: "Alan Kay" } ];
-            const randomQuote = fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)];
-            quoteDisplay.innerHTML = `"${randomQuote.quote}"<figcaption>- ${randomQuote.author}</figcaption>`;
+        function displayFallbackTopic() {
+            const fallbackTopics = ['Global Economic Trends 2024', 'Major International Conflicts', 'Recent Technological Breakthroughs', 'Climate Change Summits', 'Key Political Elections This Year'];
+            const randomTopic = fallbackTopics[Math.floor(Math.random() * fallbackTopics.length)];
+            topicSuggestionEl.innerHTML = `<i class="fa-solid fa-lightbulb"></i> ${randomTopic}`;
         }
-        async function fetchAndDisplayQuote() {
-            if (API_KEY === "YOUR_GOOGLE_AI_API_KEY") { displayFallbackQuote(); return; }
+        async function fetchAndDisplayTopic() {
+            if (API_KEY === "YOUR_GOOGLE_AI_API_KEY") { displayFallbackTopic(); return; }
             try {
+                topicSuggestionEl.style.opacity = 0;
                 const genAI = new GoogleGenerativeAI(API_KEY);
                 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-                const prompt = `Generate a single, short, interesting quote from one of these categories: motivation, education, technology, or funny. Format the response as a valid JSON object with "quote" and "author" keys. Output only the raw JSON.`;
+                const prompt = `Generate a single, short, interesting, and specific topic about current affairs for a quiz. The topic should be just a few words. For example: "Recent UN Resolutions", "The 2024 Global Elections", "Advances in AI Ethics", "The Global Supply Chain", "Major Environmental Policies". Provide the response as a simple raw string, not JSON. Just the topic text itself.`;
                 const result = await model.generateContent(prompt);
                 const response = await result.response;
-                const data = JSON.parse(response.text().replace(/```json/g, '').replace(/```/g, '').trim());
-                if (data.quote && data.author) { quoteDisplay.innerHTML = `"${data.quote}"<figcaption>- ${data.author}</figcaption>`; } 
-                else { displayFallbackQuote(); }
-            } catch (error) { console.error("Error fetching AI quote:", error); displayFallbackQuote(); }
+                const topic = response.text().trim().replace(/"/g, '');
+                
+                setTimeout(() => {
+                    if (topic) { topicSuggestionEl.innerHTML = `<i class="fa-solid fa-lightbulb"></i> ${topic}`; } 
+                    else { displayFallbackTopic(); }
+                    topicSuggestionEl.style.opacity = 1;
+                }, 500); 
+            } catch (error) { 
+                console.error("Error fetching AI topic:", error); 
+                setTimeout(() => { displayFallbackTopic(); topicSuggestionEl.style.opacity = 1; }, 500);
+            }
         }
 
         function addQuizToHistory(result) {
@@ -392,16 +410,9 @@
                 if (answer === q.answer) state.score++;
             });
             const quizResult = { 
-                id: Date.now(), 
-                name: state.name, 
-                topic: state.topic, 
-                difficulty: state.difficulty, 
-                numQuestions: state.numQuestions, 
-                score: state.score, 
-                questions: state.questions, 
-                userAnswers: state.userAnswers, 
-                timestamp: Date.now(),
-                totalTime: state.totalTime // FIXED: Add totalTime to the result object
+                id: Date.now(), name: state.name, topic: state.topic, difficulty: state.difficulty, 
+                numQuestions: state.numQuestions, score: state.score, questions: state.questions, 
+                userAnswers: state.userAnswers, timestamp: Date.now(), totalTime: state.totalTime
             };
             
             if (sharedQuizData) {
@@ -417,13 +428,8 @@
             const sharerCol = document.getElementById('sharer-results');
             const yourCol = document.getElementById('your-results');
             
-            sharerCol.innerHTML = `<h3>${sharedQuizData.name}</h3>
-                <p>Topic: <span>${sharedQuizData.topic}</span></p>
-                <p>Score: <span>${sharedQuizData.score} / ${sharedQuizData.numQuestions}</span></p>`;
-            yourCol.innerHTML = `<h3>${yourResult.name} (You)</h3>
-                <p>Topic: <span>${yourResult.topic}</span></p>
-                <p>Score: <span>${yourResult.score} / ${yourResult.numQuestions}</span></p>`;
-
+            sharerCol.innerHTML = `<h3>${sharedQuizData.name}</h3><p>Topic: <span>${sharedQuizData.topic}</span></p><p>Score: <span>${sharedQuizData.score} / ${sharedQuizData.numQuestions}</span></p>`;
+            yourCol.innerHTML = `<h3>${yourResult.name} (You)</h3><p>Topic: <span>${yourResult.topic}</span></p><p>Score: <span>${yourResult.score} / ${yourResult.numQuestions}</span></p>`;
             comparisonModal.classList.add('visible');
         }
 
@@ -463,12 +469,11 @@
             localStorage.setItem('quizUserName', state.name);
 
             if (sharedQuizData) {
-                // FIXED: Populate the entire state from the shared data
-                state.questions = sharedQuizData.questions;
                 state.topic = sharedQuizData.topic;
+                state.questions = sharedQuizData.questions;
                 state.numQuestions = sharedQuizData.numQuestions;
                 state.difficulty = sharedQuizData.difficulty;
-                state.totalTime = sharedQuizData.totalTime || 10; // Use shared time, with a fallback
+                state.totalTime = sharedQuizData.totalTime;
                 
                 renderQuiz();
                 showPage('quiz');
@@ -528,6 +533,11 @@
         function hideConfirmModal(){ confirmModal.classList.remove("visible"); }
 
         function showPage(pageId){
+            if (topicIntervalId) {
+                clearInterval(topicIntervalId);
+                topicIntervalId = null;
+            }
+
             const activePage = document.querySelector(".page.active");
             const newPage = pages[pageId];
             if (activePage === newPage) return;
@@ -535,7 +545,16 @@
             if (pageId === 'quiz') { quizTopBar.classList.add('visible'); } 
             else { quizTopBar.classList.remove('visible'); }
 
-            const tl = gsap.timeline({ onComplete: () => { if (activePage) activePage.classList.remove('active'); newPage.classList.add('active'); gsap.set(activePage, { autoAlpha: 0 }); } });
+            const tl = gsap.timeline({ onComplete: () => { 
+                if (activePage) activePage.classList.remove('active'); 
+                newPage.classList.add('active'); 
+                gsap.set(activePage, { autoAlpha: 0 }); 
+
+                if(pageId === 'home') {
+                    fetchAndDisplayTopic(); // Fetch immediately on showing home
+                    topicIntervalId = setInterval(fetchAndDisplayTopic, 10000); // Then every 10 seconds
+                }
+            } });
             if (activePage) { tl.to(activePage, { rotationY: 90, scale: 0.9, autoAlpha: 0, duration: 0.5, ease: 'power3.in' }); }
             tl.fromTo(newPage, { rotationY: -90, scale: 0.9, autoAlpha: 1 }, { rotationY: 0, scale: 1, duration: 0.5, ease: 'power3.out' });
         }
@@ -555,33 +574,26 @@
         function animateThree(){ requestAnimationFrame(animateThree); const time = Date.now() * 0.0001; camera.position.x = 10 * Math.cos(time); camera.position.z = 10 * Math.sin(time); camera.lookAt(scene.position); shapes.forEach(shape => { shape.rotation.x += shape.userData.rotSpeed.x; shape.rotation.y += shape.userData.rotSpeed.y; shape.rotation.z += shape.userData.rotSpeed.z; }); renderer.render(scene, camera); }
         window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
 
-        function initiateSharedQuiz() {
-            const setupTitle = document.getElementById('setup-title');
-            const quizConfigInputs = document.getElementById('quiz-config-inputs');
-            const startQuizBtn = document.getElementById('start-quiz-btn');
-            
-            setupTitle.textContent = `Challenge from ${sharedQuizData.name}`;
-            quizConfigInputs.style.display = 'none'; // Hide regular inputs
-            startQuizBtn.innerHTML = `<i class="fa-solid fa-play"></i> Start Challenge`;
-            
-            const nameInput = document.getElementById('name');
-            const savedName = localStorage.getItem('quizUserName');
-            if (savedName) { nameInput.value = savedName; }
-
-            showPage('setup');
-        }
-
-        joinQuizBtn.addEventListener('click', () => {
-            const nameInput = document.getElementById('name');
-            const savedName = localStorage.getItem('quizUserName');
+        function prepareForNewQuiz() {
+            sharedQuizData = null;
             document.getElementById('quiz-config-inputs').style.display = 'block';
             document.getElementById('setup-title').textContent = 'Quiz Setup';
             document.getElementById('start-quiz-btn').innerHTML = `<i class="fa-solid fa-robot"></i> Generate Quiz`;
-            
-            nameInput.value = savedName || '';
-            sharedQuizData = null; // Clear any previous share data
+            const nameInput = document.getElementById('name');
+            nameInput.value = localStorage.getItem('quizUserName') || '';
             showPage('setup');
-        });
+        }
+
+        function prepareForChallengeQuiz() {
+            document.getElementById('setup-title').textContent = `Challenge from ${sharedQuizData.name}`;
+            document.getElementById('quiz-config-inputs').style.display = 'none';
+            document.getElementById('start-quiz-btn').innerHTML = `<i class="fa-solid fa-play"></i> Start Challenge`;
+            const nameInput = document.getElementById('name');
+            nameInput.value = localStorage.getItem('quizUserName') || '';
+            showPage('setup');
+        }
+
+        joinQuizBtn.addEventListener('click', prepareForNewQuiz);
         historyBtn.addEventListener('click', () => { renderHistoryPage(); showPage('history'); });
         backHomeBtn.addEventListener('click', () => showPage('home'));
         setupForm.addEventListener('submit', handleSetupSubmit);
@@ -592,16 +604,6 @@
         restartQuizBtn.addEventListener('click', () => showPage('home'));
         favoritesList.addEventListener('click', handleHistoryClick);
         historyList.addEventListener('click', handleHistoryClick);
-        copyQuoteBtn.addEventListener('click', () => {
-            const textToCopy = quoteDisplay.innerText;
-            navigator.clipboard.writeText(textToCopy);
-            showSnackbar("Quote copied to clipboard!");
-        });
-        shareQuoteBtn.addEventListener('click', async () => {
-            const sharePayload = { title: 'Sintha Quizzes - Quote of the Day', text: quoteDisplay.innerText, url: window.location.href };
-            if (navigator.share) { try { await navigator.share(sharePayload); } catch (err) { console.error('Share failed:', err); }
-            } else { navigator.clipboard.writeText(`${sharePayload.text} - ${sharePayload.url}`); showSnackbar("Quote & link copied!"); }
-        });
         comparisonCloseBtn.addEventListener('click', () => { comparisonModal.classList.remove('visible'); showPage('home'); });
 
         document.addEventListener('DOMContentLoaded', () => { 
@@ -609,19 +611,18 @@
                 const splashTl = gsap.timeline({
                     onComplete: () => {
                         initThree();
-                        // Check for shared quiz link
                         if (window.location.hash.startsWith('#quiz-share-')) {
                             try {
                                 const encodedData = window.location.hash.substring(12);
                                 sharedQuizData = JSON.parse(atob(encodedData));
-                                window.location.hash = ''; // Clear hash to prevent re-triggering
-                                initiateSharedQuiz();
+                                window.location.hash = '';
+                                prepareForChallengeQuiz();
                             } catch (e) {
                                 console.error('Failed to decode shared quiz:', e);
-                                fetchAndDisplayQuote(); showPage('home');
+                                showPage('home');
                             }
                         } else {
-                           fetchAndDisplayQuote(); showPage('home');
+                           showPage('home');
                         }
                     }
                 });
