@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini Vision AI Analyzer</title>
+    <title>Gemini 1.5 Pro Vision Analyzer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
@@ -12,10 +12,10 @@
     <style>
         :root {
             --primary-color: #ffffff;
-            --secondary-color: #dddddd;
-            --accent-color: #007bff;
-            --background-color: #111111;
-            --glass-background: rgba(255, 255, 255, 0.1);
+            --secondary-color: #e0e0e0;
+            --accent-color: #4f46e5; /* A more modern purple */
+            --background-color: #111827; /* Dark blue-gray */
+            --glass-background: rgba(255, 255, 255, 0.05);
             --border-color: rgba(255, 255, 255, 0.2);
         }
 
@@ -72,40 +72,6 @@
             margin-bottom: 2rem;
         }
 
-        .input-group {
-            margin-bottom: 1.5rem;
-            text-align: left;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 400;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-            background: rgba(0, 0, 0, 0.2);
-            color: var(--primary-color);
-            font-family: 'Poppins', sans-serif;
-            font-size: 1rem;
-        }
-
-        .input-group input:focus {
-            outline: none;
-            border-color: var(--accent-color);
-        }
-
-        #controls {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
         button {
             padding: 0.75rem 1.5rem;
             font-family: 'Poppins', sans-serif;
@@ -129,7 +95,14 @@
 
         button:hover {
             transform: translateY(-3px);
-            background-color: #0056b3;
+            background-color: #4338ca;
+        }
+
+        #controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
         }
 
         #cameraView {
@@ -213,21 +186,13 @@
     <!-- ============== HTML STRUCTURE ================= -->
     <!-- =============================================== -->
 
-    <!-- Three.js Canvas for 3D Background -->
     <canvas id="bg"></canvas>
 
     <main>
         <div class="container">
-            <h1>Gemini Vision AI</h1>
-            <p class="subtitle">Upload or capture an image to see what the AI thinks.</p>
+            <h1>Gemini 1.5 Vision</h1>
+            <p class="subtitle">Analyze any image with Google's latest AI model.</p>
 
-            <!-- API Key Input -->
-            <div id="apiKeySection" class="input-group">
-                <label for="apiKey">Enter Your Google AI API Key:</label>
-                <input type="password" id="apiKeyInput" placeholder="Paste your API key here">
-            </div>
-
-            <!-- Controls for Upload/Capture -->
             <div id="controls" class="hidden">
                 <button id="uploadButton">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
@@ -237,29 +202,24 @@
                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 11.5c-2.49 0-4.5-2.01-4.5-4.5S12.51 6.5 15 6.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zM5 13.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5S7.33 15 6.5 15 5 14.33 5 13.5z"/></svg>
                     Use Camera
                 </button>
-                <!-- Hidden file input triggered by the button -->
                 <input type="file" id="fileInput" accept="image/*" hidden>
             </div>
 
-            <!-- Camera View -->
             <div id="cameraView" class="hidden">
                 <video id="videoElement" autoplay playsinline></video>
                 <button id="snapButton">Snap Photo</button>
                 <button id="cancelCameraButton">Cancel</button>
             </div>
 
-            <!-- Image Preview -->
             <div id="imagePreviewContainer" class="hidden">
                 <img id="imagePreview" src="#" alt="Image preview" />
             </div>
 
-            <!-- Loading Spinner -->
             <div id="loader" class="hidden">
                 <div class="spinner"></div>
-                <p>Analyzing image...</p>
+                <p>Analyzing with Gemini 1.5 Pro...</p>
             </div>
 
-            <!-- Results Display -->
             <div id="resultsContainer" class="hidden">
                 <h2>AI Analysis:</h2>
                 <p id="resultsText"></p>
@@ -277,29 +237,25 @@
     <!-- =============================================== -->
     <script>
         // --- 1. GLOBAL VARIABLES & DOM SELECTION ---
-        let apiKey = 'AIzaSyCRswXekCH3Yh8RhYpRGKS02J0rpKEPFcs';
+        
+        // PASTE YOUR GOOGLE AI STUDIO API KEY HERE
+        // WARNING: For local development only. Do not deploy with a visible API key.
+        let apiKey = 'AIzaSyDcKSRWrPygNFIt_kqJjo28vVTTqVBOaU8'; 
+
         let cameraStream;
 
-        // DOM Elements
         const bgCanvas = document.getElementById('bg');
         const mainContainer = document.querySelector('.container');
-
-        const apiKeySection = document.getElementById('apiKeySection');
-        const apiKeyInput = document.getElementById('apiKeyInput');
-
         const controls = document.getElementById('controls');
         const uploadButton = document.getElementById('uploadButton');
         const captureButton = document.getElementById('captureButton');
         const fileInput = document.getElementById('fileInput');
-
         const cameraView = document.getElementById('cameraView');
         const videoElement = document.getElementById('videoElement');
         const snapButton = document.getElementById('snapButton');
         const cancelCameraButton = document.getElementById('cancelCameraButton');
-
         const imagePreviewContainer = document.getElementById('imagePreviewContainer');
         const imagePreview = document.getElementById('imagePreview');
-
         const loader = document.getElementById('loader');
         const resultsContainer = document.getElementById('resultsContainer');
         const resultsText = document.getElementById('resultsText');
@@ -309,24 +265,17 @@
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ canvas: bgCanvas, alpha: true });
-
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(window.innerWidth, window.innerHeight);
         camera.position.setZ(15);
-
-        // Geometry - A more complex, interesting shape
-        const geometry = new THREE.TorusKnotGeometry(6, 1.5, 100, 16);
-        const material = new THREE.MeshStandardMaterial({ color: 0x007bff, metalness: 0.7, roughness: 0.4 });
+        const geometry = new THREE.IcosahedronGeometry(7, 0);
+        const material = new THREE.MeshStandardMaterial({ color: 0x4f46e5, metalness: 0.6, roughness: 0.3 });
         const mesh = new THREE.Mesh(geometry, material);
         scene.add(mesh);
-
-        // Lights
-        const pointLight = new THREE.PointLight(0xffffff, 1);
-        pointLight.position.set(10, 10, 10);
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+        const pointLight = new THREE.PointLight(0xffffff, 1.5);
+        pointLight.position.set(15, 15, 15);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
         scene.add(pointLight, ambientLight);
-
-        // Animation Loop
         function animate() {
             requestAnimationFrame(animate);
             mesh.rotation.x += 0.001;
@@ -334,8 +283,6 @@
             renderer.render(scene, camera);
         }
         animate();
-
-        // Handle window resize
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
@@ -343,48 +290,25 @@
         });
 
         // --- 3. GSAP UI ANIMATIONS ---
-        gsap.from(mainContainer, {
-            duration: 1.5,
-            y: -50,
-            opacity: 0,
-            ease: "power3.out",
-            delay: 0.5
-        });
-
+        gsap.from(mainContainer, { duration: 1.5, y: -50, opacity: 0, ease: "power3.out", delay: 0.5 });
 
         // --- 4. CORE APPLICATION LOGIC ---
-
-        // Event Listeners
-        apiKeyInput.addEventListener('change', handleApiKeyInput);
         uploadButton.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', handleFileSelect);
         captureButton.addEventListener('click', startCamera);
         snapButton.addEventListener('click', takeSnapshot);
-        cancelCameraButton.addEventListener('click', stopCamera);
+        cancelCameraButton.addEventListener('click', resetUI);
         resetButton.addEventListener('click', resetUI);
-
-
-        function handleApiKeyInput() {
-            apiKey = apiKeyInput.value.trim();
-            if (apiKey) {
-                apiKeySection.classList.add('hidden');
-                controls.classList.remove('hidden');
-                gsap.from(controls, { duration: 0.5, scale: 0.8, opacity: 0, ease: 'back.out(1.7)' });
-            }
-        }
 
         function handleFileSelect(event) {
             const file = event.target.files[0];
-            if (file) {
-                processImage(file);
-            }
+            if (file) { processImage(file); }
         }
 
         function startCamera() {
             hideAllSections();
             cameraView.classList.remove('hidden');
             gsap.from(cameraView, { duration: 0.5, scale: 0.8, opacity: 0, ease: 'back.out(1.7)' });
-
             navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
                 .then(stream => {
                     cameraStream = stream;
@@ -392,27 +316,21 @@
                 })
                 .catch(err => {
                     console.error("Camera Error:", err);
-                    alert("Could not access the camera. Please ensure you have one and have granted permission.");
+                    alert("Could not access the camera. Please grant permission.");
                     resetUI();
                 });
         }
 
         function stopCamera() {
-            if (cameraStream) {
-                cameraStream.getTracks().forEach(track => track.stop());
-            }
-            // Do not call resetUI() here, as it may be part of a snapshot flow
+            if (cameraStream) { cameraStream.getTracks().forEach(track => track.stop()); }
         }
 
         function takeSnapshot() {
             const canvas = document.createElement('canvas');
             canvas.width = videoElement.videoWidth;
             canvas.height = videoElement.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-            
+            canvas.getContext('2d').drawImage(videoElement, 0, 0, canvas.width, canvas.height);
             stopCamera();
-
             canvas.toBlob(blob => {
                 const file = new File([blob], "snapshot.jpg", { type: "image/jpeg" });
                 processImage(file);
@@ -423,12 +341,10 @@
             hideAllSections();
             loader.classList.remove('hidden');
             gsap.from(loader, { duration: 0.5, opacity: 0 });
-
             const reader = new FileReader();
             reader.onloadend = async () => {
                 const base64Data = reader.result.split(',')[1];
                 imagePreview.src = reader.result;
-                
                 try {
                     const resultText = await analyzeImageWithGemini(base64Data, file.type);
                     displayResults(resultText);
@@ -441,49 +357,22 @@
             reader.readAsDataURL(file);
         }
 
-        // --- 5. GEMINI API INTERACTION ---
-
+        // --- 5. GEMINI 1.5 PRO API INTERACTION ---
         async function analyzeImageWithGemini(base64Data, mimeType) {
-            if (!apiKey) {
-                throw new Error("API Key is missing.");
+            if (!apiKey || apiKey === 'YOUR_API_KEY_HERE') {
+                throw new Error("API Key is missing. Please add it to the script in index.html.");
             }
-
-            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=${apiKey}`;
-
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${apiKey}`;
             const requestBody = {
-                contents: [{
-                    parts: [{
-                        text: "Describe this image briefly and concisely."
-                    }, {
-                        inline_data: {
-                            mime_type: mimeType,
-                            data: base64Data
-                        }
-                    }]
-                }],
-                generationConfig: {
-                    "temperature": 0.4,
-                    "topK": 32,
-                    "topP": 1,
-                    "maxOutputTokens": 4096,
-                    "stopSequences": []
-                },
+                contents: [{ parts: [{ text: "Analyze this image and provide a brief, one-paragraph description." }, { inline_data: { mime_type: mimeType, data: base64Data } }] }],
+                generationConfig: { "temperature": 0.4, "topK": 32, "topP": 1, "maxOutputTokens": 4096, "stopSequences": [] },
             };
-
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestBody)
-            });
-
+            const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error.message || `API request failed with status ${response.status}`);
             }
-
             const data = await response.json();
-            
-            // Safely access the response text
             try {
                 return data.candidates[0].content.parts[0].text;
             } catch (e) {
@@ -492,35 +381,22 @@
             }
         }
 
-
         // --- 6. UI MANAGEMENT FUNCTIONS ---
-
         function displayResults(text) {
             hideAllSections();
             imagePreviewContainer.classList.remove('hidden');
             resultsContainer.classList.remove('hidden');
             resultsText.textContent = text;
-            
-            // Animate the result display
-            gsap.from([imagePreviewContainer, resultsContainer], {
-                duration: 0.8,
-                y: 30,
-                opacity: 0,
-                stagger: 0.2,
-                ease: 'power2.out'
-            });
+            gsap.from([imagePreviewContainer, resultsContainer], { duration: 0.8, y: 30, opacity: 0, stagger: 0.2, ease: 'power2.out' });
         }
 
         function resetUI() {
+            stopCamera();
             hideAllSections();
-            apiKeySection.classList.remove('hidden');
+            controls.classList.remove('hidden');
             fileInput.value = ''; // Reset file input
-            if (cameraStream) {
-                cameraStream.getTracks().forEach(track => track.stop());
-            }
-            gsap.from(apiKeySection, { duration: 0.5, opacity: 0 });
+            gsap.from(controls, { duration: 0.5, opacity: 0 });
         }
-
 
         function hideAllSections() {
             controls.classList.add('hidden');
@@ -528,15 +404,22 @@
             imagePreviewContainer.classList.add('hidden');
             loader.classList.add('hidden');
             resultsContainer.classList.add('hidden');
-            apiKeySection.classList.add('hidden');
         }
 
-        // Initial state check
-        if (!apiKey) {
-            apiKeySection.classList.remove('hidden');
-        } else {
-            controls.classList.remove('hidden');
+        // --- Initial State ---
+        // Since the API key is hard-coded, we check it and show the controls.
+        function initialize() {
+            if (!apiKey || apiKey === 'YOUR_API_KEY_HERE') {
+                alert("Welcome! Please add your Google AI API key to the script in index.html to use the app.");
+            } else {
+                hideAllSections();
+                controls.classList.remove('hidden');
+                gsap.from(controls, { duration: 0.5, scale: 0.8, opacity: 0, ease: 'back.out(1.7)' });
+            }
         }
+        
+        // Run the initialization function when the page loads
+        document.addEventListener('DOMContentLoaded', initialize);
     </script>
 </body>
 </html>
