@@ -184,16 +184,14 @@
     document.addEventListener('DOMContentLoaded', () => {
 
         const firebaseConfig = {
-            /* PASTE YOUR FIREBASE CONFIGURATION HERE */
-            const firebaseConfig = {
-            apiKey: "AIzaSyACRWhlLW3fGU1VLiAzRcopMRLoFdufAG8",
-            authDomain: "chat-b24b5.firebaseapp.com",
-            databaseURL: "https://chat-b24b5-default-rtdb.firebaseio.com",
-            projectId: "chat-b24b5",
-            storageBucket: "chat-b24b5.firebasestorage.app",
-            messagingSenderId: "180728290458",
-            appId: "1:180728290458:web:bc16d897749a1206851323",
-            measurementId: "G-Q56QGQPRFY"
+        apiKey: "AIzaSyACRWhlLW3fGU1VLiAzRcopMRLoFdufAG8",
+        authDomain: "chat-b24b5.firebaseapp.com",
+        databaseURL: "https://chat-b24b5-default-rtdb.firebaseio.com",
+        projectId: "chat-b24b5",
+        storageBucket: "chat-b24b5.firebasestorage.app",
+        messagingSenderId: "180728290458",
+        appId: "1:180728290458:web:bc16d897749a1206851323",
+        measurementId: "G-Q56QGQPRFY"
         };
 
         firebase.initializeApp(firebaseConfig);
@@ -288,7 +286,7 @@
         };
 
         const initLobby = () => {
-            welcomeMessage.textContent = `Welcome, ${username}`;
+            welcomeMessage.textContent = `Welcome, ${username}!`;
             rejoinContainer.innerHTML = '';
             const lastRoomInfo = JSON.parse(localStorage.getItem('firebase-chat-lastroom'));
             if (lastRoomInfo) {
@@ -550,7 +548,7 @@
         // --- Utility Buttons (Share/Copy) ---
         shareBtn.addEventListener('click', () => {
             const shareUrl = `${window.location.origin}${window.location.pathname}?room=${currentRoomId}`;
-            const shareData = { title: 'Join My Firebase Chat Room!', text: `Let's chat! Join my room with this link.`, url: shareUrl };
+            const shareData = { title: 'Join My Sinths Chat Room!', text: `Let's chat! Join my room with this link.`, url: shareUrl };
             if (navigator.share) {
                 navigator.share(shareData).catch(err => console.log('Error sharing', err));
             } else {
