@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sintha Chat</title>
+    <title>Sintha Realtime Chat</title>
     <!-- Google Fonts & Font Awesome -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,7 +15,7 @@
         :root {
             --bg-color: #121212; --card-bg: #1e1e1e; --primary-color: #0d47a1;
             --secondary-color: #bb86fc; --text-color: #e0e0e0; --input-bg: #2c2c2c;
-            --font-family: 'Poppins', sans-serif; --success-color: #03dac6;
+            --font-family: 'Poppins', sans-serif; --success-color: #03dac6; --danger-color: #c62828;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -32,11 +32,11 @@
         }
         h1, h2, h3 { color: white; margin-bottom: 10px; }
         p { margin-bottom: 20px; font-size: 0.9rem; line-height: 1.6; color: #b0b0b0; }
-        input[type="text"] {
+        input[type="text"], input[type="password"] {
             width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #444; border-radius: 8px;
             background-color: var(--input-bg); color: var(--text-color); font-family: var(--font-family); font-size: 1rem; transition: border-color 0.3s;
         }
-        input[type="text"]:focus { outline: none; border-color: var(--secondary-color); }
+        input[type="text"]:focus, input[type="password"]:focus { outline: none; border-color: var(--secondary-color); }
         button {
             width: 100%; padding: 12px; background-color: var(--secondary-color); color: #000;
             border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 600;
@@ -59,7 +59,7 @@
         #enter-room-btn:hover { background-color: #36fddc; }
         .chat-container { width: 100%; max-width: 700px; height: 90vh; background: var(--card-bg); border-radius: 15px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); border: 1px solid #333; }
         .chat-header { padding: 15px 20px; background: #2a2a2a; border-radius: 15px 15px 0 0; display: flex; justify-content: space-between; align-items: center; }
-        #leave-btn { width: auto; padding: 8px 20px; font-size: 0.9rem; background: #c62828; color: white; }
+        #leave-btn { width: auto; padding: 8px 20px; font-size: 0.9rem; background: var(--danger-color); color: white; }
         .messages { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 1px; }
         .message { margin-bottom: 15px; max-width: 75%; display: flex; flex-direction: column; }
         .message.sent { align-self: flex-end; align-items: flex-end; }
@@ -74,11 +74,59 @@
         .chat-input-form input { margin-bottom: 0; }
         .chat-input-form button { width: auto; padding: 0 25px; }
         .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; color: white; font-size: 1.2rem; flex-direction: column; }
+
+        /* Room List Styles */
+        #room-list-screen .card { max-width: 500px; width: 95%; }
+        #public-rooms-container { max-height: 60vh; overflow-y: auto; margin-top: 20px; padding-right: 10px; }
+        .room-list-item { background: var(--input-bg); padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; text-align: left; }
+        .room-list-item .info h4 { margin: 0; color: white; }
+        .room-list-item .info span { font-size: 0.8rem; color: #aaa; }
+        .room-list-item .actions { display: flex; gap: 8px; }
+        .room-list-item .actions button { width: auto; padding: 8px 12px; font-size: 0.9rem; }
+        .room-list-item .actions .delete-btn { background-color: var(--danger-color); color: white; }
+
+        /* Create Room Modal Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { width: 100%; max-width: 400px; }
+        #create-room-form { text-align: left; }
+        #create-room-form label { display: block; margin-bottom: 8px; color: #ccc; }
+        .radio-group { display: flex; gap: 20px; margin-bottom: 20px; }
+        .form-actions { display: flex; gap: 10px; margin-top: 20px; }
     </style>
 </head>
 <body>
     <canvas id="bg"></canvas>
     <div class="loading-overlay" id="loading-overlay"><p id="loading-text">Connecting...</p></div>
+
+    <div id="create-room-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="card">
+                <h3>Create a New Room</h3>
+                <form id="create-room-form">
+                    <label for="new-room-name">Room Name</label>
+                    <input type="text" id="new-room-name" placeholder="E.g., General Chat" required>
+                    
+                    <label>Room Type</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="roomType" value="public" checked> Public</label>
+                        <label><input type="radio" name="roomType" value="private"> Private</label>
+                    </div>
+
+                    <div id="secret-code-group" style="display: none;">
+                        <label for="new-room-secret">Secret Code</label>
+                        <input type="password" id="new-room-secret" placeholder="Enter a secret code">
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="secondary-action">Create</button>
+                        <button type="button" id="cancel-create-room">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
     <div class="app-container">
         <div id="welcome-screen" class="screen">
             <div class="card">
@@ -91,6 +139,7 @@
             <div class="card">
                 <div class="name-container"><h2 id="welcome-message"></h2><button class="edit-name-btn" id="edit-name-btn" title="Edit Name"><i class="fas fa-pencil-alt"></i></button></div>
                 <div id="rejoin-container"></div>
+                <button id="show-room-list-btn" class="secondary-action"><i class="fas fa-list"></i> Browse Rooms</button>
                 <button id="create-room-btn">Create a New Room <i class="fas fa-plus-circle"></i></button>
                 <div class="divider">OR</div>
                 <form id="join-form"><input type="text" id="join-code-input" placeholder="Enter Room Code" required autocomplete="off"><button type="submit">Join Room <i class="fas fa-sign-in-alt"></i></button></form>
@@ -103,6 +152,15 @@
                         <button id="copy-code-btn"><i class="fas fa-copy"></i> Copy</button>
                     </div>
                 </div>
+            </div>
+        </div>
+        <div id="room-list-screen" class="screen">
+            <div class="card">
+                <h3>Public Rooms</h3>
+                <div id="public-rooms-container">
+                    <p>Loading rooms...</p>
+                </div>
+                <button id="back-to-lobby-btn" class="secondary-action" style="margin-top: 20px;"><i class="fas fa-arrow-left"></i> Back to Lobby</button>
             </div>
         </div>
         <div id="chat-screen" class="screen">
@@ -126,21 +184,23 @@
     document.addEventListener('DOMContentLoaded', () => {
 
         const firebaseConfig = {
-        apiKey: "AIzaSyACRWhlLW3fGU1VLiAzRcopMRLoFdufAG8",
-        authDomain: "chat-b24b5.firebaseapp.com",
-        databaseURL: "https://chat-b24b5-default-rtdb.firebaseio.com",
-        projectId: "chat-b24b5",
-        storageBucket: "chat-b24b5.firebasestorage.app",
-        messagingSenderId: "180728290458",
-        appId: "1:180728290458:web:bc16d897749a1206851323",
-        measurementId: "G-Q56QGQPRFY"
+            /* PASTE YOUR FIREBASE CONFIGURATION HERE */
+            const firebaseConfig = {
+            apiKey: "AIzaSyACRWhlLW3fGU1VLiAzRcopMRLoFdufAG8",
+            authDomain: "chat-b24b5.firebaseapp.com",
+            databaseURL: "https://chat-b24b5-default-rtdb.firebaseio.com",
+            projectId: "chat-b24b5",
+            storageBucket: "chat-b24b5.firebasestorage.app",
+            messagingSenderId: "180728290458",
+            appId: "1:180728290458:web:bc16d897749a1206851323",
+            measurementId: "G-Q56QGQPRFY"
         };
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
         // --- DOM Elements ---
-        const screens = { welcome: document.getElementById('welcome-screen'), lobby: document.getElementById('lobby-screen'), chat: document.getElementById('chat-screen') };
+        const screens = { welcome: document.getElementById('welcome-screen'), lobby: document.getElementById('lobby-screen'), chat: document.getElementById('chat-screen'), roomList: document.getElementById('room-list-screen') };
         const loadingOverlay = document.getElementById('loading-overlay'), loadingText = document.getElementById('loading-text');
         const nameForm = document.getElementById('name-form'), nameInput = document.getElementById('name-input');
         const welcomeMessage = document.getElementById('welcome-message'), editNameBtn = document.getElementById('edit-name-btn');
@@ -150,11 +210,18 @@
         const chatRoomTitle = document.getElementById('chat-room-title');
         const messageContainer = document.getElementById('message-container'), chatForm = document.getElementById('chat-form'), chatInput = document.getElementById('chat-input');
         const leaveBtn = document.getElementById('leave-btn'), rejoinContainer = document.getElementById('rejoin-container');
+        const showRoomListBtn = document.getElementById('show-room-list-btn');
+        const publicRoomsContainer = document.getElementById('public-rooms-container');
+        const backToLobbyBtn = document.getElementById('back-to-lobby-btn');
+        const createRoomModal = document.getElementById('create-room-modal');
+        const createRoomForm = document.getElementById('create-room-form');
+        const cancelCreateRoomBtn = document.getElementById('cancel-create-room');
+        const secretCodeGroup = document.getElementById('secret-code-group');
 
         // --- App State ---
         let username = '', currentRoomId = null, roomToJoinFromUrl = null;
         let currentRoomRef = null, messagesRef = null, membersRef = null;
-        let messageListener = null, memberAddedListener = null, memberRemovedListener = null;
+        let messageListener = null, memberAddedListener = null, memberRemovedListener = null, roomListListener = null;
         let initialMembersLoaded = false;
         const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -221,7 +288,7 @@
         };
 
         const initLobby = () => {
-            welcomeMessage.textContent = `Welcome, ${username}!`;
+            welcomeMessage.textContent = `Welcome, ${username}`;
             rejoinContainer.innerHTML = '';
             const lastRoomInfo = JSON.parse(localStorage.getItem('firebase-chat-lastroom'));
             if (lastRoomInfo) {
@@ -248,58 +315,157 @@
                 welcomeMessage.textContent = `Welcome, ${username}!`;
                 if (currentRoomRef) {
                     membersRef.child(userId).set({ username });
-                    messagesRef.push({
-                        type: 'name-change',
-                        oldName: oldName,
-                        newName: username,
-                        timestamp: firebase.database.ServerValue.TIMESTAMP
-                    });
+                    messagesRef.push({ type: 'name-change', oldName: oldName, newName: username, timestamp: firebase.database.ServerValue.TIMESTAMP });
                 }
             }
         });
-        
-        // --- Room Management (Firebase) ---
-        createRoomBtn.addEventListener('click', () => {
-            const roomName = prompt("Enter a name for your new chat room:", `${username}'s Room`);
-            if (roomName && roomName.trim() !== "") {
-                const newRoomRef = db.ref('rooms').push();
-                currentRoomId = newRoomRef.key;
-                newRoomRef.set({ name: roomName.trim(), createdAt: firebase.database.ServerValue.TIMESTAMP });
-                roomCodeEl.textContent = currentRoomId;
-                roomCodeDisplay.style.display = 'block';
-                gsap.from(roomCodeDisplay, { opacity: 0, y: 20, duration: 0.3 });
-            }
-        });
-        
-        enterRoomBtn.addEventListener('click', () => {
-            if (currentRoomId) enterChatRoom(currentRoomId);
+
+        // --- Room Creation Modal ---
+        createRoomBtn.addEventListener('click', () => createRoomModal.classList.add('active'));
+        cancelCreateRoomBtn.addEventListener('click', () => createRoomModal.classList.remove('active'));
+        createRoomForm.roomType.forEach(radio => {
+            radio.addEventListener('change', () => {
+                secretCodeGroup.style.display = createRoomForm.roomType.value === 'private' ? 'block' : 'none';
+            });
         });
 
+        createRoomForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const roomName = document.getElementById('new-room-name').value.trim();
+            const roomType = createRoomForm.roomType.value;
+            const secretCode = document.getElementById('new-room-secret').value;
+
+            if (!roomName) { alert('Please enter a room name.'); return; }
+            if (roomType === 'private' && !secretCode) { alert('Private rooms require a secret code.'); return; }
+            
+            const newRoomRef = db.ref('rooms').push();
+            currentRoomId = newRoomRef.key;
+            
+            const roomData = {
+                name: roomName,
+                type: roomType,
+                creatorId: userId,
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            };
+            if (roomType === 'private') {
+                roomData.secretCode = secretCode;
+            }
+
+            newRoomRef.set(roomData);
+            
+            createRoomModal.classList.remove('active');
+            createRoomForm.reset();
+            secretCodeGroup.style.display = 'none';
+
+            roomCodeEl.textContent = currentRoomId;
+            roomCodeDisplay.style.display = 'block';
+            gsap.from(roomCodeDisplay, { opacity: 0, y: 20, duration: 0.3 });
+        });
+        
+        // --- Room List Logic ---
+        showRoomListBtn.addEventListener('click', () => {
+            showScreen(screens.roomList);
+            listenForPublicRooms();
+        });
+
+        backToLobbyBtn.addEventListener('click', () => {
+            if (roomListListener) {
+                db.ref('rooms').off('value', roomListListener);
+                roomListListener = null;
+            }
+            showScreen(screens.lobby);
+        });
+
+        const listenForPublicRooms = () => {
+            const roomsRef = db.ref('rooms');
+            if (roomListListener) roomsRef.off('value', roomListListener); // Detach old listener first
+
+            roomListListener = roomsRef.on('value', snapshot => {
+                publicRoomsContainer.innerHTML = '';
+                const rooms = snapshot.val();
+                let hasPublicRooms = false;
+                if (rooms) {
+                    for (const roomId in rooms) {
+                        const room = rooms[roomId];
+                        if (room.type === 'public') {
+                            hasPublicRooms = true;
+                            const memberCount = room.members ? Object.keys(room.members).length : 0;
+                            const roomEl = document.createElement('div');
+                            roomEl.className = 'room-list-item';
+                            roomEl.innerHTML = `
+                                <div class="info">
+                                    <h4>${room.name}</h4>
+                                    <span><i class="fas fa-users"></i> ${memberCount} user(s) online</span>
+                                </div>
+                                <div class="actions">
+                                    <button class="join-btn"><i class="fas fa-sign-in-alt"></i> Join</button>
+                                    ${room.creatorId === userId ? '<button class="delete-btn"><i class="fas fa-trash"></i> Delete</button>' : ''}
+                                </div>
+                            `;
+                            roomEl.querySelector('.join-btn').onclick = () => joinRoom(roomId);
+                            if (room.creatorId === userId) {
+                                roomEl.querySelector('.delete-btn').onclick = () => deleteRoom(roomId, room.name);
+                            }
+                            publicRoomsContainer.appendChild(roomEl);
+                        }
+                    }
+                }
+                if (!hasPublicRooms) {
+                    publicRoomsContainer.innerHTML = '<p>No public rooms available. Why not create one?</p>';
+                }
+            });
+        };
+
+        const deleteRoom = (roomId, roomName) => {
+            if (confirm(`Are you sure you want to permanently delete the room "${roomName}"?`)) {
+                db.ref(`rooms/${roomId}`).remove()
+                    .then(() => console.log(`Room ${roomId} deleted.`))
+                    .catch(err => alert(`Error deleting room: ${err.message}`));
+            }
+        };
+
+        // --- Room Joining & Leaving Logic ---
+        enterRoomBtn.addEventListener('click', () => { if (currentRoomId) enterChatRoom(currentRoomId); });
         joinForm.addEventListener('submit', (e) => { e.preventDefault(); const code = joinCodeInput.value.trim(); if(code) joinRoom(code); });
         
         const joinRoom = (roomId) => {
-            showLoading(true, `Joining room...`);
+            showLoading(true, `Checking room...`);
             db.ref(`rooms/${roomId}`).once('value', (snapshot) => {
                 showLoading(false);
-                if (snapshot.exists()) {
-                    currentRoomId = roomId;
-                    enterChatRoom(roomId);
-                } else {
+                if (!snapshot.exists()) {
                     alert(`Room with code "${roomId}" does not exist.`);
                     joinCodeInput.value = '';
+                    return;
+                }
+                
+                const room = snapshot.val();
+                if (room.type === 'private') {
+                    const secret = prompt('This room is private. Please enter the secret code:');
+                    if (secret === room.secretCode) {
+                        enterChatRoom(roomId);
+                    } else {
+                        alert('Incorrect secret code.');
+                    }
+                } else {
+                    enterChatRoom(roomId);
                 }
             });
         };
 
         const enterChatRoom = (roomId) => {
+            if (roomListListener) {
+                db.ref('rooms').off('value', roomListListener);
+                roomListListener = null;
+            }
             messageContainer.innerHTML = '';
-            initialMembersLoaded = false; // Reset flag for new room entry
+            initialMembersLoaded = false;
+            currentRoomId = roomId;
             currentRoomRef = db.ref(`rooms/${roomId}`);
             messagesRef = currentRoomRef.child('messages');
             membersRef = currentRoomRef.child('members');
 
             currentRoomRef.child('name').once('value', (snapshot) => {
-                const roomName = snapshot.val();
+                const roomName = snapshot.val() || 'Chat Room';
                 chatRoomTitle.textContent = roomName;
                 localStorage.setItem('firebase-chat-lastroom', JSON.stringify({id: roomId, name: roomName}));
             });
@@ -309,7 +475,7 @@
             myMemberRef.set({ username: username });
 
             listenForMessages();
-            listenForMembers(); // This function now handles the smarter join/leave logic
+            listenForMembers();
 
             showScreen(screens.chat);
             history.pushState(null, '', `${window.location.pathname}?room=${roomId}`);
@@ -322,8 +488,7 @@
                 if (memberAddedListener) membersRef.off('child_added', memberAddedListener);
                 if (memberRemovedListener) membersRef.off('child_removed', memberRemovedListener);
             }
-            currentRoomId = null;
-            currentRoomRef = null;
+            currentRoomId = null; currentRoomRef = null;
             messageListener = memberAddedListener = memberRemovedListener = null;
             history.pushState(null, '', window.location.pathname);
             initLobby();
@@ -331,32 +496,19 @@
         
         // --- Real-time Listeners ---
         const listenForMessages = () => {
-            messageListener = messagesRef.orderByChild('timestamp').on('child_added', (snapshot) => {
-                displayMessage(snapshot.val());
-            });
+            messageListener = messagesRef.orderByChild('timestamp').on('child_added', (snapshot) => displayMessage(snapshot.val()));
         };
 
         const listenForMembers = () => {
-            // Fetch initial list of members silently
-            membersRef.once('value', () => {
-                initialMembersLoaded = true;
-            });
-            
-            // Listen for NEW members joining after you
+            membersRef.once('value', () => { initialMembersLoaded = true; });
             memberAddedListener = membersRef.on('child_added', (snapshot) => {
-                const member = snapshot.val();
-                // Only show message if initial load is done and it's not you
                 if (initialMembersLoaded && snapshot.key !== userId) {
-                    displaySystemMessage(`${member.username} has joined the chat.`);
+                    displaySystemMessage(`${snapshot.val().username} has joined the chat.`);
                 }
             });
-            
-            // Listen for members leaving
             memberRemovedListener = membersRef.on('child_removed', (snapshot) => {
                 const member = snapshot.val();
-                if (member) { // Ensure member data exists before showing message
-                     displaySystemMessage(`${member.username} has left the chat.`);
-                }
+                if (member) displaySystemMessage(`${member.username} has left the chat.`);
             });
         };
         
@@ -365,12 +517,7 @@
             e.preventDefault(); 
             const content = chatInput.value.trim(); 
             if (content) {
-                messagesRef.push({
-                    type: 'message',
-                    content: content,
-                    senderName: username,
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
-                });
+                messagesRef.push({ type: 'message', content: content, senderName: username, timestamp: firebase.database.ServerValue.TIMESTAMP });
                 chatInput.value = ''; 
             }
         });
@@ -388,25 +535,15 @@
             if (!msg || !msg.type) return;
 
             switch (msg.type) {
-                case 'system':
-                    div.classList.add('system');
-                    div.textContent = msg.content;
-                    break;
-                case 'name-change':
-                    div.classList.add('system');
-                    div.textContent = `${msg.oldName} is now known as ${msg.newName}.`;
-                    break;
+                case 'system': div.classList.add('system'); div.textContent = msg.content; break;
+                case 'name-change': div.classList.add('system'); div.textContent = `${msg.oldName} is now known as ${msg.newName}.`; break;
                 case 'message':
                     div.classList.add(msg.senderName === username ? 'sent' : 'received');
-                    const bubble = `<div class="sender-name">${msg.senderName}</div><div class="message-bubble">${msg.content}</div>`;
-                    const time = `<div class="timestamp">${formatTimestamp(msg.timestamp)}</div>`;
-                    div.innerHTML = bubble + time;
+                    div.innerHTML = `<div class="sender-name">${msg.senderName}</div><div class="message-bubble">${msg.content}</div><div class="timestamp">${formatTimestamp(msg.timestamp)}</div>`;
                     break;
             }
             messageContainer.appendChild(div);
-            if (document.hidden === false) {
-                gsap.from(div, { opacity: 0, y: 10, duration: 0.3 });
-            }
+            gsap.from(div, { opacity: 0, y: 10, duration: 0.3 });
             messageContainer.scrollTop = messageContainer.scrollHeight;
         };
         
@@ -415,7 +552,7 @@
             const shareUrl = `${window.location.origin}${window.location.pathname}?room=${currentRoomId}`;
             const shareData = { title: 'Join My Firebase Chat Room!', text: `Let's chat! Join my room with this link.`, url: shareUrl };
             if (navigator.share) {
-                navigator.share(shareData).catch((error) => console.log('Error sharing', error));
+                navigator.share(shareData).catch(err => console.log('Error sharing', err));
             } else {
                 navigator.clipboard.writeText(shareUrl).then(() => {
                     shareBtn.innerHTML = '<i class="fas fa-check"></i> Link Copied!';
