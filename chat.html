@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Firebase Realtime Chat</title>
+    <title>Sintha Chat</title>
     <!-- Google Fonts & Font Awesome -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -68,6 +68,8 @@
         .message-bubble { padding: 10px 15px; border-radius: 20px; line-height: 1.4; word-wrap: break-word; }
         .message.sent .message-bubble { background: var(--primary-color); color: white; border-bottom-right-radius: 5px; }
         .message.received .message-bubble { background: #363636; color: var(--text-color); border-bottom-left-radius: 5px; }
+        /* NEW: Style for the timestamp */
+        .message .timestamp { font-size: 0.7rem; color: #888; margin-top: 5px; margin-left: 12px; margin-right: 12px; }
         .message.system { align-self: center; text-align: center; font-style: italic; color: #888; font-size: 0.8rem; background: #2c2c2c; padding: 5px 15px; border-radius: 20px; }
         .chat-input-form { display: flex; padding: 15px; border-top: 1px solid #333; gap: 10px; }
         .chat-input-form input { margin-bottom: 0; }
@@ -83,7 +85,7 @@
         <div id="welcome-screen" class="screen">
             <div class="card">
                 <h1><i class="fas fa-comments" style="color: var(--secondary-color);"></i> Firebase Chat</h1>
-                <p>A fast, reliable, and real-time chat application powered by Firebase.</p>
+                <p>A fast, reliable, and real-time chat application powered by sintha.</p>
                 <form id="name-form"><input type="text" id="name-input" placeholder="Enter Your Name" required autocomplete="off"><button type="submit">Continue <i class="fas fa-arrow-right"></i></button></form>
             </div>
         </div>
@@ -125,22 +127,21 @@
     <script>
     document.addEventListener('DOMContentLoaded', () => {
 
-        /* --- 1. PASTE YOUR FIREBASE CONFIGURATION HERE --- */
-       const firebaseConfig = {
-       apiKey: "AIzaSyACRWhlLW3fGU1VLiAzRcopMRLoFdufAG8",
-       authDomain: "chat-b24b5.firebaseapp.com",
-       databaseURL: "https://chat-b24b5-default-rtdb.firebaseio.com",
-       projectId: "chat-b24b5",
-       storageBucket: "chat-b24b5.firebasestorage.app",
-       messagingSenderId: "180728290458",
-       appId: "1:180728290458:web:bc16d897749a1206851323",
-       measurementId: "G-Q56QGQPRFY"
+        const firebaseConfig = {
+            /* PASTE YOUR FIREBASE CONFIGURATION HERE */
+            const firebaseConfig = {
+            apiKey: "AIzaSyACRWhlLW3fGU1VLiAzRcopMRLoFdufAG8",
+            authDomain: "chat-b24b5.firebaseapp.com",
+            databaseURL: "https://chat-b24b5-default-rtdb.firebaseio.com",
+            projectId: "chat-b24b5",
+            storageBucket: "chat-b24b5.firebasestorage.app",
+            messagingSenderId: "180728290458",
+            appId: "1:180728290458:web:bc16d897749a1206851323",
+            measurementId: "G-Q56QGQPRFY"
         };
 
-        // --- 2. Initialize Firebase ---
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-
 
         // --- DOM Elements (unchanged) ---
         const screens = { welcome: document.getElementById('welcome-screen'), lobby: document.getElementById('lobby-screen'), chat: document.getElementById('chat-screen') };
@@ -157,8 +158,9 @@
         // --- App State ---
         let username = '', currentRoomId = null, roomToJoinFromUrl = null;
         let currentRoomRef = null, messagesRef = null, membersRef = null;
-        let messageListener = null, memberListener = null;
-        const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`; // Simple unique ID for this session
+        let messageListener = null, memberAddedListener = null, memberRemovedListener = null;
+        let initialMembersLoaded = false;
+        const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
         // --- UI Functions (unchanged) ---
         const tl = gsap.timeline({ defaults: { duration: 0.4, ease: "power2.inOut" }});
@@ -249,9 +251,7 @@
                 localStorage.setItem('firebase-chat-username', username);
                 welcomeMessage.textContent = `Welcome, ${username}!`;
                 if (currentRoomRef) {
-                    // Update name in members list for presence
                     membersRef.child(userId).set({ username });
-                    // Post a system message about the name change
                     messagesRef.push({
                         type: 'name-change',
                         oldName: oldName,
@@ -266,16 +266,9 @@
         createRoomBtn.addEventListener('click', () => {
             const roomName = prompt("Enter a name for your new chat room:", `${username}'s Room`);
             if (roomName && roomName.trim() !== "") {
-                const roomsRef = db.ref('rooms');
-                const newRoomRef = roomsRef.push(); // Generate unique ID for the room
-                
+                const newRoomRef = db.ref('rooms').push();
                 currentRoomId = newRoomRef.key;
-                
-                newRoomRef.set({
-                    name: roomName.trim(),
-                    createdAt: firebase.database.ServerValue.TIMESTAMP
-                });
-
+                newRoomRef.set({ name: roomName.trim(), createdAt: firebase.database.ServerValue.TIMESTAMP });
                 roomCodeEl.textContent = currentRoomId;
                 roomCodeDisplay.style.display = 'block';
                 gsap.from(roomCodeDisplay, { opacity: 0, y: 20, duration: 0.3 });
@@ -290,9 +283,7 @@
         
         const joinRoom = (roomId) => {
             showLoading(true, `Joining room...`);
-            const roomRef = db.ref(`rooms/${roomId}`);
-            
-            roomRef.once('value', (snapshot) => {
+            db.ref(`rooms/${roomId}`).once('value', (snapshot) => {
                 showLoading(false);
                 if (snapshot.exists()) {
                     currentRoomId = roomId;
@@ -305,7 +296,8 @@
         };
 
         const enterChatRoom = (roomId) => {
-            messageContainer.innerHTML = ''; // Clear previous messages
+            messageContainer.innerHTML = '';
+            initialMembersLoaded = false; // Reset flag for new room entry
             currentRoomRef = db.ref(`rooms/${roomId}`);
             messagesRef = currentRoomRef.child('messages');
             membersRef = currentRoomRef.child('members');
@@ -316,14 +308,12 @@
                 localStorage.setItem('firebase-chat-lastroom', JSON.stringify({id: roomId, name: roomName}));
             });
 
-            // --- Presence System ---
             const myMemberRef = membersRef.child(userId);
-            myMemberRef.onDisconnect().remove(); // Tell Firebase to remove me when I disconnect
-            myMemberRef.set({ username: username }); // Add me to the members list
+            myMemberRef.onDisconnect().remove();
+            myMemberRef.set({ username: username });
 
-            // --- Attach Listeners ---
             listenForMessages();
-            listenForMembers();
+            listenForMembers(); // This function now handles the smarter join/leave logic
 
             showScreen(screens.chat);
             history.pushState(null, '', `${window.location.pathname}?room=${roomId}`);
@@ -331,19 +321,15 @@
 
         leaveBtn.addEventListener('click', () => {
             if (currentRoomRef) {
-                // Remove presence and detach listeners
                 membersRef.child(userId).remove();
                 messagesRef.off('child_added', messageListener);
-                membersRef.off('child_added', memberListener);
-                membersRef.off('child_removed', memberListener);
+                // NEW: Detach specific member listeners
+                if (memberAddedListener) membersRef.off('child_added', memberAddedListener);
+                if (memberRemovedListener) membersRef.off('child_removed', memberRemovedListener);
             }
-            
-            // Reset state
             currentRoomId = null;
             currentRoomRef = null;
-            messagesRef = null;
-            membersRef = null;
-            
+            messageListener = memberAddedListener = memberRemovedListener = null;
             history.pushState(null, '', window.location.pathname);
             initLobby();
         });
@@ -356,14 +342,27 @@
         };
 
         const listenForMembers = () => {
-            // Note: We create a combined listener function to reference it when turning it off.
-            memberListener = (snapshot) => {
+            // Fetch initial list of members silently
+            membersRef.once('value', () => {
+                initialMembersLoaded = true;
+            });
+            
+            // Listen for NEW members joining after you
+            memberAddedListener = membersRef.on('child_added', (snapshot) => {
                 const member = snapshot.val();
-                if (!member) return;
-                displaySystemMessage(`${member.username} has ${snapshot.type === 'child_added' ? 'joined' : 'left'} the chat.`);
-            };
-            membersRef.on('child_added', memberListener);
-            membersRef.on('child_removed', memberListener);
+                // Only show message if initial load is done and it's not you
+                if (initialMembersLoaded && snapshot.key !== userId) {
+                    displaySystemMessage(`${member.username} has joined the chat.`);
+                }
+            });
+            
+            // Listen for members leaving
+            memberRemovedListener = membersRef.on('child_removed', (snapshot) => {
+                const member = snapshot.val();
+                if (member) { // Ensure member data exists before showing message
+                     displaySystemMessage(`${member.username} has left the chat.`);
+                }
+            });
         };
         
         // --- Message Display and Sending ---
@@ -382,11 +381,17 @@
         });
 
         const displaySystemMessage = (content) => displayMessage({ type: 'system', content });
+        
+        // NEW: Helper to format timestamp
+        const formatTimestamp = (timestamp) => {
+            if (!timestamp) return '';
+            return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        };
 
         const displayMessage = (msg) => {
             const div = document.createElement('div');
             div.classList.add('message');
-            if (!msg.type) return; // Skip invalid data
+            if (!msg.type) return;
 
             switch (msg.type) {
                 case 'system':
@@ -399,7 +404,9 @@
                     break;
                 case 'message':
                     div.classList.add(msg.senderName === username ? 'sent' : 'received');
-                    div.innerHTML = `<div class="sender-name">${msg.senderName}</div><div class="message-bubble">${msg.content}</div>`;
+                    const bubble = `<div class="sender-name">${msg.senderName}</div><div class="message-bubble">${msg.content}</div>`;
+                    const time = `<div class="timestamp">${formatTimestamp(msg.timestamp)}</div>`;
+                    div.innerHTML = bubble + time;
                     break;
             }
             messageContainer.appendChild(div);
@@ -412,11 +419,7 @@
         // --- Utility Buttons (Share/Copy) ---
         shareBtn.addEventListener('click', () => {
             const shareUrl = `${window.location.origin}${window.location.pathname}?room=${currentRoomId}`;
-            const shareData = {
-                title: 'Join My Firebase Chat Room!',
-                text: `Let's chat! Join my room with this link.`,
-                url: shareUrl,
-            };
+            const shareData = { title: 'Join My Firebase Chat Room!', text: `Let's chat! Join my room with this link.`, url: shareUrl };
             if (navigator.share) {
                 navigator.share(shareData).catch((error) => console.log('Error sharing', error));
             } else {
