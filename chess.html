@@ -720,7 +720,8 @@
                 }
                 
                 if(data.status === 'resigned' && !game.game_over()) {
-                    handleGameOver(`${data.winner === 'w' ? data.players.player1.name : data.players.player2.name} wins by resignation.`);
+                    const winnerName = data.winner === 'w' ? data.players.player1.name : data.players.player2.name;
+                    handleGameOver(`${winnerName} wins by resignation.`);
                 }
             });
         }
@@ -758,11 +759,20 @@
         
         $('#flip-board-btn').on('click', () => {
              const newColor = playerColor === 'w' ? 'b' : 'w';
+             // No need to call setupGame, just change the camera and internal color for UI
              playerColor = newColor;
              const camPos = newColor === 'b' ? new THREE.Vector3(0, 7, -7) : new THREE.Vector3(0, 7, 7);
              gsap.to(camera.position, { x: camPos.x, y: camPos.y, z: camPos.z, duration: 1, ease: 'power2.inOut' });
              gsap.to(controls.target, { x: 0, y: 0, z: 0, duration: 1, ease: 'power2.inOut' });
-             setupGame(gameMode, { color: newColor, difficulty: aiDifficulty });
+
+             if (gameMode === 'single') {
+                $('#white-player-name-display').text(playerColor === 'w' ? 'You' : 'AI');
+                $('#black-player-name-display').text(playerColor === 'b' ? 'You' : 'AI');
+                updateStatusText(); // Update active player highlight
+                if (game.turn() !== playerColor && !game.game_over()) {
+                    makeComputerMove();
+                }
+             }
         });
         
         $('#new-game-btn').on('click', () => { if(confirm('Start a new game? This will end the current match.')){ $('#game-area').addClass('hidden'); showModal('#game-mode-modal'); }});
