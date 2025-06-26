@@ -153,7 +153,8 @@
     };
     // --- END FIREBASE CONFIG ---
     
-    if (firebaseConfig.apiKey) {
+    // Initialize Firebase
+    if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
         firebase.initializeApp(firebaseConfig);
     }
     const database = firebase.database();
@@ -281,9 +282,19 @@
         function updateMoveHistory() { const history = game.history({ verbose: true }); let html = ''; for (let i = 0; i < history.length; i += 2) { html += `<span>${(i/2)+1}. ${history[i].san} ${history[i+1] ? history[i+1].san : ' '}</span><br>`; } $moveHistory.html(html); $moveHistory.scrollTop($moveHistory[0].scrollHeight);}
         
         function cleanupAndResetState() {
-            game.reset(); whiteTime = 600; blackTime = 600; fromSquare = null; redoStack = []; roomCode = null; gameMode = null;
-            $('#white-timer').text(formatTime(whiteTime)); $('#black-timer').text(formatTime(blackTime));
-            $moveHistory.html(''); $('#chat-log').html(''); removeHighlights(); stopTimers();
+            stopTimers();
+            game.reset(); 
+            whiteTime = 600; 
+            blackTime = 600; 
+            fromSquare = null; 
+            redoStack = []; 
+            roomCode = null; 
+            gameMode = null;
+            $('#white-timer').text(formatTime(whiteTime)); 
+            $('#black-timer').text(formatTime(blackTime));
+            $moveHistory.html(''); 
+            $('#chat-log').html(''); 
+            removeHighlights(); 
             cleanupFirebaseListeners();
         }
 
@@ -293,15 +304,26 @@
         function negamax(game, depth, alpha, beta) { if (depth === 0 || game.game_over()) { return evaluateBoard(game.board()); } let max = -Infinity; const moves = game.moves(); for (const move of moves) { game.move(move); const score = -negamax(game, depth - 1, -beta, -alpha); game.undo(); max = Math.max(max, score); alpha = Math.max(alpha, score); if (alpha >= beta) { break; } } return max; }
         function evaluateBoard(board) { let totalEvaluation = 0; const pieceValues = { p: 10, n: 30, b: 30, r: 50, q: 90, k: 900 }; board.forEach(row => { row.forEach(piece => { if (piece) { const value = pieceValues[piece.type]; totalEvaluation += (piece.color === 'w' ? value : -value); } }); }); return totalEvaluation * (game.turn() === 'w' ? 1 : -1); }
         
-        // --- GAME SETUP & START ---
+        // --- GAME SETUP & START (CORRECTED) ---
         function startGame(mode, options = {}) {
-            cleanupAndResetState();
             gameMode = mode; 
             playerColor = options.color || 'w'; 
             aiDifficulty = options.difficulty || 3;
-            if (options.fen) game.load(options.fen);
             
-            const boardConfig = { position: game.fen(), pieceTheme: 'https://lichess1.org/assets/piece/staunty/{piece}.svg', draggable: false, moveSpeed: 'slow', snapSpeed: 50 };
+            // Reset game state for non-online modes, or load from FEN for online.
+            if (options.fen) {
+                game.load(options.fen);
+            } else {
+                game.reset();
+            }
+            
+            const boardConfig = { 
+                position: game.fen(), 
+                pieceTheme: 'https://lichess1.org/assets/piece/staunty/{piece}.svg', 
+                draggable: false, 
+                moveSpeed: 'slow', 
+                snapSpeed: 50 
+            };
             boardConfig.orientation = (playerColor === 'b') ? 'black' : 'white';
             
             if(board) board.destroy();
@@ -313,8 +335,15 @@
             playIntroAnimation(); 
             playSound('gameStart');
             
-            if (mode === 'online') { $('.tab-btn[data-tab="chat"]').show(); $('.tab-btn[data-tab="chat"]').click(); } 
-            else { $('.tab-btn[data-tab="chat"]').hide(); $('.tab-btn[data-tab="moves"]').addClass('active').click(); }
+            if (mode === 'online') { 
+                $('.tab-btn[data-tab="chat"]').show(); 
+                $('.tab-btn[data-tab="chat"]').click(); 
+                listenToRoomChanges(); // This will now work correctly
+            } 
+            else { 
+                $('.tab-btn[data-tab="chat"]').hide(); 
+                $('.tab-btn[data-tab="moves"]').addClass('active').click(); 
+            }
             if (mode === 'single' && playerColor === 'b') window.setTimeout(makeComputerMove, 500);
             
             $(window).trigger('resize');
@@ -346,14 +375,16 @@
                 $('#room-code-display').text(roomCode);
                 hideModal('#online-modal', () => showModal('#create-room-modal'));
                 roomRef.onDisconnect().remove();
+                
+                // This temporary listener just waits for the other player to join.
                 gameListener = roomRef.on('value', snapshot => {
                     const data = snapshot.val();
                     if (data && data.status === 'active') {
-                        roomRef.off('value', gameListener); gameListener = null;
+                        roomRef.off('value', gameListener); // Stop this temporary listener.
+                        gameListener = null;
                         roomRef.onDisconnect().update({ status: 'finished', result: 'Opponent disconnected.' });
                         hideModal('#create-room-modal', () => {
                             startGame('online', { color: 'w', fen: data.fen });
-                            listenToRoomChanges();
                         });
                     }
                 });
@@ -375,7 +406,6 @@
                         roomRef.onDisconnect().update({ status: 'finished', result: 'Opponent disconnected.' });
                         hideModal('#join-room-modal', () => {
                             startGame('online', { color: 'b', fen: data.fen });
-                            listenToRoomChanges();
                         });
                     });
                 } else {
@@ -386,30 +416,37 @@
         }
 
         function listenToRoomChanges() {
+            if (!roomRef) return; // Safeguard
+
+            // Listener for game state (FEN) and status changes
             gameListener = roomRef.on('value', snapshot => {
                 const data = snapshot.val();
                 if (!data || gameMode !== 'online') return;
 
                 if (data.status === 'finished') {
+                    if (game.game_over()) return; // Avoid double game-over calls
                     handleGameOver(data.result || "Game Over");
                     return;
                 }
 
                 if (game.fen() !== data.fen) {
                     const oldFen = game.fen();
-                    // Load the new FEN and capture the last move for sound effects
                     game.load(data.fen);
                     const history = game.history({ verbose: true });
-                    const moveResult = history[history.length - 1];
+                    const moveResult = history.length > 0 ? history[history.length - 1] : null;
                     
                     if (game.fen() !== oldFen) {
                         updateGameUi(true, moveResult); // It's a remote move
                     }
                 }
             });
+
+            // Listener for new chat messages
             chatListener = roomRef.child('chat').on('child_added', snapshot => {
                 if (gameMode !== 'online' || !snapshot.exists()) return;
                 const chat = snapshot.val();
+                
+                // Don't display our own message again
                 if (chat.sender === playerColor) return;
                 
                 const senderName = 'Opponent';
@@ -422,9 +459,11 @@
             const $chatInput = $('#chat-input');
             const message = $chatInput.val().trim();
             if (message !== '' && gameMode === 'online' && roomRef) {
+                const chatMsg = { sender: playerColor, message: message, timestamp: firebase.database.ServerValue.TIMESTAMP };
+                roomRef.child('chat').push(chatMsg);
+                // Display my message locally immediately
                 $('#chat-log').append(`<div class="my-message"><b>You</b> ${message}</div>`);
                 $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight);
-                roomRef.child('chat').push({ sender: playerColor, message: message });
                 $chatInput.val('').focus();
             }
         }
@@ -434,12 +473,12 @@
         $('.btn, .btn-icon').on('click', function() { gsap.fromTo(this, {scale: 0.95}, {scale: 1, duration: 0.3, ease: 'elastic.out(1, 0.5)'}); });
         $('.tab-btn').on('click', function() { const tabId = $(this).data('tab'); $('.tab-btn').removeClass('active'); $(this).addClass('active'); $('.tab-panel').removeClass('active'); $('#' + tabId + '-panel').addClass('active'); });
         
-        $('#single-player-btn').on('click', () => { hideModal('#game-mode-modal', () => showModal('#ai-difficulty-modal')); });
+        $('#single-player-btn').on('click', () => { cleanupAndResetState(); hideModal('#game-mode-modal', () => showModal('#ai-difficulty-modal')); });
         $('.difficulty-btn').on('click', function() { hideModal('#ai-difficulty-modal', () => startGame('single', { difficulty: $(this).data('depth') })); });
-        $('#pass-and-play-btn').on('click', () => { hideModal('#game-mode-modal', () => startGame('pass')); });
+        $('#pass-and-play-btn').on('click', () => { cleanupAndResetState(); hideModal('#game-mode-modal', () => startGame('pass')); });
         
         $('#online-multiplayer-btn').on('click', () => { 
-            if (!firebaseConfig.apiKey) { alert("Firebase is not configured. Please add your config details to the script."); return; } 
+            if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "YOUR_API_KEY") { alert("Firebase is not configured. Please add your config details to the script."); return; } 
             hideModal('#game-mode-modal', () => showModal('#online-modal')); 
         });
         
