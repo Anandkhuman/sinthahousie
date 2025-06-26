@@ -3,113 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sintha Chess - 3D AI Edition</title>
+    <title>Sovereign Chess - Realistic Edition</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         :root {
-            --font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            --bg-color: #1a1a2e;
-            --panel-bg-color: #16213e;
-            --panel-secondary-bg-color: #0f3460;
-            --text-color: #e0fbfc;
-            --text-secondary-color: #93b5c6;
-            --border-color: #0f3460;
-            --highlight-color: rgba(233, 69, 96, 0.7); /* Neon Pink/Red */
-            --valid-move-color: rgba(62, 221, 221, 0.6); /* Cyan */
-            --accent-color: #e94560;
-            --glow-color: var(--accent-color);
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --bg-color: #161616;
+            --panel-bg-color: #212121;
+            --panel-secondary-bg-color: #2c2c2c;
+            --text-color: #f0f0f0;
+            --text-secondary-color: #aaa;
+            --border-color: #444444;
+            --square-light: #FFCE9E; /* Light wood color */
+            --square-dark: #D18B47;  /* Dark wood color */
+            --highlight-color: rgba(255, 235, 59, 0.5); /* Yellow for selected square */
+            --dot-color: rgba(29, 99, 53, 0.6); /* Darker green dot color */
+            --button-bg: #3a3a3a;
+            --button-hover-bg: #4a4a4a;
+            --glow-color: var(--dot-color);
         }
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: var(--font-family);
             background-color: var(--bg-color);
-            background-image: linear-gradient(180deg, rgba(22, 33, 62, 0.9) 0%, rgba(26, 26, 46, 0.9) 100%);
             color: var(--text-color);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             padding: 1rem;
-            overflow: hidden;
+            overflow-x: hidden;
         }
-        #app-container { width: 100%; max-width: 1600px; margin: auto; }
+
+        #app-container {
+            width: 100%;
+            max-width: 1600px;
+            margin: auto;
+        }
+        
         .header {
-            text-align: center;
-            padding: 0.5rem 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
             margin-bottom: 1.5rem;
-            border-bottom: 2px solid var(--accent-color);
+            background-color: var(--panel-bg-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-        .header h1 { font-size: 2.2rem; font-weight: 700; color: var(--text-color); text-shadow: 0 0 10px var(--accent-color); }
-        .game-layout { display: flex; gap: 2rem; align-items: flex-start; justify-content: center; }
-        .board-area { flex-grow: 1; flex-shrink: 1; max-width: 75vh; min-width: 390px; display: flex; flex-direction: column; gap: 1rem; }
+        .header h1 { font-size: 1.8rem; font-weight: 700; }
+
+        .game-layout {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        .board-area {
+            flex-grow: 1;
+            flex-shrink: 1;
+            max-width: 75vh;
+            min-width: 390px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
         #board-container {
             position: relative;
-            width: 100%;
-            padding-top: 100%; /* Aspect Ratio 1:1 */
-            background: var(--panel-secondary-bg-color);
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 15px rgba(0,0,0,0.4);
         }
-        #board-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 12px; cursor: pointer; }
+        
+        #board {
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border-radius: 6px;
+        }
+
+        .highlight-source {
+            box-shadow: inset 0 0 0 4px var(--highlight-color);
+        }
+
+        .move-dot {
+            position: absolute;
+            width: 33%;
+            height: 33%;
+            background-color: var(--dot-color);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            opacity: 0.8;
+        }
+        
         .player-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.75rem 1.25rem;
+            padding: 0.5rem 1.25rem;
             background: var(--panel-secondary-bg-color);
-            border: 1px solid var(--border-color);
             border-radius: 8px;
-            transition: box-shadow 0.4s ease, border-color 0.4s ease;
+            transition: box-shadow 0.4s ease-in-out;
+            min-height: 60px;
         }
-        .player-bar.active-player { box-shadow: 0 0 15px 3px var(--valid-move-color); border-color: var(--valid-move-color); }
-        .player-info { display: flex; align-items: center; gap: 1rem; font-weight: 500; font-size: 1.1rem; }
-        .timer { font-size: 1.4rem; font-weight: 700; letter-spacing: 1px; }
-        .controls-area { display: flex; justify-content: center; gap: 1rem; padding: 0.75rem; background-color: var(--panel-secondary-bg-color); border-radius: 8px; }
-        .btn-icon { background: transparent; border: 1px solid var(--border-color); cursor: pointer; padding: 0.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; width: 48px; height: 48px; color: var(--text-secondary-color); transition: all 0.2s ease-in-out; }
-        .btn-icon:hover { color: var(--text-color); border-color: var(--accent-color); box-shadow: 0 0 8px var(--accent-color); transform: translateY(-2px); }
-        .btn-icon:disabled { opacity: 0.4; cursor: not-allowed; border-color: var(--border-color) !important; box-shadow: none !important; transform: none !important; }
-        .side-dashboard { width: 380px; flex-shrink: 0; background-color: var(--panel-bg-color); border-radius: 12px; box-shadow: 0 4px 25px rgba(0,0,0,0.3); overflow: hidden; border: 1px solid var(--border-color); }
-        .tab-controls { display: flex; background: var(--panel-secondary-bg-color); }
+        .player-bar.active-player { box-shadow: 0 0 15px 3px var(--glow-color); }
+        .player-info { display: flex; align-items: center; gap: 0.75rem; font-weight: 500; font-size: 1.1rem; }
+        .player-info .turn-indicator { font-size: 0.8rem; opacity: 0; transition: opacity 0.3s; }
+        .active-player .turn-indicator { opacity: 1; }
+        .captured-pieces { display: flex; align-items: center; height: 20px; gap: 2px; }
+        .captured-pieces img { height: 100%; width: auto; opacity: 0.8; }
+        .timer { font-size: 1.4rem; font-weight: 700; }
+        
+        .controls-area {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            padding: 0.5rem;
+            background-color: var(--panel-secondary-bg-color);
+            border-radius: 8px;
+        }
+
+        .btn-icon { background: none; border: none; cursor: pointer; padding: 0.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; width: 44px; height: 44px; transition: background-color 0.2s; }
+        .btn-icon:hover { background-color: var(--button-hover-bg); }
+        .btn-icon i { color: var(--text-color); transition: transform 0.2s ease-out; }
+        .btn-icon:hover i { transform: scale(1.1); }
+        .btn-icon:disabled { opacity: 0.4; cursor: not-allowed; background-color: transparent !important; }
+        .btn-icon:disabled:hover i { transform: none; }
+
+        .side-dashboard {
+            width: 350px;
+            flex-shrink: 0;
+            background-color: var(--panel-bg-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .tab-controls { display: flex; border-bottom: 1px solid var(--border-color); }
         .tab-btn { flex: 1; padding: 1rem; background-color: transparent; border: none; color: var(--text-secondary-color); font-size: 1rem; font-weight: 500; cursor: pointer; transition: all 0.2s; border-bottom: 3px solid transparent; }
-        .tab-btn.active { color: var(--text-color); border-bottom-color: var(--accent-color); }
+        .tab-btn.active { color: var(--text-color); border-bottom-color: var(--glow-color); }
+
         .tab-content { padding: 1rem; }
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
-        #status { font-weight: 500; text-align: center; margin-bottom: 1rem; padding: 0.75rem; border-radius: 6px; background: var(--panel-secondary-bg-color); border: 1px solid var(--border-color); }
-        #move-history { height: 40vh; max-height: 500px; overflow-y: auto; font-size: 1rem; line-height: 1.8; padding: 0.5rem; }
-        #chat-log { height: calc(40vh - 60px); max-height: 440px; overflow-y: auto; margin-bottom: 1rem; border: 1px solid var(--border-color); padding: 0.75rem; border-radius: 6px; background: var(--bg-color); }
-        #chat-input { width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--bg-color); color: var(--text-color); font-family: var(--font-family); transition: border-color 0.2s; }
-        #chat-input:focus { outline: none; border-color: var(--accent-color); }
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(15, 52, 96, 0.4); backdrop-filter: blur(8px); align-items: center; justify-content: center; }
-        .modal-content { background-color: var(--panel-bg-color); color: var(--text-color); padding: 2.5rem; border-radius: 12px; width: 90%; max-width: 500px; text-align: center; border: 1px solid var(--border-color); box-shadow: 0 5px 35px rgba(0,0,0,0.5); opacity: 0; transform: scale(0.9); }
-        .modal-content h2 { margin-top: 0; font-size: 2rem; font-weight: 700; color: var(--accent-color); }
-        .modal-content p { margin: 1rem 0 1.5rem; color: var(--text-secondary-color); }
-        .btn-group { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
-        .btn { padding: 1rem 1.5rem; border: 1px solid var(--accent-color); border-radius: 8px; background-color: transparent; color: var(--accent-color); font-size: 1rem; font-weight: 500; cursor: pointer; transition: all 0.2s; text-transform: uppercase; letter-spacing: 1px; }
-        .btn:hover { background-color: var(--accent-color); color: white; transform: translateY(-3px); box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4); }
-        .btn-primary { background-color: var(--accent-color); color: white; }
+        
+        #status { font-weight: 500; text-align: center; margin-bottom: 1rem; padding: 0.5rem; border-radius: 6px; min-height: 2.2em; display: flex; align-items: center; justify-content: center; }
+        #move-history-container { height: 40vh; max-height: 500px; overflow-y: auto; font-size: 1rem; line-height: 1.6; }
+        .move-history-table { width: 100%; border-collapse: collapse; }
+        .move-history-table td { padding: 4px 8px; }
+        .move-history-table tr:nth-child(odd) { background-color: rgba(255,255,255,0.03); }
+        .move-history-table .move-number { color: var(--text-secondary-color); width: 30px; text-align: right; }
+        
+        #chat-log { height: calc(40vh - 50px); max-height: 450px; overflow-y: auto; margin-bottom: 0.5rem; border: 1px solid var(--border-color); padding: 0.5rem; border-radius: 6px; display: flex; flex-direction: column; gap: 0.5rem; }
+        .chat-message { max-width: 80%; padding: 0.5rem 0.75rem; border-radius: 12px; line-height: 1.4; }
+        .chat-message.self { background-color: var(--square-dark); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .chat-message.opponent { background-color: var(--button-bg); align-self: flex-start; border-bottom-left-radius: 2px; }
+        
+        #chat-input { width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--bg-color); color: var(--text-color); font-family: var(--font-family); }
+
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(5px); align-items: center; justify-content: center; }
+        .modal-content { background-color: var(--panel-bg-color); color: var(--text-color); padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px; text-align: center; box-shadow: 0 5px 25px rgba(0,0,0,0.3); opacity: 0; transform: scale(0.8); }
+        .modal-content h2 { margin-top: 0; font-size: 1.8rem; font-weight: 700; }
+        .modal-content p { margin: 1rem 0; color: var(--text-secondary-color); }
+        .modal-content .btn-group { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+        .btn { padding: 0.8rem 1.5rem; border: none; border-radius: 8px; background-color: var(--button-bg); color: var(--text-color); font-size: 1rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .btn:hover { background-color: var(--button-hover-bg); transform: translateY(-2px); }
+        .btn-primary { background-color: var(--square-dark); color: white; }
         .btn-primary:hover { filter: brightness(1.2); }
-        #room-code-display { font-size: 2.5rem; font-weight: bold; background: var(--bg-color); padding: 1rem; border-radius: 6px; margin: 1.5rem 0; letter-spacing: 6px; border: 1px dashed var(--accent-color); }
-        #room-code-input, #player-name-input { width: 100%; padding: 0.75rem; font-size: 1.5rem; text-align: center; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 1rem; letter-spacing: 4px; font-weight: bold; text-transform: uppercase; background-color: var(--bg-color); color: var(--text-color); transition: border-color 0.2s; }
-        #room-code-input:focus, #player-name-input:focus { outline: none; border-color: var(--accent-color); }
+        
+        #room-code-display { font-size: 2rem; font-weight: bold; background: var(--bg-color); padding: 1rem; border-radius: 6px; margin: 1.5rem 0; letter-spacing: 4px; }
+        #room-code-input { width: 100%; padding: 0.75rem; font-size: 1.5rem; text-align: center; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 1rem; letter-spacing: 4px; font-weight: bold; text-transform: uppercase; }
+        
         .hidden { display: none !important; }
-        @media (max-width: 1100px) { .game-layout { flex-direction: column; } .side-dashboard { width: 100%; } .board-area { max-width: 100%; } }
-        @media (max-width: 640px) { body { padding: 0.5rem; } .header h1 { font-size: 1.5rem; } .btn { padding: 0.8rem 1.2rem; } .modal-content { padding: 1.5rem; } }
+
+        @media (max-width: 1100px) {
+            .game-layout { flex-direction: column; }
+            .side-dashboard { width: 100%; }
+            .board-area { max-width: 100%; }
+        }
+        @media (max-width: 640px) {
+            body { padding: 0.5rem; }
+            .header { padding: 0.5rem 1rem; }
+            .header h1 { font-size: 1.2rem; }
+            .btn { padding: 0.75rem 1.2rem; font-size: 0.9rem; }
+            .modal-content { padding: 1.5rem; }
+        }
     </style>
 </head>
 <body>
 
     <div id="app-container">
-        <div class="header"><h1>Sintha Chess</h1></div>
+        <div class="header"><h1>Sovereign Chess</h1></div>
         <div id="game-area" class="game-layout hidden">
             <div class="board-area">
-                <div id="opponent-bar" class="player-bar"><div class="player-info"><span id="black-player-name-display">Black</span></div><div id="black-timer" class="timer">10:00</div></div>
-                <div id="board-container"><canvas id="board-canvas"></canvas></div>
-                <div id="player-bar" class="player-bar"><div class="player-info"><span id="white-player-name-display">White</span></div><div id="white-timer" class="timer">10:00</div></div>
+                <div id="opponent-bar" class="player-bar">
+                    <div class="player-info">
+                        <i class="fas fa-dot-circle turn-indicator"></i>
+                        <span>Opponent</span>
+                        <div id="opponent-captured" class="captured-pieces"></div>
+                    </div>
+                    <div id="black-timer" class="timer">10:00</div>
+                </div>
+                <div id="board-container"><div id="board"></div></div>
+                <div id="player-bar" class="player-bar">
+                    <div class="player-info">
+                        <i class="fas fa-dot-circle turn-indicator"></i>
+                        <span>You</span>
+                        <div id="player-captured" class="captured-pieces"></div>
+                    </div>
+                    <div id="white-timer" class="timer">10:00</div>
+                </div>
                 <div class="controls-area">
+                    <button id="undo-btn" class="btn-icon" title="Undo Move"><i class="fas fa-undo"></i></button>
+                    <button id="redo-btn" class="btn-icon" title="Redo Move"><i class="fas fa-redo"></i></button>
                     <button id="flip-board-btn" class="btn-icon" title="Flip Board"><i class="fas fa-sync-alt"></i></button>
                     <button id="new-game-btn" class="btn-icon" title="New Game"><i class="fas fa-plus-square"></i></button>
                     <button id="draw-btn" class="btn-icon" title="Offer Draw"><i class="fas fa-handshake"></i></button>
@@ -117,86 +234,48 @@
                 </div>
             </div>
             <div class="side-dashboard">
-                <div class="tab-controls"><button class="tab-btn active" data-tab="moves">Moves</button><button class="tab-btn" data-tab="chat">Chat</button></div>
+                <div class="tab-controls">
+                    <button class="tab-btn active" data-tab="moves">Moves</button>
+                    <button class="tab-btn" data-tab="chat">Chat</button>
+                </div>
                 <div class="tab-content">
-                    <div id="moves-panel" class="tab-panel active"><div id="status">White to move.</div><div id="move-history"></div></div>
-                    <div id="chat-panel" class="tab-panel"><div id="chat-log"></div><input type="text" id="chat-input" placeholder="Type a message..."></div>
+                    <div id="moves-panel" class="tab-panel active">
+                        <div id="status">White to move.</div>
+                        <div id="move-history-container"><table class="move-history-table"><tbody></tbody></table></div>
+                    </div>
+                    <div id="chat-panel" class="tab-panel">
+                        <div id="chat-log"></div>
+                        <input type="text" id="chat-input" placeholder="Type a message...">
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modals -->
-    <div id="game-mode-modal" class="modal"><div class="modal-content"><h2>Welcome to Sintha Chess</h2><p>Choose your battlefield.</p><div class="btn-group"><button id="single-player-btn" class="btn">Single Player vs AI</button><button id="pass-and-play-btn" class="btn">Pass & Play (Local)</button><button id="online-multiplayer-btn" class="btn btn-primary">Online Multiplayer</button></div></div></div>
+    <div id="game-mode-modal" class="modal"><div class="modal-content"><h2>Welcome to Sovereign Chess</h2><p>Choose how you want to play.</p><div class="btn-group"><button id="single-player-btn" class="btn btn-primary">Single Player vs AI</button><button id="pass-and-play-btn" class="btn">Pass & Play (Local)</button><button id="online-multiplayer-btn" class="btn">Online Multiplayer</button></div></div></div>
     <div id="ai-difficulty-modal" class="modal"><div class="modal-content"><h2>Choose AI Difficulty</h2><div class="btn-group"><button class="btn difficulty-btn" data-depth="1">Easy</button><button class="btn difficulty-btn" data-depth="3">Medium</button><button class="btn difficulty-btn" data-depth="5">Hard</button></div></div></div>
-    <div id="name-modal" class="modal"><div class="modal-content"><h2>Enter Your Name</h2><p>Your name will be visible to your opponent.</p><input type="text" id="player-name-input" placeholder="Your Name" maxlength="15"><button id="submit-name-btn" class="btn btn-primary" style="margin-top:1rem;">Continue</button></div></div>
-    <div id="online-modal" class="modal"><div class="modal-content"><h2>Online Multiplayer</h2><p>Create a private room or join a friend's.</p><div class="btn-group"><button id="create-game-btn" class="btn btn-primary">Create Room</button><button id="join-game-btn" class="btn">Join Room</button></div><button id="online-back-btn" class="btn" style="margin-top: 1.5rem; border-color: var(--text-secondary-color); color: var(--text-secondary-color);">Back</button></div></div>
+    <div id="online-modal" class="modal"><div class="modal-content"><h2>Online Multiplayer</h2><p>Create a private room to play with a friend, or join one with their code.</p><div class="btn-group"><button id="create-game-btn" class="btn btn-primary">Create Game</button><button id="join-game-btn" class="btn">Join Game</button></div><button id="online-back-btn" class="btn" style="margin-top: 1.5rem;">Back</button></div></div>
     <div id="create-room-modal" class="modal"><div class="modal-content"><h2>Your Room Code</h2><p>Share this code with your friend. Waiting for them to connect...</p><div id="room-code-display"></div><button id="copy-code-btn" class="btn">Copy Code</button></div></div>
-    <div id="join-room-modal" class="modal"><div class="modal-content"><h2>Join Room</h2><input type="text" id="room-code-input" placeholder="Enter Code" maxlength="6"><button id="join-room-submit-btn" class="btn btn-primary">Join</button></div></div>
-    <div id="game-over-modal" class="modal"><div class="modal-content"><h2 id="game-over-message"></h2><button id="play-again-btn" class="btn btn-primary" style="margin-top: 1.5rem;">Main Menu</button></div></div>
+    <div id="join-room-modal" class="modal"><div class="modal-content"><h2>Join Game</h2><input type="text" id="room-code-input" placeholder="Enter 6-Digit Code" maxlength="6"><button id="join-room-submit-btn" class="btn btn-primary">Join</button></div></div>
+    <div id="game-over-modal" class="modal"><div class="modal-content"><h2 id="game-over-message"></h2><button id="play-again-btn" class="btn btn-primary" style="margin-top: 1.5rem;">Play Again</button></div></div>
 
-    <!-- Audio -->
     <audio id="sound-move" src="https://lichess1.org/sound/standard/move.mp3" preload="auto"></audio>
     <audio id="sound-capture" src="https://lichess1.org/sound/standard/capture.mp3" preload="auto"></audio>
     <audio id="sound-check" src="https://lichess1.org/sound/standard/check.mp3" preload="auto"></audio>
     <audio id="sound-game-start" src="https://lichess1.org/sound/standard/game-start.mp3" preload="auto"></audio>
     <audio id="sound-game-end" src="https://lichess1.org/sound/standard/game-end.mp3" preload="auto"></audio>
 
-    <!-- Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.2/chess.min.js"></script>
     
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    
-    <!-- Three.js and GLTF Loader -->
-    <script type="importmap">
-        { "imports": { "three": "https://unpkg.com/three@0.158.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/" } }
-    </script>
+    <!-- REMOVED PeerJS, ADDED Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
-        // --- GLOBAL STATE & CONFIG ---
-        let game = new Chess(), gameMode = null, playerColor = 'w', playerName = 'Player 1', opponentName = 'Player 2';
-        let aiDifficulty = 3;
-        let fromSquare = null;
-        let whiteTimer, blackTimer, whiteTime = 600, blackTime = 600;
-        let isAudioUnlocked = false;
-
-        // Firebase state
-        let firebaseApp, db, gameRef, roomCode;
-        let unsubscribeGame; // Function to detach the Firebase listener
-
-        const $status = $('#status'), $moveHistory = $('#move-history');
-        const sounds = {
-            move: $('#sound-move')[0], capture: $('#sound-capture')[0], check: $('#sound-check')[0],
-            gameStart: $('#sound-game-start')[0], gameEnd: $('#sound-game-end')[0]
-        };
-
-        // --- 3D SCENE & ASSETS ---
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ canvas: $('#board-canvas')[0], antialias: true, alpha: true });
-        const controls = new OrbitControls(camera, renderer.domElement);
-        const raycaster = new THREE.Raycaster();
-        const pointer = new THREE.Vector2();
-        
-        const gltfLoader = new GLTFLoader();
-        const pieceModels = {};
-        const activePieces = new Map(); // Maps square (e.g., 'e4') to piece mesh
-        let boardPlane, selectionHighlighter, moveHighlighters = [];
-
-        const pieceAssetPaths = {
-            w: { p: 'pawn_white.glb', r: 'rook_white.glb', n: 'knight_white.glb', b: 'bishop_white.glb', q: 'queen_white.glb', k: 'king_white.glb' },
-            b: { p: 'pawn_black.glb', r: 'rook_black.glb', n: 'knight_black.glb', b: 'bishop_black.glb', q: 'queen_black.glb', k: 'king_black.glb' }
-        };
-        const assetBaseUrl = 'https://raw.githubusercontent.com/UsmanSA/gltf-chess-assets/main/';
-        
+    <script>
+    $(document).ready(function() {
         // --- FIREBASE CONFIG ---
         // IMPORTANT: Replace this with your own Firebase project configuration!
         const firebaseConfig = {
@@ -209,175 +288,86 @@
         appId: "1:180728290458:web:bc16d897749a1206851323",
         measurementId: "G-Q56QGQPRFY"
         };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // --- GLOBAL STATE & CONFIG ---
+        let board = null, game = new Chess(), gameMode = null, playerColor = 'w', fromSquare = null;
+        let aiDifficulty = 3, redoStack = [];
+        let whiteTimer, blackTimer, whiteTime = 600, blackTime = 600;
+        let isAudioUnlocked = false;
         
-        function initializeFirebase() {
-            if (!firebase.apps.length) {
-                firebaseApp = firebase.initializeApp(firebaseConfig);
-            } else {
-                firebaseApp = firebase.app();
-            }
-            db = firebase.database();
-        }
+        // Online-specific state
+        let roomCode = null, playerId = null, roomRef = null, opponentId = null;
+
+        const $status = $('#status'), $moveHistoryContainer = $('#move-history-container'), $boardEl = $('#board');
+        const $undoBtn = $('#undo-btn'), $redoBtn = $('#redo-btn');
+        const sounds = { move: $('#sound-move')[0], capture: $('#sound-capture')[0], check: $('#sound-check')[0], gameStart: $('#sound-game-start')[0], gameEnd: $('#sound-game-end')[0] };
 
         // --- UI & SOUND FUNCTIONS ---
         function playSound(soundName) { if (!isAudioUnlocked) return; const sound = sounds[soundName]; if (sound) { sound.currentTime = 0; sound.play().catch(e => {}); } }
         function unlockAudio() { if (isAudioUnlocked) return; isAudioUnlocked = true; Object.values(sounds).forEach(sound => { sound.play().catch(() => {}); sound.pause(); sound.currentTime = 0; }); }
         function showModal(id) { const modal = $(id); modal.css('display', 'flex'); gsap.to(modal.find('.modal-content'), { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(1.7)' }); }
-        function hideModal(id, onComplete) { const modal = $(id); gsap.to(modal.find('.modal-content'), { opacity: 0, scale: 0.9, duration: 0.2, ease: 'power2.in', onComplete: () => { modal.hide(); if (onComplete) onComplete(); }}); }
-        function playIntroAnimation() { const tl = gsap.timeline(); tl.from('.header', { y: -50, opacity: 0, duration: 0.5, ease: 'power2.out' }).from('.player-bar', { y: (i) => i === 0 ? -30 : 30, opacity: 0, duration: 0.6, stagger: 0.1, ease: 'power2.out' }, "-=0.3").from('#board-container', { scale: 0.9, opacity: 0, duration: 0.7, ease: 'back.out(1.4)'}, "-=0.6").from('.controls-area', { y: 30, opacity: 0, duration: 0.4, ease: 'power2.out' }, "-=0.5").from('.side-dashboard', { x: 100, opacity: 0, duration: 0.6, ease: 'power2.out' }, "-=0.5"); }
-        
-        // --- 3D SCENE MANAGEMENT ---
-        function initScene() {
-            renderer.setSize(500, 500); // Initial size, will be updated by resize
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.outputEncoding = THREE.sRGBEncoding;
-            renderer.shadowMap.enabled = true;
-            
-            camera.position.set(0, 7, 7);
-            camera.lookAt(0, 0, 0);
-
-            controls.enableDamping = true;
-            controls.dampingFactor = 0.05;
-            controls.minDistance = 5;
-            controls.maxDistance = 15;
-            controls.maxPolarAngle = Math.PI / 2.2;
-            controls.target.set(0, 0, 0);
-
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(5, 10, 7.5);
-            directionalLight.castShadow = true;
-            scene.add(directionalLight);
-
-            // Board
-            const boardTexture = new THREE.TextureLoader().load('https://images.chesscomfiles.com/chess-themes/boards/blue/200.png');
-            const boardMaterial = new THREE.MeshStandardMaterial({ map: boardTexture });
-            const boardGeometry = new THREE.PlaneGeometry(8, 8);
-            boardPlane = new THREE.Mesh(boardGeometry, boardMaterial);
-            boardPlane.rotation.x = -Math.PI / 2;
-            boardPlane.receiveShadow = true;
-            scene.add(boardPlane);
-
-            // Selection Highlighter
-            const highlighterGeom = new THREE.PlaneGeometry(1, 1);
-            const highlighterMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue('--highlight-color')), transparent: true, opacity: 0.7 });
-            selectionHighlighter = new THREE.Mesh(highlighterGeom, highlighterMat);
-            selectionHighlighter.rotation.x = -Math.PI / 2;
-            selectionHighlighter.position.y = 0.01;
-            selectionHighlighter.visible = false;
-            scene.add(selectionHighlighter);
-            
-            animate();
-            loadPieceAssets();
-        }
-
-        function loadPieceAssets() {
-            const promises = [];
-            for (const color in pieceAssetPaths) {
-                for (const type in pieceAssetPaths[color]) {
-                    const path = assetBaseUrl + pieceAssetPaths[color][type];
-                    const promise = gltfLoader.loadAsync(path).then(gltf => {
-                        const model = gltf.scene;
-                        model.traverse(child => { if (child.isMesh) child.castShadow = true; });
-                        if (!pieceModels[color]) pieceModels[color] = {};
-                        pieceModels[color][type] = model;
-                    });
-                    promises.push(promise);
-                }
-            }
-            return Promise.all(promises);
+        function hideModal(id, onComplete) { const modal = $(id); gsap.to(modal.find('.modal-content'), { opacity: 0, scale: 0.8, duration: 0.2, ease: 'power2.in', onComplete: () => { modal.hide(); if (onComplete) onComplete(); }}); }
+        function playIntroAnimation() {
+            const tl = gsap.timeline();
+            tl.from('.header', { y: -50, opacity: 0, duration: 0.5, ease: 'power2.out' })
+              .from('.player-bar', { y: (i) => i === 0 ? -30 : 30, opacity: 0, duration: 0.6, stagger: 0.1, ease: 'power2.out' }, "-=0.3")
+              .from('#board', { scale: 0.9, opacity: 0, duration: 0.5, ease: 'back.out(1.4)'}, "-=0.6")
+              .from('.controls-area', { y: 30, opacity: 0, duration: 0.4, ease: 'power2.out' }, "-=0.5")
+              .from('.side-dashboard', { x: 100, opacity: 0, duration: 0.6, ease: 'power2.out' }, "-=0.5");
         }
         
-        function squareToWorld(square) {
-            const col = square.charCodeAt(0) - 'a'.charCodeAt(0);
-            const row = parseInt(square[1]) - 1;
-            return new THREE.Vector3(col - 3.5, 0, -(row - 3.5));
-        }
-
-        function worldToSquare(point) {
-            const col = Math.floor(point.x + 4);
-            const row = Math.floor(-point.z + 4);
-            if (col < 0 || col > 7 || row < 0 || row > 7) return null;
-            return String.fromCharCode('a'.charCodeAt(0) + col) + (row + 1);
-        }
-
-        function drawBoardFromFEN(fen) {
-            activePieces.forEach(piece => scene.remove(piece));
-            activePieces.clear();
-            const boardState = game.board();
-            for (let r = 0; r < 8; r++) {
-                for (let f = 0; f < 8; f++) {
-                    const pieceInfo = boardState[r][f];
-                    if (pieceInfo) {
-                        const square = pieceInfo.square;
-                        const model = pieceModels[pieceInfo.color][pieceInfo.type].clone();
-                        model.position.copy(squareToWorld(square));
-                        model.scale.set(0.8, 0.8, 0.8);
-                        scene.add(model);
-                        activePieces.set(square, model);
+        // --- HIGHLIGHTING & MOVE LOGIC ---
+        function removeHighlights() { $boardEl.find('.square-55d63').removeClass('highlight-source'); $boardEl.find('.move-dot').remove(); }
+        function highlightMoves(square) { removeHighlights(); const moves = game.moves({ square: square, verbose: true }); if (moves.length === 0) return; $boardEl.find('.square-' + square).addClass('highlight-source'); moves.forEach(move => { $boardEl.find('.square-' + move.to).append('<div class="move-dot"></div>'); }); }
+        
+        function onSquareClick() {
+            const square = $(this).data('square');
+            if (game.game_over() || (gameMode !== 'pass' && game.turn() !== playerColor)) return;
+            const pieceOnSquare = game.get(square);
+            if (fromSquare) {
+                if (square === fromSquare) { fromSquare = null; removeHighlights(); return; }
+                const move = { from: fromSquare, to: square, promotion: 'q' };
+                const moveResult = game.move(move);
+                if (moveResult) {
+                    redoStack = []; // A new move clears the redo stack
+                    fromSquare = null;
+                    removeHighlights();
+                    // Handle move based on game mode
+                    if (gameMode === 'online' && roomRef) {
+                        roomRef.update({ fen: game.fen(), lastMove: move });
+                    } else {
+                        // For single player or pass & play, UI update is immediate
+                        playSound(moveResult.flags.includes('c') ? 'capture' : 'move');
+                        updateGameStatus();
+                        board.position(game.fen());
+                        if (gameMode === 'single' && !game.game_over()) window.setTimeout(makeComputerMove, 250);
                     }
+                } else { // Invalid move
+                    if (pieceOnSquare && pieceOnSquare.color === game.turn()) { fromSquare = square; highlightMoves(square); } 
+                    else { fromSquare = null; removeHighlights(); }
                 }
+            } else if (pieceOnSquare && pieceOnSquare.color === game.turn()) {
+                fromSquare = square; highlightMoves(square);
             }
         }
         
-        function animateMove(move, onComplete) {
-            const pieceMesh = activePieces.get(move.from);
-            if (!pieceMesh) { if(onComplete) onComplete(); return; }
-            const targetPos = squareToWorld(move.to);
-            let capturedMesh = activePieces.get(move.to);
-            activePieces.delete(move.from);
-            activePieces.set(move.to, pieceMesh);
-            const tl = gsap.timeline({ onComplete: () => { if (onComplete) onComplete(); }});
-            tl.to(pieceMesh.position, { y: 1, duration: 0.2, ease: 'power2.out' });
-            tl.to(pieceMesh.position, { x: targetPos.x, z: targetPos.z, duration: 0.4, ease: 'power2.inOut' });
-            tl.to(pieceMesh.position, { y: 0, duration: 0.2, ease: 'power2.in' });
-            if (capturedMesh) {
-                gsap.to(capturedMesh.scale, { x: 0.01, y: 0.01, z: 0.01, duration: 0.3, ease: 'power2.in', onComplete: () => scene.remove(capturedMesh) });
-            }
-        }
-
-        function highlightValidMoves(square) {
-            removeMoveHighlights();
-            const moves = game.moves({ square: square, verbose: true });
-            if (moves.length === 0) return;
-            moves.forEach(move => {
-                const highlighterGeom = new THREE.CircleGeometry(0.3, 32);
-                const highlighterMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue('--valid-move-color')), transparent: true, opacity: 0.8 });
-                const highlighter = new THREE.Mesh(highlighterGeom, highlighterMat);
-                highlighter.position.copy(squareToWorld(move.to));
-                highlighter.position.y = 0.02;
-                highlighter.rotation.x = -Math.PI / 2;
-                scene.add(highlighter);
-                moveHighlighters.push(highlighter);
-            });
-        }
-        
-        function removeMoveHighlights() {
-            moveHighlighters.forEach(h => scene.remove(h));
-            moveHighlighters = [];
-        }
-
-        // --- TIMER LOGIC ---
+        // --- TIMERS ---
         function stopTimers() { clearInterval(whiteTimer); clearInterval(blackTimer); }
-        function startTimers() {
-            stopTimers();
-            if (game.game_over()) return;
-            if (game.turn() === 'w') { whiteTimer = setInterval(updateWhiteTimer, 1000); } 
-            else { blackTimer = setInterval(updateBlackTimer, 1000); }
-        }
-        function updateWhiteTimer() { whiteTime--; $('#white-timer').text(formatTime(whiteTime)); if (gameMode === 'online' && playerColor === 'w') updateFirebaseTime(); if (whiteTime <= 0) handleGameOver('Black wins on time'); }
-        function updateBlackTimer() { blackTime--; $('#black-timer').text(formatTime(blackTime)); if (gameMode === 'online' && playerColor === 'b') updateFirebaseTime(); if (blackTime <= 0) handleGameOver('White wins on time'); }
+        function startTimers() { stopTimers(); if (game.turn() === 'w') { whiteTimer = setInterval(updateWhiteTimer, 1000); } else { blackTimer = setInterval(updateBlackTimer, 1000); }}
+        function updateWhiteTimer() { whiteTime--; $('#white-timer').text(formatTime(whiteTime)); if (whiteTime <= 0) handleGameOver('Black wins on time'); }
+        function updateBlackTimer() { blackTime--; $('#black-timer').text(formatTime(blackTime)); if (blackTime <= 0) handleGameOver('White wins on time'); }
         function formatTime(seconds) { if (seconds < 0) seconds = 0; const mins = Math.floor(seconds / 60); const secs = seconds % 60; return `${mins}:${secs < 10 ? '0' : ''}${secs}`; }
-        function updateFirebaseTime() { if (gameRef) gameRef.update({ whiteTime, blackTime }); }
-
-        // --- CORE GAME LOGIC & STATUS UPDATES ---
-        function updateGameStatus(lastMove = null) {
+        
+        // --- CORE GAME LOGIC & UI UPDATES ---
+        function updateGameStatus() {
             updateStatusText();
-            updateMoveHistory();
+            updateMoveHistoryTable();
+            updateUndoRedoButtons();
+            updateCapturedPieces();
             startTimers();
-            if (lastMove) playSound(lastMove.flags.includes('c') ? 'capture' : 'move');
-
             if (game.game_over()) {
                 stopTimers();
                 playSound('gameEnd');
@@ -385,357 +375,219 @@
                 if (game.in_checkmate()) message = 'Checkmate! ' + (game.turn() === 'w' ? 'Black' : 'White') + ' wins.';
                 else if (game.in_draw()) {
                     message = 'Draw!';
-                    if (game.in_stalemate()) message += ' (Stalemate)';
-                    if (game.in_threefold_repetition()) message += ' (Repetition)';
-                    if (game.insufficient_material()) message += ' (Insufficient Material)';
+                    if(game.in_stalemate()) message += ' (Stalemate)';
+                    if(game.in_threefold_repetition()) message += ' (Repetition)';
+                    if(game.insufficient_material()) message += ' (Insufficient Material)';
                 }
                 handleGameOver(message);
-                return;
-            }
-
-            if (gameMode === 'single' && game.turn() !== playerColor && !game.game_over()) {
-                window.setTimeout(makeComputerMove, 500);
             }
         }
-
-        function handleGameOver(message) {
-            stopTimers();
-            selectionHighlighter.visible = false;
-            removeMoveHighlights();
-            $('#game-over-message').text(message);
-            showModal('#game-over-modal');
-            if (gameMode === 'online' && unsubscribeGame) {
-                unsubscribeGame();
-                unsubscribeGame = null;
-                gameRef = null;
-            }
-        }
-        
+        function handleGameOver(message) { stopTimers(); removeHighlights(); $('#game-over-message').text(message); showModal('#game-over-modal'); if (roomRef) { roomRef.child('meta').update({ status: 'ended', result: message }); roomRef.onDisconnect().cancel(); roomRef.off(); roomRef = null; } }
         function updateStatusText() {
             let statusText = (game.turn() === 'w' ? 'White' : 'Black') + ' to move.';
             $('.player-bar').removeClass('active-player');
-            const whitePlayerBar = playerColor === 'w' ? '#player-bar' : '#opponent-bar';
-            const blackPlayerBar = playerColor === 'b' ? '#player-bar' : '#opponent-bar';
-            $(game.turn() === 'w' ? whitePlayerBar : blackPlayerBar).addClass('active-player');
+            if(game.turn() === 'w') { (playerColor === 'w' ? $('#player-bar') : $('#opponent-bar')).addClass('active-player'); }
+            else { (playerColor === 'b' ? $('#player-bar') : $('#opponent-bar')).addClass('active-player'); }
+            if (gameMode === 'pass') { if (game.turn() === 'w') $('#player-bar').addClass('active-player'); else $('#opponent-bar').addClass('active-player'); }
 
             if (game.in_check()) {
                 statusText += ' - CHECK!';
-                $status.css('background-color', 'rgba(233, 69, 96, 0.2)');
-                gsap.fromTo($status, { scale: 1.05 }, { scale: 1, duration: 0.8, ease: 'elastic.out(1, 0.5)' });
+                $status.css('background-color', 'rgba(255,0,0,0.2)');
+                gsap.fromTo($status, {scale: 1.1, y: -2}, {scale: 1, y: 0, duration: 0.8, ease: 'elastic.out(1, 0.5)'});
                 playSound('check');
-            } else {
-                $status.css('background-color', 'var(--panel-secondary-bg-color)');
-            }
+            } else { $status.css('background-color', 'transparent'); }
             $status.text(statusText);
         }
-
-        function updateMoveHistory() {
+        function updateMoveHistoryTable() {
             const history = game.history({ verbose: true });
+            const $tbody = $('.move-history-table tbody');
+            $tbody.empty();
             let html = '';
             for (let i = 0; i < history.length; i += 2) {
-                html += `<div><span>${(i / 2) + 1}.</span> ${history[i].san} ${history[i + 1] ? history[i + 1].san : ' '}</div>`;
+                html += `<tr>
+                    <td class="move-number">${(i/2)+1}.</td>
+                    <td>${history[i].san}</td>
+                    <td>${history[i+1] ? history[i+1].san : ''}</td>
+                </tr>`;
             }
-            $moveHistory.html(html);
-            $moveHistory.scrollTop($moveHistory[0].scrollHeight);
+            $tbody.html(html);
+            $moveHistoryContainer.scrollTop($moveHistoryContainer[0].scrollHeight);
         }
+        function updateCapturedPieces() {
+            const pieceMap = { p: 'pawn', n: 'knight', b: 'bishop', r: 'rook', q: 'queen' };
+            const initialCount = { p: 8, n: 2, b: 2, r: 2, q: 1 };
+            const currentCount = { w: { p: 0, n: 0, b: 0, r: 0, q: 0 }, b: { p: 0, n: 0, b: 0, r: 0, q: 0 } };
 
+            game.board().forEach(row => row.forEach(piece => {
+                if (piece) currentCount[piece.color][piece.type]++;
+            }));
+
+            $('#player-captured, #opponent-captured').empty();
+            
+            for (const color of ['w', 'b']) {
+                const capturedByColor = (color === playerColor) ? '#player-captured' : '#opponent-captured';
+                const opponentColor = (color === 'w') ? 'b' : 'w';
+                
+                for (const pieceType in initialCount) {
+                    let capturedCount = initialCount[pieceType] - currentCount[opponentColor][pieceType];
+                    for(let i = 0; i < capturedCount; i++) {
+                         $(capturedByColor).append(`<img src="https://lichess1.org/assets/piece/staunty/${opponentColor}${pieceType.toUpperCase()}.svg" alt="${pieceMap[pieceType]}">`);
+                    }
+                }
+            }
+        }
         function resetCoreState() {
             game.reset();
-            whiteTime = 600;
-            blackTime = 600;
-            fromSquare = null;
-            if (unsubscribeGame) { unsubscribeGame(); unsubscribeGame = null; }
-            gameRef = null;
-            roomCode = null;
-            $('#white-timer').text(formatTime(whiteTime));
-            $('#black-timer').text(formatTime(blackTime));
-            $moveHistory.html('');
-            $('#chat-log').html('');
-            stopTimers();
-            if (pieceModels.w) drawBoardFromFEN(game.fen());
+            whiteTime = 600; blackTime = 600; fromSquare = null; redoStack = [];
+            $('#white-timer').text(formatTime(whiteTime)); $('#black-timer').text(formatTime(blackTime));
+            $('.move-history-table tbody').html(''); $('#chat-log').html(''); removeHighlights(); stopTimers();
+            updateCapturedPieces();
+            if (roomRef) { roomRef.onDisconnect().cancel(); roomRef.off(); roomRef = null; }
+            roomCode = null; playerId = null; opponentId = null;
         }
 
         function setupGame(mode, options = {}) {
             resetCoreState();
-            gameMode = mode;
-            playerColor = options.color || 'w';
-            aiDifficulty = options.difficulty || 3;
+            gameMode = mode; playerColor = options.color || 'w'; aiDifficulty = options.difficulty || 3;
             
-            const camPos = playerColor === 'b' ? new THREE.Vector3(0, 7, -7) : new THREE.Vector3(0, 7, 7);
-            gsap.to(camera.position, { x: camPos.x, y: camPos.y, z: camPos.z, duration: 1, ease: 'power2.inOut' });
-            gsap.to(controls.target, { x: 0, y: 0, z: 0, duration: 1, ease: 'power2.inOut' });
-            
+            // For online games, get details from options
             if (mode === 'online') {
-                $('.tab-btn[data-tab="chat"]').show();
-                 $('#white-player-name-display').text(options.whiteName || "White");
-                 $('#black-player-name-display').text(options.blackName || "Black");
-            } else if (mode === 'single') {
-                 $('.tab-btn[data-tab="chat"]').hide();
-                 $('.tab-btn[data-tab="moves"]').addClass('active').click();
-                 $('#white-player-name-display').text(playerColor === 'w' ? 'You' : 'AI');
-                 $('#black-player-name-display').text(playerColor === 'b' ? 'You' : 'AI');
-            } else { // Pass and play
-                 $('.tab-btn[data-tab="chat"]').hide();
-                 $('.tab-btn[data-tab="moves"]').addClass('active').click();
-                 $('#white-player-name-display').text('White');
-                 $('#black-player-name-display').text('Black');
+                roomCode = options.roomCode;
+                playerId = options.playerId;
+                roomRef = db.ref('games/' + roomCode);
+                attachFirebaseListeners();
             }
+
+            const boardConfig = { position: 'start', pieceTheme: 'https://lichess1.org/assets/piece/staunty/{piece}.svg', draggable: false, moveSpeed: 'slow', snapSpeed: 50 };
+            boardConfig.orientation = (playerColor === 'b') ? 'black' : 'white';
+            if(board) board.destroy();
+            board = Chessboard('board', boardConfig);
+            $boardEl.on('click', '.square-55d63', onSquareClick);
             
             updateGameStatus();
-            drawBoardFromFEN(game.fen());
-            $('#game-area').removeClass('hidden');
-            playIntroAnimation();
-            playSound('gameStart');
+            $('#game-area').removeClass('hidden'); playIntroAnimation(); playSound('gameStart');
+            
+            $('.tab-btn[data-tab="chat"]').toggle(mode === 'online');
+            if (mode !== 'online') $('.tab-btn[data-tab="moves"]').addClass('active').click();
+            
+            if (mode === 'single' && playerColor === 'b') window.setTimeout(makeComputerMove, 500);
+            
+            // Set player names
+            $('#player-bar .player-info span').text(mode === 'pass' ? 'White' : 'You');
+            $('#opponent-bar .player-info span').text(mode === 'pass' ? 'Black' : 'Opponent');
+
             $(window).trigger('resize');
-
-            if (gameMode === 'single' && game.turn() !== playerColor) {
-                 window.setTimeout(makeComputerMove, 1000);
-            }
         }
+        
+        // --- AI LOGIC (Unchanged) ---
+        function makeComputerMove() { const bestMove = getBestMove(game, aiDifficulty); if (bestMove) { game.move(bestMove); playSound(game.history({verbose: true}).pop().flags.includes('c') ? 'capture' : 'move'); updateGameStatus(); board.position(game.fen()); } }
+        function getBestMove(game, depth) { const possibleMoves = game.moves({ verbose: true }); if (possibleMoves.length === 0) return null; let bestMove = null; let bestValue = -Infinity; possibleMoves.sort(() => Math.random() - 0.5); for (const move of possibleMoves) { game.move(move); const boardValue = -negamax(game, depth - 1, -Infinity, Infinity); game.undo(); if (boardValue > bestValue) { bestValue = boardValue; bestMove = move; } } return bestMove; }
+        function negamax(game, depth, alpha, beta) { if (depth === 0 || game.game_over()) { return evaluateBoard(game.board()); } let max = -Infinity; const moves = game.moves(); for (const move of moves) { game.move(move); const score = -negamax(game, depth - 1, -beta, -alpha); game.undo(); max = Math.max(max, score); alpha = Math.max(alpha, score); if (alpha >= beta) { break; } } return max; }
+        function evaluateBoard(board) { let totalEvaluation = 0; const pieceValues = { p: 10, n: 30, b: 30, r: 50, q: 90, k: 900 }; board.forEach(row => { row.forEach(piece => { if (piece) { const value = pieceValues[piece.type]; totalEvaluation += (piece.color === 'w' ? value : -value); } }); }); return totalEvaluation * (game.turn() === 'w' ? 1 : -1); }
+        
+        // --- FIREBASE & ONLINE LOGIC ---
+        function generateId(length) { return Math.random().toString(36).substr(2, length); }
 
-        // --- AI LOGIC (MINIMAX with ALPHA-BETA) ---
-        const pieceValues = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
-        const pst = {
-            p: [
-                [0,  0,  0,  0,  0,  0,  0,  0],
-                [50, 50, 50, 50, 50, 50, 50, 50],
-                [10, 10, 20, 30, 30, 20, 10, 10],
-                [5,  5, 10, 25, 25, 10,  5,  5],
-                [0,  0,  0, 20, 20,  0,  0,  0],
-                [5, -5,-10,  0,  0,-10, -5,  5],
-                [5, 10, 10,-20,-20, 10, 10,  5],
-                [0,  0,  0,  0,  0,  0,  0,  0]
-            ],
-            n: [
-                [-50,-40,-30,-30,-30,-30,-40,-50],
-                [-40,-20,  0,  0,  0,  0,-20,-40],
-                [-30,  0, 10, 15, 15, 10,  0,-30],
-                [-30,  5, 15, 20, 20, 15,  5,-30],
-                [-30,  0, 15, 20, 20, 15,  0,-30],
-                [-30,  5, 10, 15, 15, 10,  5,-30],
-                [-40,-20,  0,  5,  5,  0,-20,-40],
-                [-50,-40,-30,-30,-30,-30,-40,-50]
-            ],
-            b: [
-                [-20,-10,-10,-10,-10,-10,-10,-20],
-                [-10,  0,  0,  0,  0,  0,  0,-10],
-                [-10,  0,  5, 10, 10,  5,  0,-10],
-                [-10,  5,  5, 10, 10,  5,  5,-10],
-                [-10,  0, 10, 10, 10, 10,  0,-10],
-                [-10, 10, 10, 10, 10, 10, 10,-10],
-                [-10,  5,  0,  0,  0,  0,  5,-10],
-                [-20,-10,-10,-10,-10,-10,-10,-20]
-            ],
-            r: [
-                [0,  0,  0,  0,  0,  0,  0,  0],
-                [5, 10, 10, 10, 10, 10, 10,  5],
-                [-5,  0,  0,  0,  0,  0,  0, -5],
-                [-5,  0,  0,  0,  0,  0,  0, -5],
-                [-5,  0,  0,  0,  0,  0,  0, -5],
-                [-5,  0,  0,  0,  0,  0,  0, -5],
-                [-5,  0,  0,  0,  0,  0,  0, -5],
-                [0,  0,  0,  5,  5,  0,  0,  0]
-            ],
-            q: [
-                [-20,-10,-10, -5, -5,-10,-10,-20],
-                [-10,  0,  0,  0,  0,  0,  0,-10],
-                [-10,  0,  5,  5,  5,  5,  0,-10],
-                [-5,  0,  5,  5,  5,  5,  0, -5],
-                [0,  0,  5,  5,  5,  5,  0, -5],
-                [-10,  5,  5,  5,  5,  5,  0,-10],
-                [-10,  0,  5,  0,  0,  0,  0,-10],
-                [-20,-10,-10, -5, -5,-10,-10,-20]
-            ],
-            k: [
-                [-30,-40,-40,-50,-50,-40,-40,-30],
-                [-30,-40,-40,-50,-50,-40,-40,-30],
-                [-30,-40,-40,-50,-50,-40,-40,-30],
-                [-30,-40,-40,-50,-50,-40,-40,-30],
-                [-20,-30,-30,-40,-40,-30,-30,-20],
-                [-10,-20,-20,-20,-20,-20,-20,-10],
-                [20, 20,  0,  0,  0,  0, 20, 20],
-                [20, 30, 10,  0,  0, 10, 30, 20]
-            ]
-        };
+        function createOnlineRoom() {
+            roomCode = generateId(6).toUpperCase();
+            playerId = generateId(10);
+            roomRef = db.ref('games/' + roomCode);
 
-        function evaluateBoard(board) {
-            let totalEvaluation = 0;
-            for (let i = 0; i < 8; i++) {
-                for (let j = 0; j < 8; j++) {
-                    const piece = board[i][j];
-                    if (piece) {
-                        const value = pieceValues[piece.type] + (piece.color === 'w' ? pst[piece.type][i][j] : pst[piece.type][7-i][j]);
-                        totalEvaluation += (piece.color === 'w' ? value : -value);
+            const gameData = {
+                meta: { status: 'waiting', createdAt: firebase.database.ServerValue.TIMESTAMP },
+                players: { white: playerId, black: null },
+                fen: game.fen(),
+                chat: [],
+                signals: null
+            };
+            
+            roomRef.set(gameData).then(() => {
+                $('#room-code-display').text(roomCode);
+                showModal('#create-room-modal');
+                // Listen for the opponent to join
+                roomRef.child('players/black').on('value', (snapshot) => {
+                    if (snapshot.exists() && snapshot.val() !== null) {
+                        opponentId = snapshot.val();
+                        roomRef.child('players/black').off(); // Stop listening
+                        hideModal('#create-room-modal', () => {
+                            setupGame('online', { roomCode: roomCode, playerId: playerId, color: 'w' });
+                            roomRef.child('meta/status').set('active');
+                        });
+                    }
+                });
+            }).catch(err => {
+                alert('Error creating room. Please try again.');
+                console.error(err);
+            });
+        }
+        
+        function attachFirebaseListeners() {
+            // Listen for board state changes
+            roomRef.child('fen').on('value', (snapshot) => {
+                const newFen = snapshot.val();
+                if (newFen && newFen !== game.fen()) {
+                    game.load(newFen);
+                    const lastMove = game.history({verbose: true}).pop();
+                    playSound(lastMove.flags.includes('c') ? 'capture' : 'move');
+                    board.position(newFen);
+                    updateGameStatus();
+                }
+            });
+
+            // Listen for chat messages
+            roomRef.child('chat').on('child_added', (snapshot) => {
+                const msg = snapshot.val();
+                if (msg.senderId !== playerId) {
+                    $('#chat-log').append(`<div class="chat-message opponent">${msg.text}</div>`);
+                    $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight);
+                }
+            });
+
+            // Listen for signals (draw, resign)
+            roomRef.child('signals').on('value', (snapshot) => {
+                const signal = snapshot.val();
+                if (!signal) return;
+
+                if (signal.senderId !== playerId) {
+                    switch(signal.type) {
+                        case 'resign':
+                            handleGameOver(`${playerColor === 'w' ? 'Black' : 'White'} resigned.`);
+                            break;
+                        case 'draw-offer':
+                            if (confirm('Opponent offers a draw. Accept?')) {
+                                roomRef.child('signals').set({ type: 'draw-accept', senderId: playerId });
+                                handleGameOver('Draw by agreement.');
+                            } else {
+                                roomRef.child('signals').set({ type: 'draw-reject', senderId: playerId });
+                            }
+                            break;
+                        case 'draw-accept':
+                            handleGameOver('Draw by agreement.');
+                            break;
+                        case 'draw-reject':
+                            alert('Opponent declined the draw offer.');
+                            break;
                     }
                 }
-            }
-            return totalEvaluation;
-        }
-
-        function minimax(game, depth, alpha, beta, isMaximizingPlayer) {
-            if (depth === 0 || game.game_over()) {
-                return evaluateBoard(game.board());
-            }
-
-            const moves = game.moves();
-            
-            if (isMaximizingPlayer) {
-                let maxEval = -Infinity;
-                for (const move of moves) {
-                    game.move(move);
-                    const evaluation = minimax(game, depth - 1, alpha, beta, false);
-                    game.undo();
-                    maxEval = Math.max(maxEval, evaluation);
-                    alpha = Math.max(alpha, evaluation);
-                    if (beta <= alpha) break;
-                }
-                return maxEval;
-            } else {
-                let minEval = Infinity;
-                for (const move of moves) {
-                    game.move(move);
-                    const evaluation = minimax(game, depth - 1, alpha, beta, true);
-                    game.undo();
-                    minEval = Math.min(minEval, evaluation);
-                    beta = Math.min(beta, evaluation);
-                    if (beta <= alpha) break;
-                }
-                return minEval;
-            }
-        }
-        
-        function getBestMove(game, depth) {
-            let bestMove = null;
-            let bestValue = -Infinity;
-            const isMaximizingPlayer = game.turn() === 'w';
-            const moves = game.moves({verbose: true});
-            moves.sort(() => Math.random() - 0.5); // Randomize for variety
-
-            for (const move of moves) {
-                game.move(move);
-                const boardValue = minimax(game, depth - 1, -Infinity, Infinity, !isMaximizingPlayer);
-                game.undo();
-                const moveValue = isMaximizingPlayer ? boardValue : -boardValue;
-                if (moveValue > bestValue) {
-                    bestValue = moveValue;
-                    bestMove = move;
-                }
-            }
-            return bestMove;
-        }
-
-        function makeComputerMove() {
-            if (game.game_over()) return;
-            const bestMove = getBestMove(game, aiDifficulty);
-            if (bestMove) {
-                const moveResult = game.move(bestMove);
-                animateMove(moveResult, () => updateGameStatus(moveResult));
-            }
-        }
-
-        // --- FIREBASE NETWORKING LOGIC ---
-        function generateRoomCode() { return Math.random().toString(36).substring(2, 8).toUpperCase(); }
-
-        async function createOnlineGame() {
-            roomCode = generateRoomCode();
-            gameRef = db.ref('games/' + roomCode);
-            const player1Data = { name: playerName, color: 'w' };
-            
-            try {
-                await gameRef.set({
-                    fen: game.fen(), lastMove: null, players: { player1: player1Data },
-                    status: 'waiting', chat: [], whiteTime: 600, blackTime: 600,
-                    createdAt: firebase.database.ServerValue.TIMESTAMP
-                });
-                $('#room-code-display').text(roomCode);
-                hideModal('#online-modal', () => showModal('#create-room-modal'));
-                listenToGameUpdates();
-            } catch (error) {
-                alert("Error: Could not create game. Check console and Firebase rules.");
-            }
-        }
-
-        async function joinOnlineGame() {
-            roomCode = $('#room-code-input').val().trim().toUpperCase();
-            if (roomCode.length !== 6) { alert("Please enter a valid 6-character room code."); return; }
-            
-            gameRef = db.ref('games/' + roomCode);
-            const snapshot = await gameRef.once('value');
-
-            if (!snapshot.exists()) { alert("Room not found. Please check the code."); return; }
-            const gameData = snapshot.val();
-            if (gameData.players.player2) { alert("This room is already full."); return; }
-            
-            const player2Data = { name: playerName, color: 'b' };
-            try {
-                await gameRef.update({ 'players/player2': player2Data, status: 'active' });
-                hideModal('#join-room-modal');
-                listenToGameUpdates();
-            } catch (error) {
-                alert("Error: Could not join game.");
-            }
-        }
-        
-        function listenToGameUpdates() {
-            if (unsubscribeGame) unsubscribeGame();
-            unsubscribeGame = gameRef.on('value', (snapshot) => {
-                if (!snapshot.exists()) { handleGameOver("The game room no longer exists."); return; }
-                const data = snapshot.val();
-                
-                if (!$('#game-area').is(':visible') && data.status === 'active') {
-                    playerColor = data.players.player2 && data.players.player2.name === playerName ? 'b' : 'w';
-                    opponentName = playerColor === 'w' ? (data.players.player2?.name || 'Waiting...') : data.players.player1.name;
-                    const whiteName = playerColor === 'w' ? `${playerName} (You)` : opponentName;
-                    const blackName = playerColor === 'b' ? `${playerName} (You)` : opponentName;
-                    hideModal('#create-room-modal');
-                    hideModal('#join-room-modal');
-                    setupGame('online', { color: playerColor, whiteName, blackName });
-                }
-
-                if (game.fen() !== data.fen) {
-                    game.load(data.fen);
-                    animateMove(data.lastMove, () => {
-                         updateGameStatus(data.lastMove);
-                         drawBoardFromFEN(game.fen());
-                    });
-                }
-                
-                if (Math.abs(whiteTime - data.whiteTime) > 2) whiteTime = data.whiteTime;
-                if (Math.abs(blackTime - data.blackTime) > 2) blackTime = data.blackTime;
-                $('#white-timer').text(formatTime(whiteTime));
-                $('#black-timer').text(formatTime(blackTime));
-
-                if (playerColor === 'w' && data.players.player2 && $('#black-player-name-display').text() !== data.players.player2.name) {
-                     $('#black-player-name-display').text(data.players.player2.name);
-                }
-                
-                if (data.chat) {
-                    const chatLog = $('#chat-log');
-                    chatLog.html('');
-                    Object.values(data.chat).forEach(msg => {
-                        const sender = msg.sender === playerName ? 'You' : msg.sender;
-                        chatLog.append(`<div><b>${sender}:</b> ${msg.text}</div>`);
-                    });
-                    chatLog.scrollTop(chatLog[0].scrollHeight);
-                }
-                
-                if(data.status === 'resigned' && !game.game_over()) {
-                    const winnerName = data.winner === 'w' ? data.players.player1.name : data.players.player2.name;
-                    handleGameOver(`${winnerName} wins by resignation.`);
+                // Clear the signal after processing
+                if (signal.type === 'draw-reject' || signal.type === 'draw-offer') {
+                    setTimeout(() => roomRef.child('signals').set(null), 500);
                 }
             });
-        }
-        
-        function sendMoveToFirebase(move) {
-            if (!gameRef) return;
-            gameRef.update({ fen: game.fen(), lastMove: move, turn: game.turn() });
-        }
 
-        function sendChatToFirebase(message) {
-            if (!gameRef) return;
-            gameRef.child('chat').push({
-                sender: playerName, text: message, timestamp: firebase.database.ServerValue.TIMESTAMP
+            // Handle opponent disconnection
+            roomRef.child('players').on('value', (snapshot) => {
+                const players = snapshot.val();
+                if(!players) return; // Room was deleted
+                const opponentColor = playerColor === 'w' ? 'black' : 'white';
+                if(players[opponentColor] === null && gameMode === 'online'){
+                    handleGameOver('Opponent disconnected.');
+                }
             });
+
+            // Set up onDisconnect hook
+            const playerRef = roomRef.child(`players/${playerColor === 'w' ? 'white' : 'black'}`);
+            playerRef.onDisconnect().remove();
         }
 
         // --- EVENT HANDLERS ---
@@ -743,105 +595,64 @@
         $('.btn, .btn-icon').on('click', function() { gsap.fromTo(this, {scale: 0.95}, {scale: 1, duration: 0.3, ease: 'elastic.out(1, 0.5)'}); });
         $('.tab-btn').on('click', function() { const tabId = $(this).data('tab'); $('.tab-btn').removeClass('active'); $(this).addClass('active'); $('.tab-panel').removeClass('active'); $('#' + tabId + '-panel').addClass('active'); });
         
-        $('#single-player-btn').on('click', () => hideModal('#game-mode-modal', () => showModal('#ai-difficulty-modal')));
+        // Modal navigation
+        $('#single-player-btn').on('click', () => { hideModal('#game-mode-modal', () => showModal('#ai-difficulty-modal')); });
         $('.difficulty-btn').on('click', function() { hideModal('#ai-difficulty-modal', () => setupGame('single', { difficulty: $(this).data('depth') })); });
-        $('#pass-and-play-btn').on('click', () => hideModal('#game-mode-modal', () => setupGame('pass')));
-        $('#online-multiplayer-btn').on('click', () => hideModal('#game-mode-modal', () => showModal('#name-modal')));
-        $('#submit-name-btn').on('click', () => { const name = $('#player-name-input').val().trim(); if(name) { playerName = name; hideModal('#name-modal', () => showModal('#online-modal')); } else { alert('Please enter a name.'); } });
-
-        $('#online-back-btn').on('click', () => hideModal('#online-modal', () => showModal('#game-mode-modal')));
-        $('#create-game-btn').on('click', createOnlineGame);
-        $('#join-game-btn').on('click', () => hideModal('#online-modal', () => showModal('#join-room-modal')));
-        $('#join-room-submit-btn').on('click', joinOnlineGame);
+        $('#pass-and-play-btn').on('click', () => { hideModal('#game-mode-modal', () => setupGame('pass')); });
+        $('#online-multiplayer-btn').on('click', () => { hideModal('#game-mode-modal', () => showModal('#online-modal')); });
+        $('#online-back-btn').on('click', () => { hideModal('#online-modal', () => showModal('#game-mode-modal')); });
         
-        $('#copy-code-btn').on('click', () => { navigator.clipboard.writeText($('#room-code-display').text()).then(() => alert('Copied!')); });
-        $('#play-again-btn').on('click', () => { hideModal('#game-over-modal', () => { $('#game-area').addClass('hidden'); showModal('#game-mode-modal'); }); });
-        
-        $('#flip-board-btn').on('click', () => {
-             const newColor = playerColor === 'w' ? 'b' : 'w';
-             // No need to call setupGame, just change the camera and internal color for UI
-             playerColor = newColor;
-             const camPos = newColor === 'b' ? new THREE.Vector3(0, 7, -7) : new THREE.Vector3(0, 7, 7);
-             gsap.to(camera.position, { x: camPos.x, y: camPos.y, z: camPos.z, duration: 1, ease: 'power2.inOut' });
-             gsap.to(controls.target, { x: 0, y: 0, z: 0, duration: 1, ease: 'power2.inOut' });
-
-             if (gameMode === 'single') {
-                $('#white-player-name-display').text(playerColor === 'w' ? 'You' : 'AI');
-                $('#black-player-name-display').text(playerColor === 'b' ? 'You' : 'AI');
-                updateStatusText(); // Update active player highlight
-                if (game.turn() !== playerColor && !game.game_over()) {
-                    makeComputerMove();
-                }
-             }
-        });
-        
-        $('#new-game-btn').on('click', () => { if(confirm('Start a new game? This will end the current match.')){ $('#game-area').addClass('hidden'); showModal('#game-mode-modal'); }});
-        $('#resign-btn').on('click', () => { if(confirm('Resign the game?')){ if(gameMode === 'online' && gameRef){ gameRef.update({status: 'resigned', winner: playerColor === 'w' ? 'b' : 'w'}); } else { handleGameOver(`${playerColor === 'w' ? 'Black' : 'White'} wins by resignation.`); } }});
-        $('#draw-btn').on('click', () => { if(gameMode === 'online' && gameRef){ alert('Draw offers are not yet implemented.'); } else { alert('You can only offer a draw in an online game.'); }});
-        
-        $('#chat-input').on('keypress', function(e) { if(e.which === 13){ const message = $(this).val(); if (message.trim() !== ''){ if(gameMode === 'online') { sendChatToFirebase(message); $(this).val(''); } } } });
-
-        function onPointerDown(event) {
-            event.preventDefault();
-            const rect = renderer.domElement.getBoundingClientRect();
-            pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-            pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-            raycaster.setFromCamera(pointer, camera);
-            const intersects = raycaster.intersectObject(boardPlane);
+        // Online game creation/joining
+        $('#create-game-btn').on('click', () => { hideModal('#online-modal', createOnlineRoom); });
+        $('#join-game-btn').on('click', () => { hideModal('#online-modal', () => showModal('#join-room-modal')); });
+        $('#join-room-submit-btn').on('click', () => {
+            const code = $('#room-code-input').val().trim().toUpperCase();
+            if (code.length !== 6) { alert('Please enter a valid 6-digit room code.'); return; }
             
-            if (intersects.length > 0) {
-                const square = worldToSquare(intersects[0].point);
-                if (!square) return;
-                if (game.game_over() || (game.turn() !== playerColor && gameMode !== 'pass')) return;
-                
-                const pieceOnSquare = game.get(square);
-
-                if (fromSquare) {
-                    const move = { from: fromSquare, to: square, promotion: 'q' };
-                    const moveResult = game.move(move);
-                    
-                    if (moveResult) {
-                        if (gameMode === 'online') {
-                            sendMoveToFirebase(moveResult);
+            const joinRoomRef = db.ref('games/' + code);
+            joinRoomRef.child('meta/status').once('value', statusSnap => {
+                if (statusSnap.val() === 'waiting') {
+                    const newPlayerId = generateId(10);
+                    joinRoomRef.child('players/black').transaction(currentVal => {
+                        return currentVal === null ? newPlayerId : undefined; // Abort if someone else joined
+                    }).then(result => {
+                        if (result.committed) {
+                            hideModal('#join-room-modal', () => {
+                                setupGame('online', { roomCode: code, playerId: newPlayerId, color: 'b' });
+                            });
                         } else {
-                            animateMove(moveResult, () => updateGameStatus(moveResult));
+                            alert('Room is full or no longer available.');
                         }
-                    }
-                    fromSquare = null;
-                    selectionHighlighter.visible = false;
-                    removeMoveHighlights();
-                } else if (pieceOnSquare && pieceOnSquare.color === game.turn()) {
-                    fromSquare = square;
-                    selectionHighlighter.position.copy(squareToWorld(fromSquare));
-                    selectionHighlighter.position.y = 0.01;
-                    selectionHighlighter.visible = true;
-                    highlightValidMoves(fromSquare);
+                    });
+                } else {
+                    alert('Room is not available to join.');
                 }
-            }
-        }
+            });
+        });
+
+        $('#copy-code-btn').on('click', () => { navigator.clipboard.writeText($('#room-code-display').text()).then(() => { const btn = $('#copy-code-btn'); const originalText = btn.text(); btn.text('Copied!'); setTimeout(() => btn.text(originalText), 1500); }); });
+        $('#play-again-btn').on('click', () => { hideModal('#game-over-modal', () => { $('#game-area').addClass('hidden'); showModal('#game-mode-modal'); resetCoreState(); }); });
         
-        function animate() {
-            requestAnimationFrame(animate);
-            controls.update();
-            renderer.render(scene, camera);
+        // Game control handlers
+        $('#flip-board-btn').on('click', () => board.flip());
+        $('#new-game-btn').on('click', () => { if(confirm('Start a new game? This will end the current match.')){ $('#game-area').addClass('hidden'); showModal('#game-mode-modal'); resetCoreState(); }});
+        $('#resign-btn').on('click', () => { if(confirm('Resign the game?')){ if(gameMode === 'online' && roomRef) { roomRef.child('signals').set({ type: 'resign', senderId: playerId }); } else { handleGameOver(`${playerColor==='w'?'White':'Black'} resigned.`); } }});
+        $('#draw-btn').on('click', () => { if(gameMode === 'online' && roomRef){ roomRef.child('signals').set({type:'draw-offer', senderId: playerId}); alert('Draw offer sent.'); } else { alert('You can only offer a draw in an online game.'); }});
+        $('#chat-input').on('keypress', function(e) { if(e.which === 13){ const message = $(this).val().trim(); if (message !== '' && gameMode === 'online' && roomRef) { roomRef.child('chat').push({ text: message, senderId: playerId }); $('#chat-log').append(`<div class="chat-message self">${message}</div>`); $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight); $(this).val(''); } }});
+        
+        // Undo/Redo Logic
+        function updateUndoRedoButtons() {
+            if (gameMode === 'online') { $undoBtn.prop('disabled', true); $redoBtn.prop('disabled', true); return; }
+            $undoBtn.prop('disabled', game.history().length === 0);
+            $redoBtn.prop('disabled', redoStack.length === 0);
         }
+        $undoBtn.on('click', function() { if ($(this).prop('disabled')) return; const movesToUndo = (gameMode === 'single' && game.history().length >= 2) ? 2 : 1; for (let i = 0; i < movesToUndo; i++) { const undoneMove = game.undo(); if (undoneMove) redoStack.push(undoneMove); } board.position(game.fen()); updateGameStatus(); playSound('move'); });
+        $redoBtn.on('click', function() { if ($(this).prop('disabled')) return; const movesToRedo = (gameMode === 'single' && redoStack.length >= 2) ? 2 : 1; let moves = []; for (let i = 0; i < movesToRedo; i++) { const move = redoStack.pop(); if (move) moves.unshift(move); } moves.forEach(move => game.move(move)); board.position(game.fen()); updateGameStatus(); playSound('move'); });
 
         // --- INITIALIZATION ---
-        $(window).on('resize', () => {
-            const container = $('#board-container');
-            const size = container.width();
-            camera.aspect = 1;
-            camera.updateProjectionMatrix();
-            renderer.setSize(size, size);
-        }).trigger('resize');
-
-        renderer.domElement.addEventListener('pointerdown', onPointerDown, false);
-
-        initializeFirebase();
-        initScene();
-        loadPieceAssets().then(() => {
-            showModal('#game-mode-modal');
-        });
+        $(window).on('resize', function() { if(board) board.resize(); }).trigger('resize');
+        showModal('#game-mode-modal');
+    });
     </script>
 </body>
 </html>
