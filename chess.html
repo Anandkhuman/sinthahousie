@@ -62,7 +62,6 @@
         #chat-log div b { display: block; font-size: 0.8rem; margin-bottom: 2px; opacity: 0.7; }
         #chat-log .my-message { background-color: var(--glow-color); color: var(--bg-color); align-self: flex-end; border-bottom-right-radius: 2px; }
         #chat-log .opponent-message { background-color: var(--button-bg); align-self: flex-start; border-bottom-left-radius: 2px; }
-        /* ADDED: Styles for the chat input with send button */
         .chat-input-area { display: flex; align-items: center; gap: 0.5rem; }
         #chat-input { flex-grow: 1; width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--bg-color); color: var(--text-color); font-family: var(--font-family); }
         #send-chat-btn { background: none; border: none; color: var(--text-secondary-color); font-size: 1.2rem; cursor: pointer; padding: 0.5rem; border-radius: 50%; transition: color 0.2s, background-color 0.2s; }
@@ -108,7 +107,6 @@
                     <div id="moves-panel" class="tab-panel active"><div id="status">White to move.</div><div id="move-history"></div></div>
                     <div id="chat-panel" class="tab-panel">
                         <div id="chat-log"></div>
-                        <!-- UPDATED: Chat input area with send button -->
                         <div class="chat-input-area">
                             <input type="text" id="chat-input" placeholder="Type a message...">
                             <button id="send-chat-btn" title="Send Message"><i class="fas fa-paper-plane"></i></button>
@@ -143,16 +141,15 @@
     <script>
     // --- START FIREBASE CONFIG ---
     // PASTE YOUR FIREBASE CONFIGURATION OBJECT HERE.
-    // Online multiplayer will not work without it.
-    const firebaseConfig = {
-    apiKey: "AIzaSyACRWhlLW3fGU1VLiAzRcopMRLoFdufAG8",
-    authDomain: "chat-b24b5.firebaseapp.com",
-    databaseURL: "https://chat-b24b5-default-rtdb.firebaseio.com",
-    projectId: "chat-b24b5",
-    storageBucket: "chat-b24b5.firebasestorage.app",
-    messagingSenderId: "180728290458",
-    appId: "1:180728290458:web:bc16d897749a1206851323",
-    measurementId: "G-Q56QGQPRFY"
+   const firebaseConfig = {
+   apiKey: "AIzaSyACRWhlLW3fGU1VLiAzRcopMRLoFdufAG8",
+   authDomain: "chat-b24b5.firebaseapp.com",
+   databaseURL: "https://chat-b24b5-default-rtdb.firebaseio.com",
+   projectId: "chat-b24b5",
+   storageBucket: "chat-b24b5.firebasestorage.app",
+   messagingSenderId: "180728290458",
+   appId: "1:180728290458:web:bc16d897749a1206851323",
+   measurementId: "G-Q56QGQPRFY"
     };
     // --- END FIREBASE CONFIG ---
     
@@ -198,31 +195,26 @@
             if (game.game_over() || (gameMode !== 'pass' && game.turn() !== playerColor)) return;
             const pieceOnSquare = game.get(square);
 
-            // A piece was already selected, try to make a move
             if (fromSquare !== null) {
                 const move = { from: fromSquare, to: square, promotion: 'q' };
                 const moveResult = game.move(move);
 
                 if (moveResult) { // Valid move
-                    playSound(moveResult.flags.includes('c') ? 'capture' : 'move');
-                    redoStack = [];
-                    updateGameStatus();
+                    fromSquare = null;
+                    removeHighlights();
+                    updateGameStatus(false, moveResult); // It's a local move
                     if (gameMode === 'online' && roomRef) {
                         roomRef.update({ fen: game.fen() });
                     }
                     if (gameMode === 'single' && !game.game_over()) {
                         window.setTimeout(makeComputerMove, 250);
                     }
-                    fromSquare = null;
-                    removeHighlights();
                     return;
                 }
-                // Invalid move, so reset selection and fall through to re-evaluate click
                 fromSquare = null;
                 removeHighlights();
             }
 
-            // No piece selected yet, or previous move was invalid. Try to select a new piece.
             if (pieceOnSquare && pieceOnSquare.color === game.turn()) {
                 fromSquare = square;
                 highlightMoves(square);
@@ -237,13 +229,23 @@
         function formatTime(seconds) { if (seconds < 0) seconds = 0; const mins = Math.floor(seconds / 60); const secs = seconds % 60; return `${mins}:${secs < 10 ? '0' : ''}${secs}`; }
         
         // --- CORE GAME STATE & UI SYNC ---
-        function updateGameStatus() {
+        // This is now the single source of truth for all UI updates.
+        function updateGameStatus(isRemoteUpdate, moveResult) {
             board.position(game.fen());
             updateStatusText();
             updateMoveHistory();
             updateUndoRedoButtons();
             startTimers();
-            if (game.in_check()) { playSound('check'); }
+
+            // Play sounds based on the move result
+            if(moveResult) {
+                playSound(moveResult.flags.includes('c') ? 'capture' : 'move');
+            }
+            if (game.in_check()) {
+                playSound('check');
+            }
+            
+            // Check for game over
             if (game.game_over()) {
                 stopTimers();
                 playSound('gameEnd');
@@ -255,7 +257,9 @@
                     if(game.in_threefold_repetition()) message += ' (Repetition)';
                     if(game.insufficient_material()) message += ' (Insufficient Material)';
                 }
-                handleGameOver(message);
+                if (!isRemoteUpdate) { // Only the player who triggered the game over should update the status
+                    handleGameOver(message);
+                }
             }
         }
 
@@ -286,7 +290,7 @@
 
         function updateMoveHistory() { const history = game.history({ verbose: true }); let html = ''; for (let i = 0; i < history.length; i += 2) { html += `<span>${(i/2)+1}. ${history[i].san} ${history[i+1] ? history[i+1].san : ' '}</span><br>`; } $moveHistory.html(html); $moveHistory.scrollTop($moveHistory[0].scrollHeight);}
         
-        function resetCoreState() {
+        function cleanupAndResetState() {
             game.reset(); whiteTime = 600; blackTime = 600; fromSquare = null; redoStack = []; roomCode = null; gameMode = null;
             $('#white-timer').text(formatTime(whiteTime)); $('#black-timer').text(formatTime(blackTime));
             $moveHistory.html(''); $('#chat-log').html(''); removeHighlights(); stopTimers();
@@ -294,27 +298,27 @@
         }
 
         // --- AI LOGIC ---
-        function makeComputerMove() { const bestMove = getBestMove(game, aiDifficulty); if (bestMove) { game.move(bestMove); playSound(game.history({verbose: true}).pop().flags.includes('c') ? 'capture' : 'move'); updateGameStatus(); }}
+        function makeComputerMove() { const bestMove = getBestMove(game, aiDifficulty); if (bestMove) { const moveResult = game.move(bestMove); updateGameStatus(false, moveResult); }}
         function getBestMove(game, depth) { const possibleMoves = game.moves({ verbose: true }); if (possibleMoves.length === 0) return null; let bestMove = null; let bestValue = -Infinity; possibleMoves.sort(() => Math.random() - 0.5); for (const move of possibleMoves) { game.move(move); const boardValue = -negamax(game, depth - 1, -Infinity, Infinity); game.undo(); if (boardValue > bestValue) { bestValue = boardValue; bestMove = move; } } return bestMove; }
         function negamax(game, depth, alpha, beta) { if (depth === 0 || game.game_over()) { return evaluateBoard(game.board()); } let max = -Infinity; const moves = game.moves(); for (const move of moves) { game.move(move); const score = -negamax(game, depth - 1, -beta, -alpha); game.undo(); max = Math.max(max, score); alpha = Math.max(alpha, score); if (alpha >= beta) { break; } } return max; }
         function evaluateBoard(board) { let totalEvaluation = 0; const pieceValues = { p: 10, n: 30, b: 30, r: 50, q: 90, k: 900 }; board.forEach(row => { row.forEach(piece => { if (piece) { const value = pieceValues[piece.type]; totalEvaluation += (piece.color === 'w' ? value : -value); } }); }); return totalEvaluation * (game.turn() === 'w' ? 1 : -1); }
         
-        // --- GAME SETUP ---
-        function setupGame(mode, options = {}) {
-            resetCoreState();
+        // --- GAME SETUP & START ---
+        function startGame(mode, options = {}) {
+            cleanupAndResetState();
             gameMode = mode; 
             playerColor = options.color || 'w'; 
             aiDifficulty = options.difficulty || 3;
             if (options.fen) game.load(options.fen);
             
-            const boardConfig = { position: 'start', pieceTheme: 'https://lichess1.org/assets/piece/staunty/{piece}.svg', draggable: false, moveSpeed: 'slow', snapSpeed: 50 };
+            const boardConfig = { position: game.fen(), pieceTheme: 'https://lichess1.org/assets/piece/staunty/{piece}.svg', draggable: false, moveSpeed: 'slow', snapSpeed: 50 };
             boardConfig.orientation = (playerColor === 'b') ? 'black' : 'white';
             
             if(board) board.destroy();
             board = Chessboard('board', boardConfig);
             $boardEl.on('click', '.square-55d63', onSquareClick);
             
-            updateGameStatus();
+            updateGameStatus(false, null);
             $('#game-area').removeClass('hidden'); 
             playIntroAnimation(); 
             playSound('gameStart');
@@ -332,19 +336,18 @@
             $redoBtn.prop('disabled', isOnline || redoStack.length === 0);
         }
         
-        // --- FIREBASE ONLINE LOGIC ---
+        // --- FIREBASE ONLINE LOGIC (REWRITTEN) ---
         function cleanupFirebaseListeners() {
             if (roomRef) {
                 if (gameListener) roomRef.off('value', gameListener);
                 if (chatListener) roomRef.child('chat').off('child_added', chatListener);
                 roomRef.onDisconnect().cancel();
-                roomRef = null;
             }
-            gameListener = null; chatListener = null;
+            roomRef = null; gameListener = null; chatListener = null;
         }
 
         function handleCreateRoom() {
-            resetCoreState();
+            cleanupAndResetState();
             roomCode = Math.floor(100000 + Math.random() * 900000).toString();
             roomRef = database.ref('rooms/' + roomCode);
             playerColor = 'w';
@@ -359,7 +362,7 @@
                         roomRef.off('value', gameListener); gameListener = null;
                         roomRef.onDisconnect().update({ status: 'finished', result: 'Opponent disconnected.' });
                         hideModal('#create-room-modal', () => {
-                            setupGame('online', { color: 'w', fen: data.fen });
+                            startGame('online', { color: 'w', fen: data.fen });
                             listenToRoomChanges();
                         });
                     }
@@ -370,7 +373,7 @@
         function handleJoinRoom() {
             const enteredCode = $('#room-code-input').val().trim().toUpperCase();
             if (enteredCode.length !== 6) { alert('Please enter a valid 6-digit room code.'); return; }
-            resetCoreState();
+            cleanupAndResetState();
             roomCode = enteredCode;
             roomRef = database.ref('rooms/' + roomCode);
             playerColor = 'b';
@@ -381,7 +384,7 @@
                     roomRef.update({ status: 'active' }).then(() => {
                         roomRef.onDisconnect().update({ status: 'finished', result: 'Opponent disconnected.' });
                         hideModal('#join-room-modal', () => {
-                            setupGame('online', { color: 'b', fen: data.fen });
+                            startGame('online', { color: 'b', fen: data.fen });
                             listenToRoomChanges();
                         });
                     });
@@ -395,41 +398,45 @@
         function listenToRoomChanges() {
             gameListener = roomRef.on('value', snapshot => {
                 const data = snapshot.val();
-                if (!data || gameMode === null) return;
+                if (!data || gameMode !== 'online') return;
+
                 if (data.status === 'finished') {
                     handleGameOver(data.result || "Game Over");
                     return;
                 }
+
                 if (game.fen() !== data.fen) {
-                    const oldTurn = game.turn();
-                    game.load(data.fen);
-                    // This block runs for the player RECEIVING the move.
-                    board.position(game.fen());
-                    updateStatusText();
-                    updateMoveHistory();
-                    startTimers();
-                    if (oldTurn !== game.turn()) {
-                       const lastMove = game.history({verbose: true}).pop();
-                       if (lastMove) playSound(lastMove.flags.includes('c') ? 'capture' : 'move');
-                       if (game.in_check()) playSound('check');
+                    const oldFen = game.fen();
+                    const moveResult = game.load(data.fen); // .load() returns the last move
+                    
+                    // If the load was successful and changed the state, update UI
+                    if (game.fen() !== oldFen) {
+                        updateGameStatus(true, moveResult); // It's a remote move
                     }
                 }
             });
             chatListener = roomRef.child('chat').on('child_added', snapshot => {
-                if (gameMode === null || !snapshot.exists()) return;
+                if (gameMode !== 'online' || !snapshot.exists()) return;
                 const chat = snapshot.val();
-                const messageClass = (chat.sender === playerColor) ? "my-message" : "opponent-message";
+                if (chat.sender === playerColor) return; // Don't re-render your own messages
+                
                 const senderName = chat.sender === playerColor ? 'You' : 'Opponent';
-                $('#chat-log').append(`<div class="${messageClass}"><b>${senderName}</b> ${chat.message}</div>`);
+                $('#chat-log').append(`<div class="opponent-message"><b>${senderName}</b> ${chat.message}</div>`);
                 $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight);
             });
         }
         
         function sendChatMessage() {
-            const message = $('#chat-input').val().trim();
+            const $chatInput = $('#chat-input');
+            const message = $chatInput.val().trim();
             if (message !== '' && gameMode === 'online' && roomRef) {
+                // Add message to your own log immediately for responsiveness
+                $('#chat-log').append(`<div class="my-message"><b>You</b> ${message}</div>`);
+                $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight);
+                
+                // Push to Firebase
                 roomRef.child('chat').push({ sender: playerColor, message: message });
-                $('#chat-input').val('');
+                $chatInput.val('').focus();
             }
         }
 
@@ -439,8 +446,8 @@
         $('.tab-btn').on('click', function() { const tabId = $(this).data('tab'); $('.tab-btn').removeClass('active'); $(this).addClass('active'); $('.tab-panel').removeClass('active'); $('#' + tabId + '-panel').addClass('active'); });
         
         $('#single-player-btn').on('click', () => { hideModal('#game-mode-modal', () => showModal('#ai-difficulty-modal')); });
-        $('.difficulty-btn').on('click', function() { hideModal('#ai-difficulty-modal', () => setupGame('single', { difficulty: $(this).data('depth') })); });
-        $('#pass-and-play-btn').on('click', () => { hideModal('#game-mode-modal', () => setupGame('pass')); });
+        $('.difficulty-btn').on('click', function() { hideModal('#ai-difficulty-modal', () => startGame('single', { difficulty: $(this).data('depth') })); });
+        $('#pass-and-play-btn').on('click', () => { hideModal('#game-mode-modal', () => startGame('pass')); });
         
         $('#online-multiplayer-btn').on('click', () => { 
             if (!firebaseConfig.apiKey) { alert("Firebase is not configured. Please add your config details to the script."); return; } 
@@ -453,7 +460,7 @@
         $('#join-room-submit-btn').on('click', handleJoinRoom);
 
         $('#copy-code-btn').on('click', () => { navigator.clipboard.writeText($('#room-code-display').text()).then(() => alert('Copied!')); });
-        $('#play-again-btn').on('click', () => { hideModal('#game-over-modal', () => { $('#game-area').addClass('hidden'); showModal('#game-mode-modal'); resetCoreState(); }); });
+        $('#play-again-btn').on('click', () => { hideModal('#game-over-modal', () => { $('#game-area').addClass('hidden'); showModal('#game-mode-modal'); cleanupAndResetState(); }); });
         
         $('#flip-board-btn').on('click', () => board.flip());
         $('#new-game-btn').on('click', () => { if(confirm('Start a new game? This will end the current match.')){ handleGameOver("New game started."); $('#game-area').addClass('hidden'); showModal('#game-mode-modal'); }});
@@ -463,8 +470,8 @@
         $('#chat-input').on('keypress', e => { if (e.which === 13) sendChatMessage(); });
         $('#send-chat-btn').on('click', sendChatMessage);
         
-        $undoBtn.on('click', function() { if ($(this).prop('disabled')) return; const movesToUndo = (gameMode === 'single' && game.history().length >= 2) ? 2 : 1; for (let i = 0; i < movesToUndo; i++) { const undoneMove = game.undo(); if (undoneMove) redoStack.push(undoneMove); } updateGameStatus(); playSound('move'); });
-        $redoBtn.on('click', function() { if ($(this).prop('disabled')) return; const movesToRedo = (gameMode === 'single' && redoStack.length >= 2) ? 2 : 1; let moves = []; for (let i = 0; i < movesToRedo; i++) { const move = redoStack.pop(); if (move) moves.unshift(move); } moves.forEach(move => game.move(move)); updateGameStatus(); playSound('move'); });
+        $undoBtn.on('click', function() { if ($(this).prop('disabled')) return; const movesToUndo = (gameMode === 'single' && game.history().length >= 2) ? 2 : 1; for (let i = 0; i < movesToUndo; i++) { const undoneMove = game.undo(); if (undoneMove) redoStack.push(undoneMove); } updateGameStatus(false, null); playSound('move'); });
+        $redoBtn.on('click', function() { if ($(this).prop('disabled')) return; const movesToRedo = (gameMode === 'single' && redoStack.length >= 2) ? 2 : 1; let moves = []; for (let i = 0; i < movesToRedo; i++) { const move = redoStack.pop(); if (move) moves.unshift(move); } moves.forEach(move => game.move(move)); updateGameStatus(false, null); playSound('move'); });
 
         $(window).on('resize', function() { if(board) board.resize(); }).trigger('resize');
 
