@@ -270,29 +270,45 @@
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.2/chess.min.js"></script>
     
-    <!-- REMOVED PeerJS, ADDED Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
     <script>
     $(document).ready(function() {
-        // --- FIREBASE CONFIG ---
-        // IMPORTANT: Replace this with your own Firebase project configuration!
-        const firebaseConfig = {
-        apiKey: "AIzaSyACRWhlLW3fGU1VLiAzRcopMRLoFdufAG8",
-        authDomain: "chat-b24b5.firebaseapp.com",
-        databaseURL: "https://chat-b24b5-default-rtdb.firebaseio.com",
-        projectId: "chat-b24b5",
-        storageBucket: "chat-b24b5.firebasestorage.app",
-        messagingSenderId: "180728290458",
-        appId: "1:180728290458:web:bc16d897749a1206851323",
-        measurementId: "G-Q56QGQPRFY"
-        };
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-
         // --- GLOBAL STATE & CONFIG ---
+        let db = null; // Initialize db as null
+
+        // --- FIREBASE CONFIG & INITIALIZATION ---
+        // This 'try...catch' block prevents the entire app from crashing if Firebase is not configured.
+        // Local modes (Single Player, Pass & Play) will work regardless.
+        try {
+            // IMPORTANT: Replace this with your own Firebase project configuration!
+            const firebaseConfig = {
+            apiKey: "AIzaSyACRWhlLW3fGU1VLiAzRcopMRLoFdufAG8",
+            authDomain: "chat-b24b5.firebaseapp.com",
+            databaseURL: "https://chat-b24b5-default-rtdb.firebaseio.com",
+            projectId: "chat-b24b5",
+            storageBucket: "chat-b24b5.firebasestorage.app",
+            messagingSenderId: "180728290458",
+            appId: "1:180728290458:web:bc16d897749a1206851323",
+            measurementId: "G-Q56QGQPRFY"
+            };
+            
+            // Check if config is still a placeholder
+            if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+                throw new Error("Firebase configuration is not set. Online mode will be disabled.");
+            }
+
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+            console.log("Firebase initialized successfully.");
+
+        } catch (error) {
+            console.warn(error.message);
+            // db remains null, online features will be disabled.
+        }
+
+        // --- GLOBAL STATE & CONFIG (continued) ---
         let board = null, game = new Chess(), gameMode = null, playerColor = 'w', fromSquare = null;
         let aiDifficulty = 3, redoStack = [];
         let whiteTimer, blackTimer, whiteTime = 600, blackTime = 600;
@@ -332,25 +348,24 @@
                 const move = { from: fromSquare, to: square, promotion: 'q' };
                 const moveResult = game.move(move);
                 if (moveResult) {
-                    redoStack = []; // A new move clears the redo stack
+                    redoStack = []; 
                     fromSquare = null;
                     removeHighlights();
-                    // Handle move based on game mode
                     if (gameMode === 'online' && roomRef) {
                         roomRef.update({ fen: game.fen(), lastMove: move });
                     } else {
-                        // For single player or pass & play, UI update is immediate
                         playSound(moveResult.flags.includes('c') ? 'capture' : 'move');
                         updateGameStatus();
                         board.position(game.fen());
                         if (gameMode === 'single' && !game.game_over()) window.setTimeout(makeComputerMove, 250);
                     }
-                } else { // Invalid move
+                } else {
                     if (pieceOnSquare && pieceOnSquare.color === game.turn()) { fromSquare = square; highlightMoves(square); } 
                     else { fromSquare = null; removeHighlights(); }
                 }
             } else if (pieceOnSquare && pieceOnSquare.color === game.turn()) {
-                fromSquare = square; highlightMoves(square);
+                fromSquare = square;
+                highlightMoves(square);
             }
         }
         
@@ -386,9 +401,8 @@
         function updateStatusText() {
             let statusText = (game.turn() === 'w' ? 'White' : 'Black') + ' to move.';
             $('.player-bar').removeClass('active-player');
-            if(game.turn() === 'w') { (playerColor === 'w' ? $('#player-bar') : $('#opponent-bar')).addClass('active-player'); }
+            if(game.turn() === 'w') { (playerColor === 'w' || gameMode === 'pass' ? $('#player-bar') : $('#opponent-bar')).addClass('active-player'); }
             else { (playerColor === 'b' ? $('#player-bar') : $('#opponent-bar')).addClass('active-player'); }
-            if (gameMode === 'pass') { if (game.turn() === 'w') $('#player-bar').addClass('active-player'); else $('#opponent-bar').addClass('active-player'); }
 
             if (game.in_check()) {
                 statusText += ' - CHECK!';
@@ -450,8 +464,8 @@
             resetCoreState();
             gameMode = mode; playerColor = options.color || 'w'; aiDifficulty = options.difficulty || 3;
             
-            // For online games, get details from options
             if (mode === 'online') {
+                if (!db) { alert("Online mode is unavailable. Please check Firebase configuration."); return; }
                 roomCode = options.roomCode;
                 playerId = options.playerId;
                 roomRef = db.ref('games/' + roomCode);
@@ -468,11 +482,10 @@
             $('#game-area').removeClass('hidden'); playIntroAnimation(); playSound('gameStart');
             
             $('.tab-btn[data-tab="chat"]').toggle(mode === 'online');
-            if (mode !== 'online') $('.tab-btn[data-tab="moves"]').addClass('active').click();
+            $('.tab-btn[data-tab="moves"]').addClass('active').click();
             
             if (mode === 'single' && playerColor === 'b') window.setTimeout(makeComputerMove, 500);
             
-            // Set player names
             $('#player-bar .player-info span').text(mode === 'pass' ? 'White' : 'You');
             $('#opponent-bar .player-info span').text(mode === 'pass' ? 'Black' : 'Opponent');
 
@@ -489,6 +502,7 @@
         function generateId(length) { return Math.random().toString(36).substr(2, length); }
 
         function createOnlineRoom() {
+            if (!db) { alert("Online mode is unavailable. Please check Firebase configuration."); return; }
             roomCode = generateId(6).toUpperCase();
             playerId = generateId(10);
             roomRef = db.ref('games/' + roomCode);
@@ -496,33 +510,26 @@
             const gameData = {
                 meta: { status: 'waiting', createdAt: firebase.database.ServerValue.TIMESTAMP },
                 players: { white: playerId, black: null },
-                fen: game.fen(),
-                chat: [],
-                signals: null
+                fen: game.fen(), chat: [], signals: null
             };
             
             roomRef.set(gameData).then(() => {
                 $('#room-code-display').text(roomCode);
                 showModal('#create-room-modal');
-                // Listen for the opponent to join
                 roomRef.child('players/black').on('value', (snapshot) => {
                     if (snapshot.exists() && snapshot.val() !== null) {
                         opponentId = snapshot.val();
-                        roomRef.child('players/black').off(); // Stop listening
+                        roomRef.child('players/black').off();
                         hideModal('#create-room-modal', () => {
                             setupGame('online', { roomCode: roomCode, playerId: playerId, color: 'w' });
                             roomRef.child('meta/status').set('active');
                         });
                     }
                 });
-            }).catch(err => {
-                alert('Error creating room. Please try again.');
-                console.error(err);
-            });
+            }).catch(err => { alert('Error creating room. Please try again.'); console.error(err); });
         }
         
         function attachFirebaseListeners() {
-            // Listen for board state changes
             roomRef.child('fen').on('value', (snapshot) => {
                 const newFen = snapshot.val();
                 if (newFen && newFen !== game.fen()) {
@@ -534,7 +541,6 @@
                 }
             });
 
-            // Listen for chat messages
             roomRef.child('chat').on('child_added', (snapshot) => {
                 const msg = snapshot.val();
                 if (msg.senderId !== playerId) {
@@ -543,49 +549,30 @@
                 }
             });
 
-            // Listen for signals (draw, resign)
             roomRef.child('signals').on('value', (snapshot) => {
                 const signal = snapshot.val();
-                if (!signal) return;
-
-                if (signal.senderId !== playerId) {
-                    switch(signal.type) {
-                        case 'resign':
-                            handleGameOver(`${playerColor === 'w' ? 'Black' : 'White'} resigned.`);
-                            break;
-                        case 'draw-offer':
-                            if (confirm('Opponent offers a draw. Accept?')) {
-                                roomRef.child('signals').set({ type: 'draw-accept', senderId: playerId });
-                                handleGameOver('Draw by agreement.');
-                            } else {
-                                roomRef.child('signals').set({ type: 'draw-reject', senderId: playerId });
-                            }
-                            break;
-                        case 'draw-accept':
-                            handleGameOver('Draw by agreement.');
-                            break;
-                        case 'draw-reject':
-                            alert('Opponent declined the draw offer.');
-                            break;
-                    }
+                if (!signal || signal.senderId === playerId) return;
+                switch(signal.type) {
+                    case 'resign': handleGameOver(`${playerColor === 'w' ? 'Black' : 'White'} resigned.`); break;
+                    case 'draw-offer':
+                        if (confirm('Opponent offers a draw. Accept?')) { roomRef.child('signals').set({ type: 'draw-accept', senderId: playerId }); handleGameOver('Draw by agreement.'); } 
+                        else { roomRef.child('signals').set({ type: 'draw-reject', senderId: playerId }); }
+                        break;
+                    case 'draw-accept': handleGameOver('Draw by agreement.'); break;
+                    case 'draw-reject': alert('Opponent declined the draw offer.'); break;
                 }
-                // Clear the signal after processing
-                if (signal.type === 'draw-reject' || signal.type === 'draw-offer') {
-                    setTimeout(() => roomRef.child('signals').set(null), 500);
-                }
+                if (signal.type === 'draw-reject' || signal.type === 'draw-offer') { setTimeout(() => roomRef.child('signals').set(null), 500); }
             });
 
-            // Handle opponent disconnection
             roomRef.child('players').on('value', (snapshot) => {
                 const players = snapshot.val();
-                if(!players) return; // Room was deleted
+                if(!players) return;
                 const opponentColor = playerColor === 'w' ? 'black' : 'white';
-                if(players[opponentColor] === null && gameMode === 'online'){
+                if(players[opponentColor] === null && gameMode === 'online' && game.history().length > 0){
                     handleGameOver('Opponent disconnected.');
                 }
             });
 
-            // Set up onDisconnect hook
             const playerRef = roomRef.child(`players/${playerColor === 'w' ? 'white' : 'black'}`);
             playerRef.onDisconnect().remove();
         }
@@ -595,17 +582,16 @@
         $('.btn, .btn-icon').on('click', function() { gsap.fromTo(this, {scale: 0.95}, {scale: 1, duration: 0.3, ease: 'elastic.out(1, 0.5)'}); });
         $('.tab-btn').on('click', function() { const tabId = $(this).data('tab'); $('.tab-btn').removeClass('active'); $(this).addClass('active'); $('.tab-panel').removeClass('active'); $('#' + tabId + '-panel').addClass('active'); });
         
-        // Modal navigation
         $('#single-player-btn').on('click', () => { hideModal('#game-mode-modal', () => showModal('#ai-difficulty-modal')); });
         $('.difficulty-btn').on('click', function() { hideModal('#ai-difficulty-modal', () => setupGame('single', { difficulty: $(this).data('depth') })); });
         $('#pass-and-play-btn').on('click', () => { hideModal('#game-mode-modal', () => setupGame('pass')); });
-        $('#online-multiplayer-btn').on('click', () => { hideModal('#game-mode-modal', () => showModal('#online-modal')); });
+        $('#online-multiplayer-btn').on('click', () => { if (!db) { alert("Online mode is unavailable. Please set up Firebase credentials in the script."); return; } hideModal('#game-mode-modal', () => showModal('#online-modal')); });
         $('#online-back-btn').on('click', () => { hideModal('#online-modal', () => showModal('#game-mode-modal')); });
         
-        // Online game creation/joining
         $('#create-game-btn').on('click', () => { hideModal('#online-modal', createOnlineRoom); });
         $('#join-game-btn').on('click', () => { hideModal('#online-modal', () => showModal('#join-room-modal')); });
         $('#join-room-submit-btn').on('click', () => {
+            if (!db) { alert("Online mode is unavailable. Please check Firebase configuration."); return; }
             const code = $('#room-code-input').val().trim().toUpperCase();
             if (code.length !== 6) { alert('Please enter a valid 6-digit room code.'); return; }
             
@@ -613,34 +599,24 @@
             joinRoomRef.child('meta/status').once('value', statusSnap => {
                 if (statusSnap.val() === 'waiting') {
                     const newPlayerId = generateId(10);
-                    joinRoomRef.child('players/black').transaction(currentVal => {
-                        return currentVal === null ? newPlayerId : undefined; // Abort if someone else joined
-                    }).then(result => {
-                        if (result.committed) {
-                            hideModal('#join-room-modal', () => {
-                                setupGame('online', { roomCode: code, playerId: newPlayerId, color: 'b' });
-                            });
-                        } else {
-                            alert('Room is full or no longer available.');
-                        }
+                    joinRoomRef.child('players/black').transaction(currentVal => currentVal === null ? newPlayerId : undefined)
+                    .then(result => {
+                        if (result.committed) { hideModal('#join-room-modal', () => setupGame('online', { roomCode: code, playerId: newPlayerId, color: 'b' })); } 
+                        else { alert('Room is full or no longer available.'); }
                     });
-                } else {
-                    alert('Room is not available to join.');
-                }
+                } else { alert('Room is not available to join.'); }
             });
         });
 
         $('#copy-code-btn').on('click', () => { navigator.clipboard.writeText($('#room-code-display').text()).then(() => { const btn = $('#copy-code-btn'); const originalText = btn.text(); btn.text('Copied!'); setTimeout(() => btn.text(originalText), 1500); }); });
         $('#play-again-btn').on('click', () => { hideModal('#game-over-modal', () => { $('#game-area').addClass('hidden'); showModal('#game-mode-modal'); resetCoreState(); }); });
         
-        // Game control handlers
         $('#flip-board-btn').on('click', () => board.flip());
         $('#new-game-btn').on('click', () => { if(confirm('Start a new game? This will end the current match.')){ $('#game-area').addClass('hidden'); showModal('#game-mode-modal'); resetCoreState(); }});
         $('#resign-btn').on('click', () => { if(confirm('Resign the game?')){ if(gameMode === 'online' && roomRef) { roomRef.child('signals').set({ type: 'resign', senderId: playerId }); } else { handleGameOver(`${playerColor==='w'?'White':'Black'} resigned.`); } }});
         $('#draw-btn').on('click', () => { if(gameMode === 'online' && roomRef){ roomRef.child('signals').set({type:'draw-offer', senderId: playerId}); alert('Draw offer sent.'); } else { alert('You can only offer a draw in an online game.'); }});
         $('#chat-input').on('keypress', function(e) { if(e.which === 13){ const message = $(this).val().trim(); if (message !== '' && gameMode === 'online' && roomRef) { roomRef.child('chat').push({ text: message, senderId: playerId }); $('#chat-log').append(`<div class="chat-message self">${message}</div>`); $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight); $(this).val(''); } }});
         
-        // Undo/Redo Logic
         function updateUndoRedoButtons() {
             if (gameMode === 'online') { $undoBtn.prop('disabled', true); $redoBtn.prop('disabled', true); return; }
             $undoBtn.prop('disabled', game.history().length === 0);
