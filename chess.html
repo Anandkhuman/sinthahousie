@@ -151,7 +151,7 @@
     const database = firebase.database();
 
     $(document).ready(function() {
-        // --- GLOBAL STATE & CONFIG ---
+        // --- GLOBAL STATE ---
         let board = null, game = new Chess(), gameMode = null, playerColor = 'w';
         let aiDifficulty = 3, fromSquare = null;
         let whiteTimer, blackTimer, whiteTime = 600, blackTime = 600;
@@ -164,14 +164,14 @@
         const $undoBtn = $('#undo-btn'), $redoBtn = $('#redo-btn');
         const sounds = { move: $('#sound-move')[0], capture: $('#sound-capture')[0], check: $('#sound-check')[0], gameStart: $('#sound-game-start')[0], gameEnd: $('#sound-game-end')[0] };
 
-        // --- UI & SOUND FUNCTIONS (Reviewed: No changes needed) ---
+        // --- UI & SOUND HELPERS ---
         function playSound(soundName) { if (!isAudioUnlocked) return; const sound = sounds[soundName]; if (sound) { sound.currentTime = 0; sound.play().catch(e => {}); }}
         function unlockAudio() { if (isAudioUnlocked) return; isAudioUnlocked = true; Object.values(sounds).forEach(sound => { sound.play().catch(() => {}); sound.pause(); sound.currentTime = 0; });}
         function showModal(id) { const modal = $(id); modal.css('display', 'flex'); gsap.to(modal.find('.modal-content'), { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(1.7)' });}
         function hideModal(id, onComplete) { const modal = $(id); gsap.to(modal.find('.modal-content'), { opacity: 0, scale: 0.8, duration: 0.2, ease: 'power2.in', onComplete: () => { modal.hide(); if (onComplete) onComplete(); }});}
         function playIntroAnimation() { const tl = gsap.timeline(); tl.from('.header', { y: -50, opacity: 0, duration: 0.5, ease: 'power2.out' }).from('.player-bar', { y: (i) => i === 0 ? -30 : 30, opacity: 0, duration: 0.6, stagger: 0.1, ease: 'power2.out' }, "-=0.3").from('#board', { scale: 0.9, opacity: 0, duration: 0.5, ease: 'back.out(1.4)'}, "-=0.6").from('.controls-area', { y: 30, opacity: 0, duration: 0.4, ease: 'power2.out' }, "-=0.5").from('.side-dashboard', { x: 100, opacity: 0, duration: 0.6, ease: 'power2.out' }, "-=0.5"); }
         
-        // --- HIGHLIGHTING & MOVE LOGIC ---
+        // --- MOVE HIGHLIGHTING ---
         function removeHighlights() { $boardEl.find('.square-55d63').removeClass('highlight-source'); $boardEl.find('.move-dot').remove(); }
         function highlightMoves(square) {
             removeHighlights();
@@ -181,34 +181,55 @@
             moves.forEach(move => { $boardEl.find('.square-' + move.to).append('<div class="move-dot"></div>'); });
         }
         
+        /**
+         * REWRITTEN & CORRECTED: This is the core function for player interaction.
+         */
         function onSquareClick() {
             const square = $(this).data('square');
-            // Prevent move if game is over, or if it's not the player's turn in an online/AI match
-            if (game.game_over() || (gameMode !== 'pass' && game.turn() !== playerColor)) return;
+
+            // --- Gatekeeper: Is this player allowed to interact right now? ---
+            if (game.game_over()) return;
+            if (gameMode === 'single' && game.turn() !== playerColor) return;
+            if (gameMode === 'online' && game.turn() !== playerColor) return;
 
             const pieceOnSquare = game.get(square);
-            if (fromSquare) { // A square was already selected
-                if (square === fromSquare) { fromSquare = null; removeHighlights(); return; } // Deselect
+
+            // --- Case 1: A piece was already selected (trying to complete a move) ---
+            if (fromSquare !== null) {
                 const move = { from: fromSquare, to: square, promotion: 'q' };
                 const moveResult = game.move(move);
-                
-                if (moveResult) { // Valid move was made
+
+                // --- Subcase 1.1: The move was VALID ---
+                if (moveResult) {
                     playSound(moveResult.flags.includes('c') ? 'capture' : 'move');
-                    redoStack = []; 
-                    updateGameStatus();
-                    // If online, send the new board state to Firebase
+                    redoStack = [];
+                    // Update the board and state. This triggers all other UI updates.
+                    updateGameStatus(); 
+                    
+                    // Handle post-move actions for different game modes
                     if (gameMode === 'online' && roomRef) {
                         roomRef.update({ fen: game.fen() });
                     }
                     if (gameMode === 'single' && !game.game_over()) {
                         window.setTimeout(makeComputerMove, 250);
                     }
-                    fromSquare = null; removeHighlights();
-                } else { // Invalid move, check if a new piece of the correct color was selected
-                    if (pieceOnSquare && pieceOnSquare.color === game.turn()) { fromSquare = square; highlightMoves(square); } 
-                    else { fromSquare = null; removeHighlights(); }
+                    
+                    // Reset selection state
+                    fromSquare = null;
+                    removeHighlights();
+                    return; // End the function here, move was successful.
                 }
-            } else if (pieceOnSquare && pieceOnSquare.color === game.turn()) { // New selection
+
+                // --- Subcase 1.2: The move was INVALID ---
+                // We clear the previous selection and let the code fall through.
+                // This allows the player to select a different piece with the same click.
+                fromSquare = null;
+                removeHighlights();
+            }
+
+            // --- Case 2: No piece was selected OR the previous move was invalid ---
+            // We check if the current click is a valid piece selection.
+            if (pieceOnSquare && pieceOnSquare.color === game.turn()) {
                 fromSquare = square;
                 highlightMoves(square);
             }
@@ -223,12 +244,13 @@
         
         // --- CORE GAME STATE MANAGEMENT ---
         function updateGameStatus(isRemoteUpdate = false) {
+            // This is the primary function to sync the UI with the game state.
+            board.position(game.fen());
             updateStatusText();
             updateMoveHistory();
             updateUndoRedoButtons();
             startTimers();
 
-            // Play check sound only if the current player made the move, not on remote update
             if (game.in_check() && !isRemoteUpdate) { playSound('check'); }
             
             if (game.game_over()) {
@@ -251,9 +273,8 @@
             removeHighlights();
             $('#game-over-message').text(message);
             showModal('#game-over-modal');
-            // If in an online game, update the status and clean up listeners.
             if (roomRef) {
-                roomRef.update({ status: 'finished' });
+                roomRef.update({ status: 'finished', result: message });
                 cleanupFirebaseListeners();
             }
         }
@@ -261,20 +282,26 @@
         function updateStatusText() {
             let statusText = (game.turn() === 'w' ? 'White' : 'Black') + ' to move.';
             $('.player-bar').removeClass('active-player');
-            if ((playerColor === 'w' && game.turn() === 'w') || (playerColor === 'b' && game.turn() === 'b')) {
-                $('#player-bar').addClass('active-player');
+
+            // Logic to highlight the correct player bar based on game mode.
+            if (gameMode === 'pass') {
+                if (game.turn() === 'w') $('#player-bar').addClass('active-player');
+                else $('#opponent-bar').addClass('active-player');
             } else {
-                $('#opponent-bar').addClass('active-player');
+                if (game.turn() === playerColor) $('#player-bar').addClass('active-player');
+                else $('#opponent-bar').addClass('active-player');
             }
-            if(gameMode === 'pass') { if (game.turn() === 'w') $('#player-bar').addClass('active-player'); else $('#opponent-bar').addClass('active-player'); }
-            if (game.in_check()) { statusText += ' - CHECK!'; $status.css('background-color', 'rgba(255,0,0,0.2)'); gsap.fromTo($status, {scale: 1.1, y: -2}, {scale: 1, y: 0, duration: 0.8, ease: 'elastic.out(1, 0.5)'}); }
-            else { $status.css('background-color', 'transparent'); }
+
+            if (game.in_check()) { 
+                statusText += ' - CHECK!'; $status.css('background-color', 'rgba(255,0,0,0.2)'); gsap.fromTo($status, {scale: 1.1, y: -2}, {scale: 1, y: 0, duration: 0.8, ease: 'elastic.out(1, 0.5)'}); 
+            } else { 
+                $status.css('background-color', 'transparent'); 
+            }
             $status.text(statusText);
         }
 
         function updateMoveHistory() { const history = game.history({ verbose: true }); let html = ''; for (let i = 0; i < history.length; i += 2) { html += `<span>${(i/2)+1}. ${history[i].san} ${history[i+1] ? history[i+1].san : ' '}</span><br>`; } $moveHistory.html(html); $moveHistory.scrollTop($moveHistory[0].scrollHeight);}
         
-        // This is a critical function to ensure no old data or listeners leak into new games.
         function resetCoreState() {
             game.reset(); whiteTime = 600; blackTime = 600; fromSquare = null; redoStack = []; roomCode = null; gameMode = null;
             $('#white-timer').text(formatTime(whiteTime)); $('#black-timer').text(formatTime(blackTime));
@@ -282,8 +309,8 @@
             cleanupFirebaseListeners();
         }
 
-        // --- AI LOGIC (Reviewed: No changes needed) ---
-        function makeComputerMove() { const bestMove = getBestMove(game, aiDifficulty); if (bestMove) { game.move(bestMove); playSound(game.history({verbose: true}).pop().flags.includes('c') ? 'capture' : 'move'); board.position(game.fen()); updateGameStatus(); }}
+        // --- AI LOGIC ---
+        function makeComputerMove() { const bestMove = getBestMove(game, aiDifficulty); if (bestMove) { game.move(bestMove); playSound(game.history({verbose: true}).pop().flags.includes('c') ? 'capture' : 'move'); updateGameStatus(); }}
         function getBestMove(game, depth) { const possibleMoves = game.moves({ verbose: true }); if (possibleMoves.length === 0) return null; let bestMove = null; let bestValue = -Infinity; possibleMoves.sort(() => Math.random() - 0.5); for (const move of possibleMoves) { game.move(move); const boardValue = -negamax(game, depth - 1, -Infinity, Infinity); game.undo(); if (boardValue > bestValue) { bestValue = boardValue; bestMove = move; } } return bestMove; }
         function negamax(game, depth, alpha, beta) { if (depth === 0 || game.game_over()) { return evaluateBoard(game.board()); } let max = -Infinity; const moves = game.moves(); for (const move of moves) { game.move(move); const score = -negamax(game, depth - 1, -beta, -alpha); game.undo(); max = Math.max(max, score); alpha = Math.max(alpha, score); if (alpha >= beta) { break; } } return max; }
         function evaluateBoard(board) { let totalEvaluation = 0; const pieceValues = { p: 10, n: 30, b: 30, r: 50, q: 90, k: 900 }; board.forEach(row => { row.forEach(piece => { if (piece) { const value = pieceValues[piece.type]; totalEvaluation += (piece.color === 'w' ? value : -value); } }); }); return totalEvaluation * (game.turn() === 'w' ? 1 : -1); }
@@ -296,7 +323,7 @@
             aiDifficulty = options.difficulty || 3;
             if (options.fen) game.load(options.fen);
             
-            const boardConfig = { position: game.fen(), pieceTheme: 'https://lichess1.org/assets/piece/staunty/{piece}.svg', draggable: false, moveSpeed: 'slow', snapSpeed: 50 };
+            const boardConfig = { position: 'start', pieceTheme: 'https://lichess1.org/assets/piece/staunty/{piece}.svg', draggable: false, moveSpeed: 'slow', snapSpeed: 50 };
             boardConfig.orientation = (playerColor === 'b') ? 'black' : 'white';
             
             if(board) board.destroy();
@@ -321,16 +348,15 @@
             $redoBtn.prop('disabled', isOnline || redoStack.length === 0);
         }
         
-        // --- FIREBASE ONLINE LOGIC (Reviewed and Refactored) ---
-
-        // Detaches all Firebase listeners and cancels disconnect hooks.
+        // --- FIREBASE ONLINE LOGIC ---
         function cleanupFirebaseListeners() {
             if (roomRef) {
                 if (gameListener) roomRef.off('value', gameListener);
                 if (chatListener) roomRef.child('chat').off('child_added', chatListener);
                 roomRef.onDisconnect().cancel();
+                roomRef = null;
             }
-            roomRef = null; gameListener = null; chatListener = null;
+            gameListener = null; chatListener = null;
         }
 
         function handleCreateRoom() {
@@ -339,25 +365,15 @@
             roomRef = database.ref('rooms/' + roomCode);
             playerColor = 'w';
             
-            const initialRoomData = {
-                status: 'waiting',
-                fen: new Chess().fen(),
-                createdAt: firebase.database.ServerValue.TIMESTAMP
-            };
-
-            roomRef.set(initialRoomData).then(() => {
+            roomRef.set({ status: 'waiting', fen: new Chess().fen(), createdAt: firebase.database.ServerValue.TIMESTAMP }).then(() => {
                 $('#room-code-display').text(roomCode);
                 hideModal('#online-modal', () => showModal('#create-room-modal'));
-                
-                // Set a handler that fires if the host disconnects before the game starts.
                 roomRef.onDisconnect().remove();
-
-                // Listen for the opponent to join.
                 gameListener = roomRef.on('value', snapshot => {
                     const data = snapshot.val();
                     if (data && data.status === 'active') {
-                        roomRef.off('value', gameListener); // Stop this specific listener.
-                        roomRef.onDisconnect().update({ status: 'finished', result: 'Opponent disconnected.' }); // Set new disconnect handler for in-game.
+                        roomRef.off('value', gameListener);
+                        roomRef.onDisconnect().update({ status: 'finished', result: 'Opponent disconnected.' });
                         hideModal('#create-room-modal', () => {
                             setupGame('online', { color: 'w', fen: data.fen });
                             listenToRoomChanges();
@@ -370,17 +386,14 @@
         function handleJoinRoom() {
             const enteredCode = $('#room-code-input').val().trim().toUpperCase();
             if (enteredCode.length !== 6) { alert('Please enter a valid 6-digit room code.'); return; }
-            
             resetCoreState();
             roomCode = enteredCode;
             roomRef = database.ref('rooms/' + roomCode);
             playerColor = 'b';
             
-            // Check if the room exists and is available.
             roomRef.once('value').then(snapshot => {
                 const data = snapshot.val();
                 if (data && data.status === 'waiting') {
-                    // Join the room and set it to active. This triggers the host to start.
                     roomRef.update({ status: 'active' }).then(() => {
                         roomRef.onDisconnect().update({ status: 'finished', result: 'Opponent disconnected.' });
                         hideModal('#join-room-modal', () => {
@@ -395,34 +408,26 @@
             }).catch(err => { alert("Error joining room: " + err.message); });
         }
 
-        // This function sets up the listeners for an active game.
         function listenToRoomChanges() {
-            // Main listener for game state (FEN, status).
             gameListener = roomRef.on('value', snapshot => {
                 const data = snapshot.val();
-                if (!data) return; 
-
-                // Handle game over conditions like resignation or disconnection.
-                if (data.status === 'finished' && gameMode !== null) {
+                if (!data || gameMode === null) return;
+                if (data.status === 'finished') {
                     handleGameOver(data.result || "Game Over");
                     return;
                 }
-
-                // Sync the board if the FEN has changed.
                 if (game.fen() !== data.fen) {
                     const oldTurn = game.turn();
                     game.load(data.fen);
-                    board.position(data.fen);
                     if(oldTurn !== game.turn()) {
                        const lastMove = game.history({verbose: true}).pop();
                        if (lastMove) playSound(lastMove.flags.includes('c') ? 'capture' : 'move');
                     }
-                    updateGameStatus(true); // isRemoteUpdate = true
+                    updateGameStatus(true);
                 }
             });
-
-            // Separate, more efficient listener just for new chat messages.
             chatListener = roomRef.child('chat').on('child_added', snapshot => {
+                if (gameMode === null) return;
                 const chat = snapshot.val();
                 const messageClass = (chat.sender === playerColor) ? "my-message" : "opponent-message";
                 const senderName = chat.sender === playerColor ? 'You' : 'Opponent';
@@ -455,7 +460,7 @@
         
         $('#flip-board-btn').on('click', () => board.flip());
         $('#new-game-btn').on('click', () => { if(confirm('Start a new game? This will end the current match.')){ handleGameOver("New game started."); $('#game-area').addClass('hidden'); showModal('#game-mode-modal'); }});
-        $('#resign-btn').on('click', () => { if(confirm('Resign the game?')){ if(gameMode === 'online' && roomRef) { roomRef.update({ status: 'finished', result: `${playerColor === 'w' ? 'White' : 'Black'} resigned.` }); } else { handleGameOver(`${playerColor==='w'?'White':'Black'} resigned.`);}}});
+        $('#resign-btn').on('click', () => { if(confirm('Resign the game?')){ const resignMessage = `${playerColor === 'w' ? 'White' : 'Black'} resigned.`; if(gameMode === 'online' && roomRef) { roomRef.update({ status: 'finished', result: resignMessage }); } else { handleGameOver(resignMessage);}}});
         $('#draw-btn').on('click', () => { alert('Draw functionality is not implemented in this version.'); });
         
         $('#chat-input').on('keypress', function(e) { 
@@ -468,8 +473,8 @@
             }
         });
         
-        $undoBtn.on('click', function() { if ($(this).prop('disabled')) return; const movesToUndo = (gameMode === 'single' && game.history().length >= 2) ? 2 : 1; for (let i = 0; i < movesToUndo; i++) { const undoneMove = game.undo(); if (undoneMove) redoStack.push(undoneMove); } board.position(game.fen()); updateGameStatus(); playSound('move'); });
-        $redoBtn.on('click', function() { if ($(this).prop('disabled')) return; const movesToRedo = (gameMode === 'single' && redoStack.length >= 2) ? 2 : 1; let moves = []; for (let i = 0; i < movesToRedo; i++) { const move = redoStack.pop(); if (move) moves.unshift(move); } moves.forEach(move => game.move(move)); board.position(game.fen()); updateGameStatus(); playSound('move'); });
+        $undoBtn.on('click', function() { if ($(this).prop('disabled')) return; const movesToUndo = (gameMode === 'single' && game.history().length >= 2) ? 2 : 1; for (let i = 0; i < movesToUndo; i++) { const undoneMove = game.undo(); if (undoneMove) redoStack.push(undoneMove); } updateGameStatus(); playSound('move'); });
+        $redoBtn.on('click', function() { if ($(this).prop('disabled')) return; const movesToRedo = (gameMode === 'single' && redoStack.length >= 2) ? 2 : 1; let moves = []; for (let i = 0; i < movesToRedo; i++) { const move = redoStack.pop(); if (move) moves.unshift(move); } moves.forEach(move => game.move(move)); updateGameStatus(); playSound('move'); });
 
         $(window).on('resize', function() { if(board) board.resize(); }).trigger('resize');
 
