@@ -141,15 +141,15 @@
     <script>
     // --- START FIREBASE CONFIG ---
     // PASTE YOUR FIREBASE CONFIGURATION OBJECT HERE.
-   const firebaseConfig = {
-   apiKey: "AIzaSyACRWhlLW3fGU1VLiAzRcopMRLoFdufAG8",
-   authDomain: "chat-b24b5.firebaseapp.com",
-   databaseURL: "https://chat-b24b5-default-rtdb.firebaseio.com",
-   projectId: "chat-b24b5",
-   storageBucket: "chat-b24b5.firebasestorage.app",
-   messagingSenderId: "180728290458",
-   appId: "1:180728290458:web:bc16d897749a1206851323",
-   measurementId: "G-Q56QGQPRFY"
+    const firebaseConfig = {
+    apiKey: "AIzaSyACRWhlLW3fGU1VLiAzRcopMRLoFdufAG8",
+    authDomain: "chat-b24b5.firebaseapp.com",
+    databaseURL: "https://chat-b24b5-default-rtdb.firebaseio.com",
+    projectId: "chat-b24b5",
+    storageBucket: "chat-b24b5.firebasestorage.app",
+    messagingSenderId: "180728290458",
+    appId: "1:180728290458:web:bc16d897749a1206851323",
+    measurementId: "G-Q56QGQPRFY"
     };
     // --- END FIREBASE CONFIG ---
     
@@ -202,7 +202,7 @@
                 if (moveResult) { // Valid move
                     fromSquare = null;
                     removeHighlights();
-                    updateGameStatus(false, moveResult); // It's a local move
+                    updateGameUi(false, moveResult); // It's a local move
                     if (gameMode === 'online' && roomRef) {
                         roomRef.update({ fen: game.fen() });
                     }
@@ -228,24 +228,16 @@
         function updateBlackTimer() { blackTime--; $('#black-timer').text(formatTime(blackTime)); if (blackTime <= 0) handleGameOver('White wins on time'); }
         function formatTime(seconds) { if (seconds < 0) seconds = 0; const mins = Math.floor(seconds / 60); const secs = seconds % 60; return `${mins}:${secs < 10 ? '0' : ''}${secs}`; }
         
-        // --- CORE GAME STATE & UI SYNC ---
-        // This is now the single source of truth for all UI updates.
-        function updateGameStatus(isRemoteUpdate, moveResult) {
+        // --- UNIFIED UI UPDATE FUNCTION ---
+        function updateGameUi(isRemote, moveResult) {
             board.position(game.fen());
             updateStatusText();
             updateMoveHistory();
             updateUndoRedoButtons();
             startTimers();
-
-            // Play sounds based on the move result
-            if(moveResult) {
-                playSound(moveResult.flags.includes('c') ? 'capture' : 'move');
-            }
-            if (game.in_check()) {
-                playSound('check');
-            }
+            if (moveResult) playSound(moveResult.flags.includes('c') ? 'capture' : 'move');
+            if (game.in_check()) playSound('check');
             
-            // Check for game over
             if (game.game_over()) {
                 stopTimers();
                 playSound('gameEnd');
@@ -257,9 +249,7 @@
                     if(game.in_threefold_repetition()) message += ' (Repetition)';
                     if(game.insufficient_material()) message += ' (Insufficient Material)';
                 }
-                if (!isRemoteUpdate) { // Only the player who triggered the game over should update the status
-                    handleGameOver(message);
-                }
+                if (!isRemote) handleGameOver(message);
             }
         }
 
@@ -268,10 +258,10 @@
             removeHighlights();
             $('#game-over-message').text(message);
             showModal('#game-over-modal');
-            if (roomRef) {
+            if (roomRef && gameMode === 'online') {
                 roomRef.update({ status: 'finished', result: message });
-                cleanupFirebaseListeners();
             }
+            cleanupFirebaseListeners();
         }
 
         function updateStatusText() {
@@ -298,7 +288,7 @@
         }
 
         // --- AI LOGIC ---
-        function makeComputerMove() { const bestMove = getBestMove(game, aiDifficulty); if (bestMove) { const moveResult = game.move(bestMove); updateGameStatus(false, moveResult); }}
+        function makeComputerMove() { const bestMove = getBestMove(game, aiDifficulty); if (bestMove) { const moveResult = game.move(bestMove); updateGameUi(false, moveResult); }}
         function getBestMove(game, depth) { const possibleMoves = game.moves({ verbose: true }); if (possibleMoves.length === 0) return null; let bestMove = null; let bestValue = -Infinity; possibleMoves.sort(() => Math.random() - 0.5); for (const move of possibleMoves) { game.move(move); const boardValue = -negamax(game, depth - 1, -Infinity, Infinity); game.undo(); if (boardValue > bestValue) { bestValue = boardValue; bestMove = move; } } return bestMove; }
         function negamax(game, depth, alpha, beta) { if (depth === 0 || game.game_over()) { return evaluateBoard(game.board()); } let max = -Infinity; const moves = game.moves(); for (const move of moves) { game.move(move); const score = -negamax(game, depth - 1, -beta, -alpha); game.undo(); max = Math.max(max, score); alpha = Math.max(alpha, score); if (alpha >= beta) { break; } } return max; }
         function evaluateBoard(board) { let totalEvaluation = 0; const pieceValues = { p: 10, n: 30, b: 30, r: 50, q: 90, k: 900 }; board.forEach(row => { row.forEach(piece => { if (piece) { const value = pieceValues[piece.type]; totalEvaluation += (piece.color === 'w' ? value : -value); } }); }); return totalEvaluation * (game.turn() === 'w' ? 1 : -1); }
@@ -318,7 +308,7 @@
             board = Chessboard('board', boardConfig);
             $boardEl.on('click', '.square-55d63', onSquareClick);
             
-            updateGameStatus(false, null);
+            updateGameUi(false, null);
             $('#game-area').removeClass('hidden'); 
             playIntroAnimation(); 
             playSound('gameStart');
@@ -336,7 +326,7 @@
             $redoBtn.prop('disabled', isOnline || redoStack.length === 0);
         }
         
-        // --- FIREBASE ONLINE LOGIC (REWRITTEN) ---
+        // --- FIREBASE ONLINE LOGIC ---
         function cleanupFirebaseListeners() {
             if (roomRef) {
                 if (gameListener) roomRef.off('value', gameListener);
@@ -407,20 +397,22 @@
 
                 if (game.fen() !== data.fen) {
                     const oldFen = game.fen();
-                    const moveResult = game.load(data.fen); // .load() returns the last move
+                    // Load the new FEN and capture the last move for sound effects
+                    game.load(data.fen);
+                    const history = game.history({ verbose: true });
+                    const moveResult = history[history.length - 1];
                     
-                    // If the load was successful and changed the state, update UI
                     if (game.fen() !== oldFen) {
-                        updateGameStatus(true, moveResult); // It's a remote move
+                        updateGameUi(true, moveResult); // It's a remote move
                     }
                 }
             });
             chatListener = roomRef.child('chat').on('child_added', snapshot => {
                 if (gameMode !== 'online' || !snapshot.exists()) return;
                 const chat = snapshot.val();
-                if (chat.sender === playerColor) return; // Don't re-render your own messages
+                if (chat.sender === playerColor) return;
                 
-                const senderName = chat.sender === playerColor ? 'You' : 'Opponent';
+                const senderName = 'Opponent';
                 $('#chat-log').append(`<div class="opponent-message"><b>${senderName}</b> ${chat.message}</div>`);
                 $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight);
             });
@@ -430,11 +422,8 @@
             const $chatInput = $('#chat-input');
             const message = $chatInput.val().trim();
             if (message !== '' && gameMode === 'online' && roomRef) {
-                // Add message to your own log immediately for responsiveness
                 $('#chat-log').append(`<div class="my-message"><b>You</b> ${message}</div>`);
                 $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight);
-                
-                // Push to Firebase
                 roomRef.child('chat').push({ sender: playerColor, message: message });
                 $chatInput.val('').focus();
             }
@@ -470,8 +459,8 @@
         $('#chat-input').on('keypress', e => { if (e.which === 13) sendChatMessage(); });
         $('#send-chat-btn').on('click', sendChatMessage);
         
-        $undoBtn.on('click', function() { if ($(this).prop('disabled')) return; const movesToUndo = (gameMode === 'single' && game.history().length >= 2) ? 2 : 1; for (let i = 0; i < movesToUndo; i++) { const undoneMove = game.undo(); if (undoneMove) redoStack.push(undoneMove); } updateGameStatus(false, null); playSound('move'); });
-        $redoBtn.on('click', function() { if ($(this).prop('disabled')) return; const movesToRedo = (gameMode === 'single' && redoStack.length >= 2) ? 2 : 1; let moves = []; for (let i = 0; i < movesToRedo; i++) { const move = redoStack.pop(); if (move) moves.unshift(move); } moves.forEach(move => game.move(move)); updateGameStatus(false, null); playSound('move'); });
+        $undoBtn.on('click', function() { if ($(this).prop('disabled')) return; const movesToUndo = (gameMode === 'single' && game.history().length >= 2) ? 2 : 1; for (let i = 0; i < movesToUndo; i++) { const undoneMove = game.undo(); if (undoneMove) redoStack.push(undoneMove); } updateGameUi(false, null); playSound('move'); });
+        $redoBtn.on('click', function() { if ($(this).prop('disabled')) return; const movesToRedo = (gameMode === 'single' && redoStack.length >= 2) ? 2 : 1; let moves = []; for (let i = 0; i < movesToRedo; i++) { const move = redoStack.pop(); if (move) moves.unshift(move); } moves.forEach(move => game.move(move)); updateGameUi(false, null); playSound('move'); });
 
         $(window).on('resize', function() { if(board) board.resize(); }).trigger('resize');
 
