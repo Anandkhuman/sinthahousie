@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sovereign Chess - Realistic Edition</title>
+    <title>Sovereign Chess - Firebase Edition</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
@@ -90,6 +90,7 @@
             border-radius: 6px;
         }
 
+        /* --- HIGHLIGHT AND DOT STYLES --- */
         .highlight-source {
             box-shadow: inset 0 0 0 4px var(--highlight-color);
         }
@@ -111,18 +112,15 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.5rem 1.25rem;
+            padding: 0.75rem 1.25rem;
             background: var(--panel-secondary-bg-color);
             border-radius: 8px;
             transition: box-shadow 0.4s ease-in-out;
-            min-height: 60px;
         }
-        .player-bar.active-player { box-shadow: 0 0 15px 3px var(--glow-color); }
-        .player-info { display: flex; align-items: center; gap: 0.75rem; font-weight: 500; font-size: 1.1rem; }
-        .player-info .turn-indicator { font-size: 0.8rem; opacity: 0; transition: opacity 0.3s; }
-        .active-player .turn-indicator { opacity: 1; }
-        .captured-pieces { display: flex; align-items: center; height: 20px; gap: 2px; }
-        .captured-pieces img { height: 100%; width: auto; opacity: 0.8; }
+        .player-bar.active-player {
+            box-shadow: 0 0 15px 3px var(--glow-color);
+        }
+        .player-info { display: flex; align-items: center; gap: 1rem; font-weight: 500; font-size: 1.1rem; }
         .timer { font-size: 1.4rem; font-weight: 700; }
         
         .controls-area {
@@ -134,11 +132,22 @@
             border-radius: 8px;
         }
 
-        .btn-icon { background: none; border: none; cursor: pointer; padding: 0.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; width: 44px; height: 44px; transition: background-color 0.2s; }
+        .btn-icon {
+            background: none; border: none; cursor: pointer; padding: 0.5rem; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.25rem;
+            width: 44px;
+            height: 44px;
+            transition: background-color 0.2s;
+        }
         .btn-icon:hover { background-color: var(--button-hover-bg); }
         .btn-icon i { color: var(--text-color); transition: transform 0.2s ease-out; }
         .btn-icon:hover i { transform: scale(1.1); }
-        .btn-icon:disabled { opacity: 0.4; cursor: not-allowed; background-color: transparent !important; }
+        .btn-icon:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background-color: transparent !important;
+        }
         .btn-icon:disabled:hover i { transform: none; }
 
         .side-dashboard {
@@ -151,38 +160,51 @@
         }
 
         .tab-controls { display: flex; border-bottom: 1px solid var(--border-color); }
-        .tab-btn { flex: 1; padding: 1rem; background-color: transparent; border: none; color: var(--text-secondary-color); font-size: 1rem; font-weight: 500; cursor: pointer; transition: all 0.2s; border-bottom: 3px solid transparent; }
+        .tab-btn {
+            flex: 1; padding: 1rem; background-color: transparent; border: none;
+            color: var(--text-secondary-color); font-size: 1rem; font-weight: 500;
+            cursor: pointer; transition: all 0.2s; border-bottom: 3px solid transparent;
+        }
         .tab-btn.active { color: var(--text-color); border-bottom-color: var(--glow-color); }
 
         .tab-content { padding: 1rem; }
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
         
-        #status { font-weight: 500; text-align: center; margin-bottom: 1rem; padding: 0.5rem; border-radius: 6px; min-height: 2.2em; display: flex; align-items: center; justify-content: center; }
-        #move-history-container { height: 40vh; max-height: 500px; overflow-y: auto; font-size: 1rem; line-height: 1.6; }
-        .move-history-table { width: 100%; border-collapse: collapse; }
-        .move-history-table td { padding: 4px 8px; }
-        .move-history-table tr:nth-child(odd) { background-color: rgba(255,255,255,0.03); }
-        .move-history-table .move-number { color: var(--text-secondary-color); width: 30px; text-align: right; }
+        #status { font-weight: 500; text-align: center; margin-bottom: 1rem; padding: 0.5rem; border-radius: 6px; }
+        #move-history { height: 40vh; max-height: 500px; overflow-y: auto; font-size: 1rem; line-height: 1.6; }
         
+        /* UPDATED: Chat styles */
         #chat-log { height: calc(40vh - 50px); max-height: 450px; overflow-y: auto; margin-bottom: 0.5rem; border: 1px solid var(--border-color); padding: 0.5rem; border-radius: 6px; display: flex; flex-direction: column; gap: 0.5rem; }
-        .chat-message { max-width: 80%; padding: 0.5rem 0.75rem; border-radius: 12px; line-height: 1.4; }
-        .chat-message.self { background-color: var(--square-dark); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
-        .chat-message.opponent { background-color: var(--button-bg); align-self: flex-start; border-bottom-left-radius: 2px; }
+        #chat-log div { max-width: 85%; padding: 0.4rem 0.8rem; border-radius: 12px; line-height: 1.4; word-wrap: break-word; }
+        #chat-log div b { display: block; font-size: 0.8rem; margin-bottom: 2px; opacity: 0.7; }
+        #chat-log .my-message { background-color: var(--glow-color); color: var(--bg-color); align-self: flex-end; border-bottom-right-radius: 2px; }
+        #chat-log .opponent-message { background-color: var(--button-bg); align-self: flex-start; border-bottom-left-radius: 2px; }
         
         #chat-input { width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--bg-color); color: var(--text-color); font-family: var(--font-family); }
 
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(5px); align-items: center; justify-content: center; }
-        .modal-content { background-color: var(--panel-bg-color); color: var(--text-color); padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px; text-align: center; box-shadow: 0 5px 25px rgba(0,0,0,0.3); opacity: 0; transform: scale(0.8); }
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+            width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px); align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background-color: var(--panel-bg-color); color: var(--text-color); padding: 2rem;
+            border-radius: 12px; width: 90%; max-width: 500px; text-align: center;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.3); opacity: 0; transform: scale(0.8);
+        }
         .modal-content h2 { margin-top: 0; font-size: 1.8rem; font-weight: 700; }
         .modal-content p { margin: 1rem 0; color: var(--text-secondary-color); }
         .modal-content .btn-group { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
-        .btn { padding: 0.8rem 1.5rem; border: none; border-radius: 8px; background-color: var(--button-bg); color: var(--text-color); font-size: 1rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .btn {
+            padding: 0.8rem 1.5rem; border: none; border-radius: 8px; background-color: var(--button-bg);
+            color: var(--text-color); font-size: 1rem; font-weight: 500; cursor: pointer; transition: all 0.2s;
+        }
         .btn:hover { background-color: var(--button-hover-bg); transform: translateY(-2px); }
         .btn-primary { background-color: var(--square-dark); color: white; }
         .btn-primary:hover { filter: brightness(1.2); }
         
-        #room-code-display { font-size: 2rem; font-weight: bold; background: var(--bg-color); padding: 1rem; border-radius: 6px; margin: 1.5rem 0; letter-spacing: 4px; }
+        #room-code-display { font-size: 2rem; font-weight: bold; background: var(--bg-color); padding: 1rem; border-radius: 6px; margin: 1.5rem 0; letter-spacing: 4px; user-select: all; }
         #room-code-input { width: 100%; padding: 0.75rem; font-size: 1.5rem; text-align: center; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 1rem; letter-spacing: 4px; font-weight: bold; text-transform: uppercase; }
         
         .hidden { display: none !important; }
@@ -204,24 +226,16 @@
 <body>
 
     <div id="app-container">
-        <div class="header"><h1>Sovereign Chess</h1></div>
+        <div class="header"><h1>Sintha Chess</h1></div>
         <div id="game-area" class="game-layout hidden">
             <div class="board-area">
                 <div id="opponent-bar" class="player-bar">
-                    <div class="player-info">
-                        <i class="fas fa-dot-circle turn-indicator"></i>
-                        <span>Opponent</span>
-                        <div id="opponent-captured" class="captured-pieces"></div>
-                    </div>
+                    <div class="player-info"><span>Opponent</span></div>
                     <div id="black-timer" class="timer">10:00</div>
                 </div>
                 <div id="board-container"><div id="board"></div></div>
                 <div id="player-bar" class="player-bar">
-                    <div class="player-info">
-                        <i class="fas fa-dot-circle turn-indicator"></i>
-                        <span>You</span>
-                        <div id="player-captured" class="captured-pieces"></div>
-                    </div>
+                    <div class="player-info"><span>You</span></div>
                     <div id="white-timer" class="timer">10:00</div>
                 </div>
                 <div class="controls-area">
@@ -241,7 +255,7 @@
                 <div class="tab-content">
                     <div id="moves-panel" class="tab-panel active">
                         <div id="status">White to move.</div>
-                        <div id="move-history-container"><table class="move-history-table"><tbody></tbody></table></div>
+                        <div id="move-history"></div>
                     </div>
                     <div id="chat-panel" class="tab-panel">
                         <div id="chat-log"></div>
@@ -270,62 +284,57 @@
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.2/chess.min.js"></script>
     
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- ADDED: Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
+    // --- START FIREBASE CONFIG ---
+    // 1. Create a Firebase project at https://console.firebase.google.com/
+    // 2. Go to Project Settings > General, scroll to "Your apps", click Web (</>).
+    // 3. Register the app and copy the firebaseConfig object here.
+    const firebaseConfig = {
+    apiKey: "AIzaSyACRWhlLW3fGU1VLiAzRcopMRLoFdufAG8",
+    authDomain: "chat-b24b5.firebaseapp.com",
+    databaseURL: "https://chat-b24b5-default-rtdb.firebaseio.com",
+    projectId: "chat-b24b5",
+    storageBucket: "chat-b24b5.firebasestorage.app",
+    messagingSenderId: "180728290458",
+    appId: "1:180728290458:web:bc16d897749a1206851323",
+    measurementId: "G-Q56QGQPRFY"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    // --- END FIREBASE CONFIG ---
+
+
     $(document).ready(function() {
         // --- GLOBAL STATE & CONFIG ---
-        let db = null; // Initialize db as null
-
-        // --- FIREBASE CONFIG & INITIALIZATION ---
-        // This 'try...catch' block prevents the entire app from crashing if Firebase is not configured.
-        // Local modes (Single Player, Pass & Play) will work regardless.
-        try {
-            // IMPORTANT: Replace this with your own Firebase project configuration!
-            const firebaseConfig = {
-            apiKey: "AIzaSyACRWhlLW3fGU1VLiAzRcopMRLoFdufAG8",
-            authDomain: "chat-b24b5.firebaseapp.com",
-            databaseURL: "https://chat-b24b5-default-rtdb.firebaseio.com",
-            projectId: "chat-b24b5",
-            storageBucket: "chat-b24b5.firebasestorage.app",
-            messagingSenderId: "180728290458",
-            appId: "1:180728290458:web:bc16d897749a1206851323",
-            measurementId: "G-Q56QGQPRFY"
-            };
-            
-            // Check if config is still a placeholder
-            if (firebaseConfig.apiKey === "YOUR_API_KEY") {
-                throw new Error("Firebase configuration is not set. Online mode will be disabled.");
-            }
-
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.database();
-            console.log("Firebase initialized successfully.");
-
-        } catch (error) {
-            console.warn(error.message);
-            // db remains null, online features will be disabled.
-        }
-
-        // --- GLOBAL STATE & CONFIG (continued) ---
-        let board = null, game = new Chess(), gameMode = null, playerColor = 'w', fromSquare = null;
-        let aiDifficulty = 3, redoStack = [];
+        let board = null, game = new Chess(), gameMode = null, playerColor = 'w';
+        let aiDifficulty = 3, fromSquare = null;
         let whiteTimer, blackTimer, whiteTime = 600, blackTime = 600;
         let isAudioUnlocked = false;
+        let redoStack = []; 
         
-        // Online-specific state
-        let roomCode = null, playerId = null, roomRef = null, opponentId = null;
+        // Firebase specific state
+        let roomRef = null;
+        let roomCode = null;
+        let chatListener = null;
+        let signalListener = null;
 
-        const $status = $('#status'), $moveHistoryContainer = $('#move-history-container'), $boardEl = $('#board');
+        const $status = $('#status'), $moveHistory = $('#move-history'), $boardEl = $('#board');
         const $undoBtn = $('#undo-btn'), $redoBtn = $('#redo-btn');
-        const sounds = { move: $('#sound-move')[0], capture: $('#sound-capture')[0], check: $('#sound-check')[0], gameStart: $('#sound-game-start')[0], gameEnd: $('#sound-game-end')[0] };
+        const sounds = {
+            move: $('#sound-move')[0], capture: $('#sound-capture')[0], check: $('#sound-check')[0],
+            gameStart: $('#sound-game-start')[0], gameEnd: $('#sound-game-end')[0]
+        };
 
-        // --- UI & SOUND FUNCTIONS ---
-        function playSound(soundName) { if (!isAudioUnlocked) return; const sound = sounds[soundName]; if (sound) { sound.currentTime = 0; sound.play().catch(e => {}); } }
-        function unlockAudio() { if (isAudioUnlocked) return; isAudioUnlocked = true; Object.values(sounds).forEach(sound => { sound.play().catch(() => {}); sound.pause(); sound.currentTime = 0; }); }
-        function showModal(id) { const modal = $(id); modal.css('display', 'flex'); gsap.to(modal.find('.modal-content'), { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(1.7)' }); }
-        function hideModal(id, onComplete) { const modal = $(id); gsap.to(modal.find('.modal-content'), { opacity: 0, scale: 0.8, duration: 0.2, ease: 'power2.in', onComplete: () => { modal.hide(); if (onComplete) onComplete(); }}); }
+        // --- SOUND & UI FUNCTIONS ---
+        function playSound(soundName) { if (!isAudioUnlocked) return; const sound = sounds[soundName]; if (sound) { sound.currentTime = 0; sound.play().catch(e => console.error("Sound play failed:", e)); }}
+        function unlockAudio() { if (isAudioUnlocked) return; isAudioUnlocked = true; Object.values(sounds).forEach(sound => { sound.play().catch(() => {}); sound.pause(); sound.currentTime = 0; });}
+        function showModal(id) { const modal = $(id); modal.css('display', 'flex'); gsap.to(modal.find('.modal-content'), { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(1.7)' });}
+        function hideModal(id, onComplete) { const modal = $(id); gsap.to(modal.find('.modal-content'), { opacity: 0, scale: 0.8, duration: 0.2, ease: 'power2.in', onComplete: () => { modal.hide(); if (onComplete) onComplete(); }});}
         function playIntroAnimation() {
             const tl = gsap.timeline();
             tl.from('.header', { y: -50, opacity: 0, duration: 0.5, ease: 'power2.out' })
@@ -337,35 +346,41 @@
         
         // --- HIGHLIGHTING & MOVE LOGIC ---
         function removeHighlights() { $boardEl.find('.square-55d63').removeClass('highlight-source'); $boardEl.find('.move-dot').remove(); }
-        function highlightMoves(square) { removeHighlights(); const moves = game.moves({ square: square, verbose: true }); if (moves.length === 0) return; $boardEl.find('.square-' + square).addClass('highlight-source'); moves.forEach(move => { $boardEl.find('.square-' + move.to).append('<div class="move-dot"></div>'); }); }
-        
+        function highlightMoves(square) {
+            removeHighlights();
+            const moves = game.moves({ square: square, verbose: true });
+            if (moves.length === 0) return;
+            $boardEl.find('.square-' + square).addClass('highlight-source');
+            moves.forEach(move => { $boardEl.find('.square-' + move.to).append('<div class="move-dot"></div>'); });
+        }
         function onSquareClick() {
             const square = $(this).data('square');
-            if (game.game_over() || (gameMode !== 'pass' && game.turn() !== playerColor)) return;
+            if (game.game_over() || (gameMode === 'single' && game.turn() !== playerColor) || (gameMode === 'online' && game.turn() !== playerColor)) return;
             const pieceOnSquare = game.get(square);
             if (fromSquare) {
                 if (square === fromSquare) { fromSquare = null; removeHighlights(); return; }
                 const move = { from: fromSquare, to: square, promotion: 'q' };
                 const moveResult = game.move(move);
                 if (moveResult) {
+                    board.position(game.fen());
+                    playSound(moveResult.flags.includes('c') ? 'capture' : 'move');
                     redoStack = []; 
-                    fromSquare = null;
-                    removeHighlights();
+                    updateGameStatus();
+                    // --- FIREBASE: Send move ---
                     if (gameMode === 'online' && roomRef) {
-                        roomRef.update({ fen: game.fen(), lastMove: move });
-                    } else {
-                        playSound(moveResult.flags.includes('c') ? 'capture' : 'move');
-                        updateGameStatus();
-                        board.position(game.fen());
-                        if (gameMode === 'single' && !game.game_over()) window.setTimeout(makeComputerMove, 250);
+                        roomRef.update({ 
+                            fen: game.fen(),
+                            lastMove: { from: move.from, to: move.to } // for sound effects
+                        });
                     }
+                    if (gameMode === 'single' && !game.game_over()) window.setTimeout(makeComputerMove, 250);
+                    fromSquare = null; removeHighlights();
                 } else {
                     if (pieceOnSquare && pieceOnSquare.color === game.turn()) { fromSquare = square; highlightMoves(square); } 
                     else { fromSquare = null; removeHighlights(); }
                 }
             } else if (pieceOnSquare && pieceOnSquare.color === game.turn()) {
-                fromSquare = square;
-                highlightMoves(square);
+                fromSquare = square; highlightMoves(square);
             }
         }
         
@@ -376,12 +391,11 @@
         function updateBlackTimer() { blackTime--; $('#black-timer').text(formatTime(blackTime)); if (blackTime <= 0) handleGameOver('White wins on time'); }
         function formatTime(seconds) { if (seconds < 0) seconds = 0; const mins = Math.floor(seconds / 60); const secs = seconds % 60; return `${mins}:${secs < 10 ? '0' : ''}${secs}`; }
         
-        // --- CORE GAME LOGIC & UI UPDATES ---
+        // --- CORE GAME LOGIC ---
         function updateGameStatus() {
             updateStatusText();
-            updateMoveHistoryTable();
+            updateMoveHistory();
             updateUndoRedoButtons();
-            updateCapturedPieces();
             startTimers();
             if (game.game_over()) {
                 stopTimers();
@@ -397,237 +411,203 @@
                 handleGameOver(message);
             }
         }
-        function handleGameOver(message) { stopTimers(); removeHighlights(); $('#game-over-message').text(message); showModal('#game-over-modal'); if (roomRef) { roomRef.child('meta').update({ status: 'ended', result: message }); roomRef.onDisconnect().cancel(); roomRef.off(); roomRef = null; } }
+        function handleGameOver(message) { stopTimers(); removeHighlights(); $('#game-over-message').text(message); showModal('#game-over-modal'); if (roomRef) { roomRef.off(); roomRef.child('chat').off(); roomRef.child('signal').off(); roomRef = null; }}
         function updateStatusText() {
-            let statusText = (game.turn() === 'w' ? 'White' : 'Black') + ' to move.';
+            let statusText = '';
+            const moveColor = game.turn() === 'w' ? 'White' : 'Black';
+            statusText = moveColor + ' to move.';
             $('.player-bar').removeClass('active-player');
-            if(game.turn() === 'w') { (playerColor === 'w' || gameMode === 'pass' ? $('#player-bar') : $('#opponent-bar')).addClass('active-player'); }
-            else { (playerColor === 'b' ? $('#player-bar') : $('#opponent-bar')).addClass('active-player'); }
-
-            if (game.in_check()) {
-                statusText += ' - CHECK!';
-                $status.css('background-color', 'rgba(255,0,0,0.2)');
-                gsap.fromTo($status, {scale: 1.1, y: -2}, {scale: 1, y: 0, duration: 0.8, ease: 'elastic.out(1, 0.5)'});
-                playSound('check');
-            } else { $status.css('background-color', 'transparent'); }
+            if ( (playerColor === 'w' && game.turn() === 'w') || (playerColor === 'b' && game.turn() === 'b')) { $('#player-bar').addClass('active-player'); } 
+            else { $('#opponent-bar').addClass('active-player'); }
+            if(gameMode === 'pass') { if (game.turn() === 'w') $('#player-bar').addClass('active-player'); else $('#opponent-bar').addClass('active-player'); }
+            if (game.in_check()) { statusText += ' - CHECK!'; $status.css('background-color', 'rgba(255,0,0,0.2)'); gsap.fromTo($status, {scale: 1.1, y: -2}, {scale: 1, y: 0, duration: 0.8, ease: 'elastic.out(1, 0.5)'}); if (gameMode !== 'online') playSound('check'); } 
+            else { $status.css('background-color', 'transparent'); }
             $status.text(statusText);
         }
-        function updateMoveHistoryTable() {
-            const history = game.history({ verbose: true });
-            const $tbody = $('.move-history-table tbody');
-            $tbody.empty();
-            let html = '';
-            for (let i = 0; i < history.length; i += 2) {
-                html += `<tr>
-                    <td class="move-number">${(i/2)+1}.</td>
-                    <td>${history[i].san}</td>
-                    <td>${history[i+1] ? history[i+1].san : ''}</td>
-                </tr>`;
-            }
-            $tbody.html(html);
-            $moveHistoryContainer.scrollTop($moveHistoryContainer[0].scrollHeight);
-        }
-        function updateCapturedPieces() {
-            const pieceMap = { p: 'pawn', n: 'knight', b: 'bishop', r: 'rook', q: 'queen' };
-            const initialCount = { p: 8, n: 2, b: 2, r: 2, q: 1 };
-            const currentCount = { w: { p: 0, n: 0, b: 0, r: 0, q: 0 }, b: { p: 0, n: 0, b: 0, r: 0, q: 0 } };
-
-            game.board().forEach(row => row.forEach(piece => {
-                if (piece) currentCount[piece.color][piece.type]++;
-            }));
-
-            $('#player-captured, #opponent-captured').empty();
-            
-            for (const color of ['w', 'b']) {
-                const capturedByColor = (color === playerColor) ? '#player-captured' : '#opponent-captured';
-                const opponentColor = (color === 'w') ? 'b' : 'w';
-                
-                for (const pieceType in initialCount) {
-                    let capturedCount = initialCount[pieceType] - currentCount[opponentColor][pieceType];
-                    for(let i = 0; i < capturedCount; i++) {
-                         $(capturedByColor).append(`<img src="https://lichess1.org/assets/piece/staunty/${opponentColor}${pieceType.toUpperCase()}.svg" alt="${pieceMap[pieceType]}">`);
-                    }
-                }
-            }
-        }
+        function updateMoveHistory() { const history = game.history({ verbose: true }); let html = ''; for (let i = 0; i < history.length; i += 2) { html += `<span>${(i/2)+1}. ${history[i].san} ${history[i+1] ? history[i+1].san : ' '}</span><br>`; } $moveHistory.html(html); $moveHistory.scrollTop($moveHistory[0].scrollHeight);}
         function resetCoreState() {
-            game.reset();
-            whiteTime = 600; blackTime = 600; fromSquare = null; redoStack = [];
+            game.reset(); whiteTime = 600; blackTime = 600; fromSquare = null; redoStack = [];
             $('#white-timer').text(formatTime(whiteTime)); $('#black-timer').text(formatTime(blackTime));
-            $('.move-history-table tbody').html(''); $('#chat-log').html(''); removeHighlights(); stopTimers();
-            updateCapturedPieces();
-            if (roomRef) { roomRef.onDisconnect().cancel(); roomRef.off(); roomRef = null; }
-            roomCode = null; playerId = null; opponentId = null;
+            $moveHistory.html(''); $('#chat-log').html(''); removeHighlights(); stopTimers();
+            // Detach any previous firebase listeners
+            if(roomRef) { roomRef.off(); roomRef = null; }
+            if(chatListener) { chatListener.off(); chatListener = null; }
+            if(signalListener) { signalListener.off(); signalListener = null; }
         }
-
+        function makeComputerMove() { const bestMove = getBestMove(game, aiDifficulty); if (bestMove) { game.move(bestMove); playSound(game.history({verbose: true}).pop().flags.includes('c') ? 'capture' : 'move'); updateGameStatus(); board.position(game.fen()); }}
+        function getBestMove(game, depth) { const possibleMoves = game.moves({ verbose: true }); if (possibleMoves.length === 0) return null; let bestMove = null; let bestValue = -Infinity; possibleMoves.sort(() => Math.random() - 0.5); for (const move of possibleMoves) { game.move(move); const boardValue = -negamax(game, depth - 1, -Infinity, Infinity); game.undo(); if (boardValue > bestValue) { bestValue = boardValue; bestMove = move; } } return bestMove; }
+        function negamax(game, depth, alpha, beta) { if (depth === 0 || game.game_over()) { return evaluateBoard(game.board()); } let max = -Infinity; const moves = game.moves(); for (const move of moves) { game.move(move); const score = -negamax(game, depth - 1, -beta, -alpha); game.undo(); max = Math.max(max, score); alpha = Math.max(alpha, score); if (alpha >= beta) { break; } } return max; }
+        function evaluateBoard(board) { let totalEvaluation = 0; const pieceValues = { p: 10, n: 30, b: 30, r: 50, q: 90, k: 900 }; board.forEach(row => { row.forEach(piece => { if (piece) { const value = pieceValues[piece.type]; totalEvaluation += (piece.color === 'w' ? value : -value); } }); }); return totalEvaluation * (game.turn() === 'w' ? 1 : -1); }
         function setupGame(mode, options = {}) {
             resetCoreState();
             gameMode = mode; playerColor = options.color || 'w'; aiDifficulty = options.difficulty || 3;
-            
-            if (mode === 'online') {
-                if (!db) { alert("Online mode is unavailable. Please check Firebase configuration."); return; }
-                roomCode = options.roomCode;
-                playerId = options.playerId;
-                roomRef = db.ref('games/' + roomCode);
-                attachFirebaseListeners();
-            }
-
             const boardConfig = { position: 'start', pieceTheme: 'https://lichess1.org/assets/piece/staunty/{piece}.svg', draggable: false, moveSpeed: 'slow', snapSpeed: 50 };
             boardConfig.orientation = (playerColor === 'b') ? 'black' : 'white';
             if(board) board.destroy();
             board = Chessboard('board', boardConfig);
             $boardEl.on('click', '.square-55d63', onSquareClick);
-            
             updateGameStatus();
             $('#game-area').removeClass('hidden'); playIntroAnimation(); playSound('gameStart');
-            
-            $('.tab-btn[data-tab="chat"]').toggle(mode === 'online');
-            $('.tab-btn[data-tab="moves"]').addClass('active').click();
-            
+            if (mode === 'online') { $('.tab-btn[data-tab="chat"]').show(); $('.tab-btn[data-tab="chat"]').click(); } 
+            else { $('.tab-btn[data-tab="chat"]').hide(); $('.tab-btn[data-tab="moves"]').addClass('active').click(); }
             if (mode === 'single' && playerColor === 'b') window.setTimeout(makeComputerMove, 500);
-            
-            $('#player-bar .player-info span').text(mode === 'pass' ? 'White' : 'You');
-            $('#opponent-bar .player-info span').text(mode === 'pass' ? 'Black' : 'Opponent');
-
             $(window).trigger('resize');
         }
         
-        // --- AI LOGIC (Unchanged) ---
-        function makeComputerMove() { const bestMove = getBestMove(game, aiDifficulty); if (bestMove) { game.move(bestMove); playSound(game.history({verbose: true}).pop().flags.includes('c') ? 'capture' : 'move'); updateGameStatus(); board.position(game.fen()); } }
-        function getBestMove(game, depth) { const possibleMoves = game.moves({ verbose: true }); if (possibleMoves.length === 0) return null; let bestMove = null; let bestValue = -Infinity; possibleMoves.sort(() => Math.random() - 0.5); for (const move of possibleMoves) { game.move(move); const boardValue = -negamax(game, depth - 1, -Infinity, Infinity); game.undo(); if (boardValue > bestValue) { bestValue = boardValue; bestMove = move; } } return bestMove; }
-        function negamax(game, depth, alpha, beta) { if (depth === 0 || game.game_over()) { return evaluateBoard(game.board()); } let max = -Infinity; const moves = game.moves(); for (const move of moves) { game.move(move); const score = -negamax(game, depth - 1, -beta, -alpha); game.undo(); max = Math.max(max, score); alpha = Math.max(alpha, score); if (alpha >= beta) { break; } } return max; }
-        function evaluateBoard(board) { let totalEvaluation = 0; const pieceValues = { p: 10, n: 30, b: 30, r: 50, q: 90, k: 900 }; board.forEach(row => { row.forEach(piece => { if (piece) { const value = pieceValues[piece.type]; totalEvaluation += (piece.color === 'w' ? value : -value); } }); }); return totalEvaluation * (game.turn() === 'w' ? 1 : -1); }
+        // --- FIREBASE ONLINE LOGIC ---
+        function generateRoomCode() { return Math.floor(100000 + Math.random() * 900000).toString(); }
+        function updateUndoRedoButtons() {
+            const isOnline = gameMode === 'online';
+            $undoBtn.prop('disabled', isOnline || game.history().length === 0);
+            $redoBtn.prop('disabled', isOnline || redoStack.length === 0);
+        }
         
-        // --- FIREBASE & ONLINE LOGIC ---
-        function generateId(length) { return Math.random().toString(36).substr(2, length); }
-
         function createOnlineRoom() {
-            if (!db) { alert("Online mode is unavailable. Please check Firebase configuration."); return; }
-            roomCode = generateId(6).toUpperCase();
-            playerId = generateId(10);
-            roomRef = db.ref('games/' + roomCode);
-
-            const gameData = {
-                meta: { status: 'waiting', createdAt: firebase.database.ServerValue.TIMESTAMP },
-                players: { white: playerId, black: null },
-                fen: game.fen(), chat: [], signals: null
+            roomCode = generateRoomCode();
+            roomRef = database.ref('rooms/' + roomCode);
+            const initialRoomData = {
+                hostColor: 'w',
+                status: 'waiting',
+                fen: game.fen(),
+                createdAt: firebase.database.ServerValue.TIMESTAMP
             };
-            
-            roomRef.set(gameData).then(() => {
+            roomRef.set(initialRoomData).then(() => {
                 $('#room-code-display').text(roomCode);
-                showModal('#create-room-modal');
-                roomRef.child('players/black').on('value', (snapshot) => {
-                    if (snapshot.exists() && snapshot.val() !== null) {
-                        opponentId = snapshot.val();
-                        roomRef.child('players/black').off();
+                hideModal('#online-modal', () => showModal('#create-room-modal'));
+                // Listen for the opponent to join
+                roomRef.on('value', snapshot => {
+                    const data = snapshot.val();
+                    if (data && data.status === 'active') {
+                        roomRef.off('value'); // Stop listening for joiners
                         hideModal('#create-room-modal', () => {
-                            setupGame('online', { roomCode: roomCode, playerId: playerId, color: 'w' });
-                            roomRef.child('meta/status').set('active');
+                            listenToRoomChanges();
                         });
                     }
                 });
-            }).catch(err => { alert('Error creating room. Please try again.'); console.error(err); });
+            }).catch(err => {
+                alert("Error creating room. Check console for details.");
+                console.error(err);
+            });
         }
         
-        function attachFirebaseListeners() {
-            roomRef.child('fen').on('value', (snapshot) => {
-                const newFen = snapshot.val();
-                if (newFen && newFen !== game.fen()) {
-                    game.load(newFen);
-                    const lastMove = game.history({verbose: true}).pop();
-                    playSound(lastMove.flags.includes('c') ? 'capture' : 'move');
-                    board.position(newFen);
+        function listenToRoomChanges() {
+            // Main listener for game state (moves)
+            roomRef.on('value', snapshot => {
+                const data = snapshot.val();
+                if (!data) {
+                    // Room was deleted or connection lost
+                    handleGameOver("Opponent disconnected or room closed.");
+                    return;
+                }
+                
+                // Sync FEN if it has changed
+                if (game.fen() !== data.fen) {
+                    game.load(data.fen);
+                    board.position(data.fen);
                     updateGameStatus();
+                    
+                    // Play sound for opponent's move
+                    const moveResult = game.history({verbose: true}).pop();
+                    if (moveResult) {
+                       playSound(moveResult.flags.includes('c') ? 'capture' : 'move');
+                       if (game.in_check()) playSound('check');
+                    }
                 }
             });
 
-            roomRef.child('chat').on('child_added', (snapshot) => {
-                const msg = snapshot.val();
-                if (msg.senderId !== playerId) {
-                    $('#chat-log').append(`<div class="chat-message opponent">${msg.text}</div>`);
-                    $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight);
-                }
+            // Listener for chat messages
+            chatListener = roomRef.child('chat');
+            chatListener.on('child_added', snapshot => {
+                const chat = snapshot.val();
+                const senderName = chat.sender === playerColor ? "You" : "Opponent";
+                const messageClass = chat.sender === playerColor ? "my-message" : "opponent-message";
+                $('#chat-log').append(`<div class="${messageClass}"><b>${senderName}</b> ${chat.message}</div>`);
+                $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight);
             });
 
-            roomRef.child('signals').on('value', (snapshot) => {
+            // Listener for one-time signals (resign, draw)
+            signalListener = roomRef.child('signal');
+            signalListener.on('child_added', snapshot => {
                 const signal = snapshot.val();
-                if (!signal || signal.senderId === playerId) return;
-                switch(signal.type) {
-                    case 'resign': handleGameOver(`${playerColor === 'w' ? 'Black' : 'White'} resigned.`); break;
-                    case 'draw-offer':
-                        if (confirm('Opponent offers a draw. Accept?')) { roomRef.child('signals').set({ type: 'draw-accept', senderId: playerId }); handleGameOver('Draw by agreement.'); } 
-                        else { roomRef.child('signals').set({ type: 'draw-reject', senderId: playerId }); }
-                        break;
-                    case 'draw-accept': handleGameOver('Draw by agreement.'); break;
-                    case 'draw-reject': alert('Opponent declined the draw offer.'); break;
-                }
-                if (signal.type === 'draw-reject' || signal.type === 'draw-offer') { setTimeout(() => roomRef.child('signals').set(null), 500); }
-            });
+                if(!signal) return;
 
-            roomRef.child('players').on('value', (snapshot) => {
-                const players = snapshot.val();
-                if(!players) return;
-                const opponentColor = playerColor === 'w' ? 'black' : 'white';
-                if(players[opponentColor] === null && gameMode === 'online' && game.history().length > 0){
-                    handleGameOver('Opponent disconnected.');
+                if (signal.type === 'resign' && signal.sender !== playerColor) {
+                    handleGameOver('Opponent resigned.');
+                }
+                else if (signal.type === 'draw-offer' && signal.sender !== playerColor) {
+                    if (confirm('Opponent offers a draw. Accept?')) {
+                        roomRef.child('signal').push({ type: 'draw-accept', sender: playerColor });
+                        handleGameOver('Draw by agreement.');
+                    } else {
+                        roomRef.child('signal').push({ type: 'draw-reject', sender: playerColor });
+                    }
+                }
+                else if (signal.type === 'draw-accept' && signal.sender !== playerColor) {
+                    handleGameOver('Draw by agreement.');
+                }
+                else if (signal.type === 'draw-reject' && signal.sender !== playerColor) {
+                    alert('Opponent declined the draw offer.');
                 }
             });
-
-            const playerRef = roomRef.child(`players/${playerColor === 'w' ? 'white' : 'black'}`);
-            playerRef.onDisconnect().remove();
         }
 
         // --- EVENT HANDLERS ---
         $(document).one('click', unlockAudio);
         $('.btn, .btn-icon').on('click', function() { gsap.fromTo(this, {scale: 0.95}, {scale: 1, duration: 0.3, ease: 'elastic.out(1, 0.5)'}); });
         $('.tab-btn').on('click', function() { const tabId = $(this).data('tab'); $('.tab-btn').removeClass('active'); $(this).addClass('active'); $('.tab-panel').removeClass('active'); $('#' + tabId + '-panel').addClass('active'); });
-        
         $('#single-player-btn').on('click', () => { hideModal('#game-mode-modal', () => showModal('#ai-difficulty-modal')); });
         $('.difficulty-btn').on('click', function() { hideModal('#ai-difficulty-modal', () => setupGame('single', { difficulty: $(this).data('depth') })); });
         $('#pass-and-play-btn').on('click', () => { hideModal('#game-mode-modal', () => setupGame('pass')); });
-        $('#online-multiplayer-btn').on('click', () => { if (!db) { alert("Online mode is unavailable. Please set up Firebase credentials in the script."); return; } hideModal('#game-mode-modal', () => showModal('#online-modal')); });
+        $('#online-multiplayer-btn').on('click', () => { if (!firebaseConfig.apiKey) { alert("Firebase is not configured. Please add your config details to the script."); return; } hideModal('#game-mode-modal', () => showModal('#online-modal')); });
         $('#online-back-btn').on('click', () => { hideModal('#online-modal', () => showModal('#game-mode-modal')); });
-        
-        $('#create-game-btn').on('click', () => { hideModal('#online-modal', createOnlineRoom); });
+        $('#create-game-btn').on('click', () => { setupGame('online', { color: 'w' }); createOnlineRoom(); });
         $('#join-game-btn').on('click', () => { hideModal('#online-modal', () => showModal('#join-room-modal')); });
+        
         $('#join-room-submit-btn').on('click', () => {
-            if (!db) { alert("Online mode is unavailable. Please check Firebase configuration."); return; }
-            const code = $('#room-code-input').val().trim().toUpperCase();
-            if (code.length !== 6) { alert('Please enter a valid 6-digit room code.'); return; }
-            
-            const joinRoomRef = db.ref('games/' + code);
-            joinRoomRef.child('meta/status').once('value', statusSnap => {
-                if (statusSnap.val() === 'waiting') {
-                    const newPlayerId = generateId(10);
-                    joinRoomRef.child('players/black').transaction(currentVal => currentVal === null ? newPlayerId : undefined)
-                    .then(result => {
-                        if (result.committed) { hideModal('#join-room-modal', () => setupGame('online', { roomCode: code, playerId: newPlayerId, color: 'b' })); } 
-                        else { alert('Room is full or no longer available.'); }
+            roomCode = $('#room-code-input').val().trim().toUpperCase();
+            if (roomCode.length !== 6) { alert('Please enter a valid 6-digit room code.'); return; }
+            roomRef = database.ref('rooms/' + roomCode);
+            roomRef.once('value', snapshot => {
+                const data = snapshot.val();
+                if (data && data.status === 'waiting') {
+                    roomRef.update({ status: 'active' }).then(() => {
+                        setupGame('online', { color: 'b' });
+                        hideModal('#join-room-modal', () => {
+                            listenToRoomChanges();
+                        });
                     });
-                } else { alert('Room is not available to join.'); }
+                } else {
+                    alert('Room not found or is already full.');
+                }
             });
         });
 
-        $('#copy-code-btn').on('click', () => { navigator.clipboard.writeText($('#room-code-display').text()).then(() => { const btn = $('#copy-code-btn'); const originalText = btn.text(); btn.text('Copied!'); setTimeout(() => btn.text(originalText), 1500); }); });
+        $('#copy-code-btn').on('click', () => { navigator.clipboard.writeText($('#room-code-display').text()).then(() => alert('Copied!')); });
         $('#play-again-btn').on('click', () => { hideModal('#game-over-modal', () => { $('#game-area').addClass('hidden'); showModal('#game-mode-modal'); resetCoreState(); }); });
         
+        // Game control handlers
         $('#flip-board-btn').on('click', () => board.flip());
         $('#new-game-btn').on('click', () => { if(confirm('Start a new game? This will end the current match.')){ $('#game-area').addClass('hidden'); showModal('#game-mode-modal'); resetCoreState(); }});
-        $('#resign-btn').on('click', () => { if(confirm('Resign the game?')){ if(gameMode === 'online' && roomRef) { roomRef.child('signals').set({ type: 'resign', senderId: playerId }); } else { handleGameOver(`${playerColor==='w'?'White':'Black'} resigned.`); } }});
-        $('#draw-btn').on('click', () => { if(gameMode === 'online' && roomRef){ roomRef.child('signals').set({type:'draw-offer', senderId: playerId}); alert('Draw offer sent.'); } else { alert('You can only offer a draw in an online game.'); }});
-        $('#chat-input').on('keypress', function(e) { if(e.which === 13){ const message = $(this).val().trim(); if (message !== '' && gameMode === 'online' && roomRef) { roomRef.child('chat').push({ text: message, senderId: playerId }); $('#chat-log').append(`<div class="chat-message self">${message}</div>`); $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight); $(this).val(''); } }});
+        $('#resign-btn').on('click', () => { if(confirm('Resign the game?')){ if(gameMode === 'online' && roomRef) { roomRef.child('signal').push({type:'resign', sender: playerColor}); } handleGameOver(`${playerColor==='w'?'White':'Black'} resigned.`);}});
+        $('#draw-btn').on('click', () => { if(gameMode === 'online' && roomRef){ roomRef.child('signal').push({type:'draw-offer', sender: playerColor}); alert('Draw offer sent.'); } else { alert('You can only offer a draw in an online game.'); }});
         
-        function updateUndoRedoButtons() {
-            if (gameMode === 'online') { $undoBtn.prop('disabled', true); $redoBtn.prop('disabled', true); return; }
-            $undoBtn.prop('disabled', game.history().length === 0);
-            $redoBtn.prop('disabled', redoStack.length === 0);
-        }
+        $('#chat-input').on('keypress', function(e) { 
+            if(e.which === 13){ 
+                const message = $(this).val().trim(); 
+                if (message !== '' && gameMode === 'online' && roomRef) { 
+                    roomRef.child('chat').push({ sender: playerColor, message: message });
+                    $(this).val('');
+                } 
+            }
+        });
+        
         $undoBtn.on('click', function() { if ($(this).prop('disabled')) return; const movesToUndo = (gameMode === 'single' && game.history().length >= 2) ? 2 : 1; for (let i = 0; i < movesToUndo; i++) { const undoneMove = game.undo(); if (undoneMove) redoStack.push(undoneMove); } board.position(game.fen()); updateGameStatus(); playSound('move'); });
         $redoBtn.on('click', function() { if ($(this).prop('disabled')) return; const movesToRedo = (gameMode === 'single' && redoStack.length >= 2) ? 2 : 1; let moves = []; for (let i = 0; i < movesToRedo; i++) { const move = redoStack.pop(); if (move) moves.unshift(move); } moves.forEach(move => game.move(move)); board.position(game.fen()); updateGameStatus(); playSound('move'); });
 
-        // --- INITIALIZATION ---
         $(window).on('resize', function() { if(board) board.resize(); }).trigger('resize');
-        showModal('#game-mode-modal');
+
+        function init() { showModal('#game-mode-modal'); }
+        init();
     });
     </script>
 </body>
