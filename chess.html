@@ -62,7 +62,12 @@
         #chat-log div b { display: block; font-size: 0.8rem; margin-bottom: 2px; opacity: 0.7; }
         #chat-log .my-message { background-color: var(--glow-color); color: var(--bg-color); align-self: flex-end; border-bottom-right-radius: 2px; }
         #chat-log .opponent-message { background-color: var(--button-bg); align-self: flex-start; border-bottom-left-radius: 2px; }
-        #chat-input { width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--bg-color); color: var(--text-color); font-family: var(--font-family); }
+        /* ADDED: Styles for the chat input with send button */
+        .chat-input-area { display: flex; align-items: center; gap: 0.5rem; }
+        #chat-input { flex-grow: 1; width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--bg-color); color: var(--text-color); font-family: var(--font-family); }
+        #send-chat-btn { background: none; border: none; color: var(--text-secondary-color); font-size: 1.2rem; cursor: pointer; padding: 0.5rem; border-radius: 50%; transition: color 0.2s, background-color 0.2s; }
+        #send-chat-btn:hover { color: var(--text-color); background-color: var(--button-bg); }
+        
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(5px); align-items: center; justify-content: center; }
         .modal-content { background-color: var(--panel-bg-color); color: var(--text-color); padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px; text-align: center; box-shadow: 0 5px 25px rgba(0,0,0,0.3); opacity: 0; transform: scale(0.8); }
         .modal-content h2 { margin-top: 0; font-size: 1.8rem; font-weight: 700; }
@@ -101,7 +106,14 @@
                 <div class="tab-controls"><button class="tab-btn active" data-tab="moves">Moves</button><button class="tab-btn" data-tab="chat">Chat</button></div>
                 <div class="tab-content">
                     <div id="moves-panel" class="tab-panel active"><div id="status">White to move.</div><div id="move-history"></div></div>
-                    <div id="chat-panel" class="tab-panel"><div id="chat-log"></div><input type="text" id="chat-input" placeholder="Type a message..."></div>
+                    <div id="chat-panel" class="tab-panel">
+                        <div id="chat-log"></div>
+                        <!-- UPDATED: Chat input area with send button -->
+                        <div class="chat-input-area">
+                            <input type="text" id="chat-input" placeholder="Type a message...">
+                            <button id="send-chat-btn" title="Send Message"><i class="fas fa-paper-plane"></i></button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -144,7 +156,6 @@
     };
     // --- END FIREBASE CONFIG ---
     
-    // Initialize Firebase
     if (firebaseConfig.apiKey) {
         firebase.initializeApp(firebaseConfig);
     }
@@ -181,54 +192,37 @@
             moves.forEach(move => { $boardEl.find('.square-' + move.to).append('<div class="move-dot"></div>'); });
         }
         
-        /**
-         * REWRITTEN & CORRECTED: This is the core function for player interaction.
-         */
+        // --- PLAYER MOVE LOGIC ---
         function onSquareClick() {
             const square = $(this).data('square');
-
-            // --- Gatekeeper: Is this player allowed to interact right now? ---
-            if (game.game_over()) return;
-            if (gameMode === 'single' && game.turn() !== playerColor) return;
-            if (gameMode === 'online' && game.turn() !== playerColor) return;
-
+            if (game.game_over() || (gameMode !== 'pass' && game.turn() !== playerColor)) return;
             const pieceOnSquare = game.get(square);
 
-            // --- Case 1: A piece was already selected (trying to complete a move) ---
+            // A piece was already selected, try to make a move
             if (fromSquare !== null) {
                 const move = { from: fromSquare, to: square, promotion: 'q' };
                 const moveResult = game.move(move);
 
-                // --- Subcase 1.1: The move was VALID ---
-                if (moveResult) {
+                if (moveResult) { // Valid move
                     playSound(moveResult.flags.includes('c') ? 'capture' : 'move');
                     redoStack = [];
-                    // Update the board and state. This triggers all other UI updates.
-                    updateGameStatus(); 
-                    
-                    // Handle post-move actions for different game modes
+                    updateGameStatus();
                     if (gameMode === 'online' && roomRef) {
                         roomRef.update({ fen: game.fen() });
                     }
                     if (gameMode === 'single' && !game.game_over()) {
                         window.setTimeout(makeComputerMove, 250);
                     }
-                    
-                    // Reset selection state
                     fromSquare = null;
                     removeHighlights();
-                    return; // End the function here, move was successful.
+                    return;
                 }
-
-                // --- Subcase 1.2: The move was INVALID ---
-                // We clear the previous selection and let the code fall through.
-                // This allows the player to select a different piece with the same click.
+                // Invalid move, so reset selection and fall through to re-evaluate click
                 fromSquare = null;
                 removeHighlights();
             }
 
-            // --- Case 2: No piece was selected OR the previous move was invalid ---
-            // We check if the current click is a valid piece selection.
+            // No piece selected yet, or previous move was invalid. Try to select a new piece.
             if (pieceOnSquare && pieceOnSquare.color === game.turn()) {
                 fromSquare = square;
                 highlightMoves(square);
@@ -242,17 +236,14 @@
         function updateBlackTimer() { blackTime--; $('#black-timer').text(formatTime(blackTime)); if (blackTime <= 0) handleGameOver('White wins on time'); }
         function formatTime(seconds) { if (seconds < 0) seconds = 0; const mins = Math.floor(seconds / 60); const secs = seconds % 60; return `${mins}:${secs < 10 ? '0' : ''}${secs}`; }
         
-        // --- CORE GAME STATE MANAGEMENT ---
-        function updateGameStatus(isRemoteUpdate = false) {
-            // This is the primary function to sync the UI with the game state.
+        // --- CORE GAME STATE & UI SYNC ---
+        function updateGameStatus() {
             board.position(game.fen());
             updateStatusText();
             updateMoveHistory();
             updateUndoRedoButtons();
             startTimers();
-
-            if (game.in_check() && !isRemoteUpdate) { playSound('check'); }
-            
+            if (game.in_check()) { playSound('check'); }
             if (game.game_over()) {
                 stopTimers();
                 playSound('gameEnd');
@@ -282,21 +273,14 @@
         function updateStatusText() {
             let statusText = (game.turn() === 'w' ? 'White' : 'Black') + ' to move.';
             $('.player-bar').removeClass('active-player');
-
-            // Logic to highlight the correct player bar based on game mode.
             if (gameMode === 'pass') {
-                if (game.turn() === 'w') $('#player-bar').addClass('active-player');
-                else $('#opponent-bar').addClass('active-player');
+                if (game.turn() === 'w') $('#player-bar').addClass('active-player'); else $('#opponent-bar').addClass('active-player');
             } else {
-                if (game.turn() === playerColor) $('#player-bar').addClass('active-player');
-                else $('#opponent-bar').addClass('active-player');
+                if (game.turn() === playerColor) $('#player-bar').addClass('active-player'); else $('#opponent-bar').addClass('active-player');
             }
-
             if (game.in_check()) { 
                 statusText += ' - CHECK!'; $status.css('background-color', 'rgba(255,0,0,0.2)'); gsap.fromTo($status, {scale: 1.1, y: -2}, {scale: 1, y: 0, duration: 0.8, ease: 'elastic.out(1, 0.5)'}); 
-            } else { 
-                $status.css('background-color', 'transparent'); 
-            }
+            } else { $status.css('background-color', 'transparent'); }
             $status.text(statusText);
         }
 
@@ -315,7 +299,7 @@
         function negamax(game, depth, alpha, beta) { if (depth === 0 || game.game_over()) { return evaluateBoard(game.board()); } let max = -Infinity; const moves = game.moves(); for (const move of moves) { game.move(move); const score = -negamax(game, depth - 1, -beta, -alpha); game.undo(); max = Math.max(max, score); alpha = Math.max(alpha, score); if (alpha >= beta) { break; } } return max; }
         function evaluateBoard(board) { let totalEvaluation = 0; const pieceValues = { p: 10, n: 30, b: 30, r: 50, q: 90, k: 900 }; board.forEach(row => { row.forEach(piece => { if (piece) { const value = pieceValues[piece.type]; totalEvaluation += (piece.color === 'w' ? value : -value); } }); }); return totalEvaluation * (game.turn() === 'w' ? 1 : -1); }
         
-        // --- GAME SETUP & CONTROLS ---
+        // --- GAME SETUP ---
         function setupGame(mode, options = {}) {
             resetCoreState();
             gameMode = mode; 
@@ -372,7 +356,7 @@
                 gameListener = roomRef.on('value', snapshot => {
                     const data = snapshot.val();
                     if (data && data.status === 'active') {
-                        roomRef.off('value', gameListener);
+                        roomRef.off('value', gameListener); gameListener = null;
                         roomRef.onDisconnect().update({ status: 'finished', result: 'Opponent disconnected.' });
                         hideModal('#create-room-modal', () => {
                             setupGame('online', { color: 'w', fen: data.fen });
@@ -419,21 +403,34 @@
                 if (game.fen() !== data.fen) {
                     const oldTurn = game.turn();
                     game.load(data.fen);
-                    if(oldTurn !== game.turn()) {
+                    // This block runs for the player RECEIVING the move.
+                    board.position(game.fen());
+                    updateStatusText();
+                    updateMoveHistory();
+                    startTimers();
+                    if (oldTurn !== game.turn()) {
                        const lastMove = game.history({verbose: true}).pop();
                        if (lastMove) playSound(lastMove.flags.includes('c') ? 'capture' : 'move');
+                       if (game.in_check()) playSound('check');
                     }
-                    updateGameStatus(true);
                 }
             });
             chatListener = roomRef.child('chat').on('child_added', snapshot => {
-                if (gameMode === null) return;
+                if (gameMode === null || !snapshot.exists()) return;
                 const chat = snapshot.val();
                 const messageClass = (chat.sender === playerColor) ? "my-message" : "opponent-message";
                 const senderName = chat.sender === playerColor ? 'You' : 'Opponent';
                 $('#chat-log').append(`<div class="${messageClass}"><b>${senderName}</b> ${chat.message}</div>`);
                 $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight);
             });
+        }
+        
+        function sendChatMessage() {
+            const message = $('#chat-input').val().trim();
+            if (message !== '' && gameMode === 'online' && roomRef) {
+                roomRef.child('chat').push({ sender: playerColor, message: message });
+                $('#chat-input').val('');
+            }
         }
 
         // --- EVENT HANDLERS ---
@@ -463,15 +460,8 @@
         $('#resign-btn').on('click', () => { if(confirm('Resign the game?')){ const resignMessage = `${playerColor === 'w' ? 'White' : 'Black'} resigned.`; if(gameMode === 'online' && roomRef) { roomRef.update({ status: 'finished', result: resignMessage }); } else { handleGameOver(resignMessage);}}});
         $('#draw-btn').on('click', () => { alert('Draw functionality is not implemented in this version.'); });
         
-        $('#chat-input').on('keypress', function(e) { 
-            if(e.which === 13){ 
-                const message = $(this).val().trim(); 
-                if (message !== '' && gameMode === 'online' && roomRef) { 
-                    roomRef.child('chat').push({ sender: playerColor, message: message });
-                    $(this).val('');
-                } 
-            }
-        });
+        $('#chat-input').on('keypress', e => { if (e.which === 13) sendChatMessage(); });
+        $('#send-chat-btn').on('click', sendChatMessage);
         
         $undoBtn.on('click', function() { if ($(this).prop('disabled')) return; const movesToUndo = (gameMode === 'single' && game.history().length >= 2) ? 2 : 1; for (let i = 0; i < movesToUndo; i++) { const undoneMove = game.undo(); if (undoneMove) redoStack.push(undoneMove); } updateGameStatus(); playSound('move'); });
         $redoBtn.on('click', function() { if ($(this).prop('disabled')) return; const movesToRedo = (gameMode === 'single' && redoStack.length >= 2) ? 2 : 1; let moves = []; for (let i = 0; i < movesToRedo; i++) { const move = redoStack.pop(); if (move) moves.unshift(move); } moves.forEach(move => game.move(move)); updateGameStatus(); playSound('move'); });
